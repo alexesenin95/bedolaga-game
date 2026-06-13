@@ -383,6 +383,11 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   box-shadow:0 4px 0 #8e2f5e,0 6px 10px rgba(150,40,90,.3),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 5px rgba(150,40,90,.4);}
 .chat-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #8e2f5e,inset 0 2px 0 rgba(255,255,255,.5);}
 .chat-btn:disabled{filter:grayscale(.5) brightness(.96);box-shadow:0 4px 0 #999;}
+.gift-btn{background:linear-gradient(180deg,#ffe18a 0%,#ffc107 50%,#e2960c 100%);color:#5a3b00;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 4px 0 #b97c08,0 6px 10px rgba(160,110,10,.3),inset 0 2px 0 rgba(255,255,255,.6),inset 0 -3px 5px rgba(160,110,10,.4);}
+.gift-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #b97c08,inset 0 2px 0 rgba(255,255,255,.5);}
+.gift-btn:disabled{filter:grayscale(.5) brightness(.97);box-shadow:0 4px 0 #999;}
 .chat-head{font-family:"Baloo 2";font-weight:800;font-size:14px;color:var(--plum-deep);text-align:center;margin-bottom:10px;}
 .chat-answers{grid-template-columns:1fr;}
 .chat-answer{border-color:#e89cc0;}
@@ -399,7 +404,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
     <div class="career">
       <div class="rank-row"><span id="rankTitle">Стажёр</span><span id="rankMult" class="mult">×1</span></div>
       <div class="trust-wrap">
-        <span class="trust-label">Доверие</span>
+        <span class="trust-label" id="trustLabel">Доверие</span>
         <div class="bar-track"><div id="trustFill" class="bar-fill trust-fill"></div></div>
       </div>
     </div>
@@ -504,6 +509,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
         <div class="chat-meta"><span class="chat-ic">💗</span><span class="chat-title" id="chatTitle">Знакомство</span><span class="chat-lvl" id="chatLvl">ур. 1/10</span></div>
         <div class="bar-track mini"><div id="chatFill" class="bar-fill chat-fill"></div></div>
         <button id="chatBtn" class="chat-btn">💬 Поговорить</button>
+        <button id="giftBtn" class="chat-btn gift-btn">🎁 Подарок</button>
       </div>
     </div>
 
@@ -554,8 +560,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   <!-- ОФЛАЙН-ДОХОД -->
   <div id="offlineOverlay" class="overlay" hidden>
     <div class="card offline">
-      <div class="offline-title">С возвращением!</div>
-      <div class="offline-body">Пока тебя не было, офис заработал</div>
+      <div class="offline-title">Даниэла скучала 💌</div>
+      <div class="offline-body">«Я приглядывала за офисом, пока тебя не было. Возвращайся чаще — без тебя тут пусто.» Касса принесла:</div>
       <div id="offlineAmount" class="offline-amount">0 ₽</div>
       <button id="offlineClose" class="primary-btn">Забрать</button>
     </div>
@@ -567,6 +573,15 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div class="finale-title">Партнёр 🥂</div>
       <div id="finaleText" class="finale-body"></div>
       <button id="finaleClose" class="primary-btn">Продолжить</button>
+    </div>
+  </div>
+
+  <!-- СВИДАНИЕ (награда за близость) -->
+  <div id="dateOverlay" class="overlay" hidden>
+    <div class="card finale">
+      <div class="finale-title" id="dateTitle">Свидание 💞</div>
+      <div id="dateText" class="finale-body"></div>
+      <button id="dateClose" class="primary-btn">💞 Прекрасный вечер</button>
     </div>
   </div>
 
@@ -1166,6 +1181,57 @@ function pickTail(lvl){
   const tier = lvl<=3 ? 0 : (lvl<=6 ? 1 : 2);
   return pickNoRepeat(CHAT_TAILS[tier], "tail"+tier);
 }
+// Благодарности Даниэлы за подарок (флиртующие, чистые)
+const GIFT_THANKS = [
+  "Цветы? Мне? Ты определённо знаешь, как тронуть моё сердце 💐",
+  "Подарок от тебя — особенно приятно. Спасибо, дорогой.",
+  "Ох… ты меня балуешь. Мне это, признаюсь, нравится.",
+  "И как тут устоять перед тобой? Спасибо ❤️",
+  "Ты умеешь удивлять. За это я тебя и… ценю.",
+  "Какая прелесть! Кажется, ты знаешь путь к моему сердцу.",
+  "Внимание дороже денег. А от тебя — вдвойне приятно.",
+  "Будешь так продолжать — я совсем потеряю голову 😉"
+];
+// Свидание-награда на вехах близости (5 и 10)
+function maybeDate(level){
+  if(level!==5 && level!==10) return;
+  const reward = Math.max(2500, Math.floor(incomePerSec()*600)); // ~10 минут дохода
+  state.money += reward;
+  $("dateTitle").textContent = level===10 ? "Свидание на крыше 💞" : "Первое свидание 💞";
+  $("dateText").textContent = (level===10
+    ? "Вечер вдвоём на крыше пентхауса, город сияет внизу. «Бизнес — это прекрасно, но лучшее моё приобретение за все эти годы — ты», — тихо сказала Даниэла и взяла тебя за руку."
+    : "Даниэла впервые позвала тебя не на совещание, а на ужин при свечах. «С тобой я будто снова дышу полной грудью», — призналась она, улыбаясь.")
+    + " 🎁 Подарок на память: " + fmt(reward) + " ₽.";
+  $("dateOverlay").hidden = false;
+  confetti(80);
+}
+// Прибавить очки близости (общий путь для чата и подарков); возвращает был ли левелап
+function addCloseness(points){
+  state.chatProgress = (state.chatProgress||0) + points;
+  let leveled = false;
+  while(state.chatProgress >= CHAT_NEED && (state.chatLevel||1) < 10){
+    state.chatLevel = (state.chatLevel||1) + 1;
+    state.chatProgress -= CHAT_NEED;
+    leveled = true;
+    maybeDate(state.chatLevel);
+  }
+  if((state.chatLevel||1) >= 10) state.chatProgress = Math.min(state.chatProgress, CHAT_NEED);
+  return leveled;
+}
+// Стоимость подарка — масштабируется с доходом, остаётся ощутимым «сливом» ₽
+function giftCost(){ return Math.max(300, Math.floor(incomePerSec()*150) + 250); }
+function giveGift(){
+  if(chatOpen || quizOpen) return;
+  const cost = giftCost();
+  if(state.money < cost){ bossSay("Подарок — это мило, но касса пуста. Сначала заработай 😉", "shrug"); return; }
+  state.money -= cost;
+  sfx.buy();
+  const leveled = addCloseness(3);
+  bossSay(pickNoRepeat(GIFT_THANKS, "gift"), pick(["sympathy","joy"]));
+  if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\nуровень "+state.chatLevel), 300); }
+  confetti(28);
+  renderHud(); renderLooks(); save();
+}
 let chatOpen=false, currentChat=null, chatCooldownUntil=0; const _lastChatQ={};
 function chatReady(){ return Date.now()>=chatCooldownUntil; }
 function faceImg(id,emo){ const src=BOSS_FACES[emo]; $(id).innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo]; }
@@ -1197,16 +1263,14 @@ function chatAnswer(i){
   $("chatAnswers").innerHTML="";
   faceImg("chatBossFace", opt.emo);
   $("chatBubbleText").textContent=react;
-  state.chatProgress=(state.chatProgress||0)+(opt.warm||1);
-  let leveled=false;
-  if(state.chatProgress>=CHAT_NEED && (state.chatLevel||1)<10){ state.chatLevel=(state.chatLevel||1)+1; state.chatProgress=0; leveled=true; }
-  if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\\nуровень "+state.chatLevel), 250); }
+  const leveled = addCloseness(opt.warm||1);
+  if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\nуровень "+state.chatLevel), 250); }
   else sfx.ok();
   bossSay(react, opt.emo);
   renderHud(); save();
-  chatCooldownUntil=Date.now()+9000;
-  // на повышении уровня даём дольше полюбоваться реакцией и обновляем панель образов
-  setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; quizHoldUntil=Date.now()+7000; renderHud(); renderLooks(); }, leveled?2600:1900);
+  chatCooldownUntil=Date.now()+15000;
+  // окно с реакцией Даниэлы держится в 2,5 раза дольше — больше времени прочитать ответ
+  setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; quizHoldUntil=Date.now()+7000; renderHud(); renderLooks(); }, leveled?6500:4750);
 }
 
 let actx = null;
@@ -1234,9 +1298,10 @@ const sfx = {
    9) ИГРОВАЯ ЛОГИКА
 --------------------------------------------------------------------------- */
 function mult(){ return STAGES[state.stage].mult; }
+function affectionMult(){ return 1 + ((state.chatLevel||1)-1)*0.08; } // близость с Даниэлой даёт +8% дохода за уровень
 function baseProduction(){ let s=0; for(let i=0;i<GENERATORS.length;i++) s += GENERATORS[i].income * (state.gens[i]||0); return s; }
-function incomePerSec(){ return baseProduction() * mult(); }
-function clickValue(){ return Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) * mult(); }
+function incomePerSec(){ return baseProduction() * mult() * affectionMult(); }
+function clickValue(){ return Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) * mult() * affectionMult(); }
 function genCost(i){ return Math.floor(GENERATORS[i].baseCost * Math.pow(GENERATORS[i].growth, state.gens[i]||0)); }
 function stageThreshold(){ return Math.max(60, incomePerSec() * 50); } // ~50с в простое (в 2 раза медленнее)
 
@@ -1459,12 +1524,17 @@ function renderHud(){
   $("rankTitle").textContent = state.partner ? "Партнёр 🥂" : stage.title;
   $("rankMult").textContent = multLabel(stage.mult);
   $("trustFill").style.width = Math.min(100, (state.trust/stage.need)*100)+"%";
+  $("trustLabel").textContent = state.partner ? "Доверие · максимум ★" : ("Доверие · ещё "+Math.max(0, stage.need - state.trust));
   $("stageFill").style.width = Math.min(100, (state.barProgress/stageThreshold())*100)+"%";
-  $("chatLvl").textContent = "ур. "+(state.chatLevel||1)+"/10";
+  const bonus = Math.round((affectionMult()-1)*100);
+  $("chatLvl").textContent = "ур. "+(state.chatLevel||1)+"/10" + (bonus>0 ? " · +"+bonus+"% ₽" : "");
   $("chatTitle").textContent = CHAT_TITLES[(state.chatLevel||1)-1];
   $("chatFill").style.width = Math.min(100, ((state.chatProgress||0)/CHAT_NEED)*100)+"%";
   $("chatBtn").disabled = !(chatReady() && !chatOpen && !quizOpen);
   $("chatBtn").textContent = chatReady() ? "💬 Поговорить" : "💬 чуть позже";
+  const gc = giftCost();
+  $("giftBtn").textContent = "🎁 " + fmt(gc) + " ₽";
+  $("giftBtn").disabled = chatOpen || quizOpen || state.money < gc;
   updateGenAfford();
 }
 
@@ -1613,6 +1683,8 @@ function bindUI(){
   document.querySelectorAll(".life").forEach(btn=>btn.addEventListener("click", ()=>useLifeline(btn.dataset.life)));
   $("offlineClose").addEventListener("click", ()=>{ $("offlineOverlay").hidden=true; });
   $("finaleClose").addEventListener("click", ()=>{ $("finaleOverlay").hidden=true; });
+  $("dateClose").addEventListener("click", ()=>{ $("dateOverlay").hidden=true; });
+  $("giftBtn").addEventListener("click", giveGift);
   // Заставка: фоновое видео поверх картинки-фолбэка office_menu.jpg
   $("menuScreen").style.backgroundImage = 'url("'+MENU_IMG+'")';
   const menuVid = $("menuVideo");
