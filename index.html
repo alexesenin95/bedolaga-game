@@ -81,6 +81,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   font-size:20px;display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 0 var(--frame-deep),0 6px 10px rgba(120,80,20,.25),inset 0 2px 0 rgba(255,255,255,.85),inset 0 -3px 5px rgba(180,130,50,.3);}
 .icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--frame-deep),inset 0 2px 0 rgba(255,255,255,.7);}
+.audio-ctrl{display:flex;align-items:center;gap:8px;}
+.vol-slider{width:78px;accent-color:var(--gold-deep);cursor:pointer;height:6px;}
+@media (max-width:820px){.vol-slider{width:54px;}}
 
 /* ---- основная зона: сцена (слева) + панель команды (справа) ---- */
 .main{flex:1 1 auto;display:flex;gap:10px;min-height:0;}
@@ -408,7 +411,10 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
         <div class="bar-track"><div id="trustFill" class="bar-fill trust-fill"></div></div>
       </div>
     </div>
-    <button id="muteBtn" class="icon-btn" aria-label="Звук вкл/выкл">🔊</button>
+    <div class="audio-ctrl">
+      <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
+      <button id="muteBtn" class="icon-btn" aria-label="Звук вкл/выкл">🔊</button>
+    </div>
   </div>
 
   <!-- ОСНОВНАЯ ЗОНА -->
@@ -592,6 +598,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
     <div class="menu-sub">путь от стажёра до партнёра</div>
     <button id="playBtn" class="menu-play">Играть ▶</button>
   </div>
+
+  <!-- фоновая музыка (зацикленная) -->
+  <audio id="bgm" src="assets/music.mp3" loop preload="auto"></audio>
 
 </div>
 
@@ -891,7 +900,7 @@ function defaultState(){
     gens:[0,0,0,0,0,0],
     stage:0, trust:0,
     lifelines:{ report:1, colleagues:1, mentor:1 },
-    barProgress:0, muted:false, partner:false, lastQuestion:-1,
+    barProgress:0, muted:false, volume:0.5, partner:false, lastQuestion:-1,
     chatLevel:1, chatProgress:0,
     lastSave:Date.now(),
   };
@@ -943,8 +952,8 @@ async function initSDK(){
 function readyForPlayer(){ try{ ysdk.features.LoadingAPI.ready(); }catch(e){} }
 function submitScore(){ try{ if(ysdk && ysdk.leaderboards){ ysdk.leaderboards.setScore("capital", Math.floor(state.totalEarned)); } }catch(e){} }
 let paused=false;
-function onPause(){ paused=true; }
-function onResume(){ paused=false; }
+function onPause(){ paused=true; try{ if(bgm) bgm.pause(); }catch(e){} }            // глушим музыку на рекламе
+function onResume(){ paused=false; try{ if(bgm && !state.muted && $("menuScreen").hidden) bgm.play().catch(()=>{}); }catch(e){} }
 
 // === МОНЕТИЗАЦИЯ — намеренно НЕ реализована в этой версии (только хуки) =======
 // function showRewarded(onReward){ ysdk.adv.showRewardedVideo(...) }   // ×2 офлайн, подсказки
@@ -1275,6 +1284,11 @@ function chatAnswer(i){
 
 let actx = null;
 function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); } }
+/* фоновая музыка */
+let bgm=null;
+function musicVol(){ return state.volume==null ? 0.5 : state.volume; }
+function applyMusic(){ if(!bgm) bgm=$("bgm"); if(!bgm) return; bgm.muted = !!state.muted; bgm.volume = musicVol(); }
+function startMusic(){ applyMusic(); if(bgm){ bgm.play().catch(()=>{}); } }
 function beep(freq, dur=0.08, type="sine", vol=0.05){
   if(state.muted || !actx) return;
   try{
@@ -1680,7 +1694,8 @@ function loadState(){
 function bindUI(){
   $("clickBtn").addEventListener("click", doClick);
   $("muteBtn").addEventListener("click", ()=>{
-    state.muted = !state.muted; $("muteBtn").textContent = state.muted ? "🔇" : "🔊"; save();
+    state.muted = !state.muted; $("muteBtn").textContent = state.muted ? "🔇" : "🔊";
+    applyMusic(); if(!state.muted && $("menuScreen").hidden) startMusic(); save();
   });
   document.querySelectorAll(".life").forEach(btn=>btn.addEventListener("click", ()=>useLifeline(btn.dataset.life)));
   $("offlineClose").addEventListener("click", ()=>{ $("offlineOverlay").hidden=true; });
@@ -1702,9 +1717,14 @@ function bindUI(){
   }
   $("playBtn").addEventListener("click", ()=>{
     ensureAudio();
+    startMusic();                                      // запуск фоновой музыки по жесту пользователя
     $("menuScreen").hidden = true;
     if(menuVid){ try{ menuVid.pause(); }catch(e){} }   // не крутим видео в фоне после старта
   });
+  // регулятор громкости музыки
+  const vs = $("volSlider");
+  vs.value = Math.round(musicVol()*100);
+  vs.addEventListener("input", ()=>{ state.volume = vs.value/100; applyMusic(); save(); });
   $("chatBtn").addEventListener("click", openChat);
 }
 window.addEventListener("DOMContentLoaded", async ()=>{
@@ -1713,6 +1733,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   loadState();
   computeOffline();
   $("muteBtn").textContent = state.muted ? "🔇" : "🔊";
+  $("volSlider").value = Math.round(musicVol()*100); applyMusic();   // синхронизация громкости из сейва
   renderAll();
   if(sdkReady) readyForPlayer();
   requestAnimationFrame(loop);
