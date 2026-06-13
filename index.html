@@ -536,11 +536,16 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
                  (для этапов 2..5 позже подставятся отдельные наборы)
 --------------------------------------------------------------------------- */
 const BOSS_POSES = {
-  neutral:"assets/boss_neutral.webp",   // приветливый жест, тёплая улыбка
-  approve:"assets/boss_approve.webp",   // большой палец вверх
-  sympathy:"assets/boss_sympathy.webp", // смеётся, ладонь у рта (кокетливо)
-  stern:"assets/boss_stern.webp",       // злится, указывает пальцем
-  joy:"assets/boss_joy.webp"            // руки вверх, хохочет
+  neutral:"assets/boss_neutral.webp",     // приветливый жест, тёплая улыбка
+  approve:"assets/boss_approve.webp",     // большой палец вверх
+  sympathy:"assets/boss_sympathy.webp",   // смеётся, ладонь у рта (кокетливо)
+  stern:"assets/boss_stern.webp",         // злится, указывает пальцем
+  joy:"assets/boss_joy.webp",             // руки вверх, хохочет
+  surprised:"assets/boss_surprised.webp", // удивление, рука в сторону
+  sad:"assets/boss_sad.webp",             // голова опущена, грустит
+  calm:"assets/boss_calm.webp",           // медитация, покой
+  serious:"assets/boss_serious.webp",     // руки скрещены, серьёзна
+  shrug:"assets/boss_shrug.webp"          // пожимает плечами, недоумение
 };
 // Доп. позы (1024×1536, прозрачный фон) — задел под расширение эмоций:
 // boss_surprised (удивление), boss_sad (расстроена), boss_calm (медитация),
@@ -561,7 +566,8 @@ const ASSETS = {
   // На этапы 2..5 позже подставишь новые наборы (другая одежда + те же эмоции).
   boss: [ BOSS_POSES, BOSS_POSES, BOSS_POSES, BOSS_POSES, BOSS_POSES ],
 };
-const EMO = { neutral:"😐", approve:"🙂", sympathy:"😏", stern:"😠", joy:"😄" };
+const EMO = { neutral:"😐", approve:"🙂", sympathy:"😏", stern:"😠", joy:"😄",
+              surprised:"😮", sad:"😔", calm:"😌", serious:"🤨", shrug:"🤷‍♀️" };
 
 /* ---------------------------------------------------------------------------
    2) БАЛАНС
@@ -582,7 +588,7 @@ const DT_CLAMP = 0.5;
    3) ЭТАПЫ — должность, множитель, реплики (деловая мотивация + симпатия)
 --------------------------------------------------------------------------- */
 const STAGES = [
-  { title:"Стажёр", mult:1.0, need:5, okEmos:["approve","sympathy"],
+  { title:"Стажёр", mult:1.0, need:5, okEmos:["surprised","approve","sympathy"],
     motivations:[
       "Аренда этого клоповника сама себя не оплатит. Думай.",
       "Касса почти пуста. Покажи, что от тебя есть толк.",
@@ -612,7 +618,7 @@ const STAGES = [
       "Касса худеет от твоих ответов. Прекрати.",
       "Ошибка. Ещё одна — и ищи себе другой стол."] },
 
-  { title:"Младший менеджер", mult:1.5, need:5, okEmos:["approve","sympathy"],
+  { title:"Младший менеджер", mult:1.5, need:5, okEmos:["approve","sympathy","surprised"],
     motivations:[
       "Нужны деньги на первую нормальную рекламу. Реши задачу.",
       "Пора, чтобы о нас узнали. Покажи деловую хватку.",
@@ -872,25 +878,36 @@ const _last={};
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function pickNoRepeat(arr,key){ if(arr.length<2) return arr[0]; let v; do{ v=pick(arr); }while(v===_last[key]); _last[key]=v; return v; }
 const IDLE=[
-  "Графики ползут вверх — мне это нравится.",
-  "Работай-работай. Я слежу за твоими успехами.",
-  "Хорошие цифры сегодня. И компания, кстати, приятная.",
-  "Не отвлекайся. Хотя на тебя отвлекаться приятно.",
-  "Капитал растёт. Продолжай в том же духе.",
-  "С тобой офис стал оживлённее.",
-  "Люблю, когда показатели в плюсе. И когда ты рядом — тоже.",
-  "Ещё немного — и обгоним конкурентов.",
-  "Мне нравится, как ты держишь темп.",
-  "Тишина в офисе — деньги в кассе. Молодец.",
-  "Иногда я смотрю на тебя дольше, чем на отчёты.",
-  "Кофе будешь? Шучу. Работай."
+  {t:"Графики ползут вверх — мне это нравится.", emo:"approve"},
+  {t:"Работай-работай. Я слежу за твоими успехами.", emo:"neutral"},
+  {t:"Хорошие цифры сегодня. И компания, кстати, приятная.", emo:"sympathy"},
+  {t:"Не отвлекайся. Хотя на тебя отвлекаться приятно.", emo:"sympathy"},
+  {t:"Капитал растёт. Продолжай в том же духе.", emo:"approve"},
+  {t:"С тобой офис стал оживлённее.", emo:"sympathy"},
+  {t:"Люблю, когда показатели в плюсе. И когда ты рядом — тоже.", emo:"sympathy"},
+  {t:"Ещё немного — и обгоним конкурентов.", emo:"approve"},
+  {t:"Мне нравится, как ты держишь темп.", emo:"approve"},
+  {t:"Тишина в офисе — деньги в кассе. Молодец.", emo:"neutral"},
+  {t:"Иногда я смотрю на тебя дольше, чем на отчёты.", emo:"sympathy"},
+  {t:"Кофе будешь? Шучу. Работай.", emo:"neutral"},
+  // медитация — минутки спокойствия
+  {t:"Минутка дзена. Даже в бизнесе важен баланс.", emo:"calm"},
+  {t:"Дышу. Цифры подождут полминуты.", emo:"calm"},
+  {t:"Иногда нужно просто выдохнуть. И снова в бой.", emo:"calm"},
+  // недоумение — когда темп просел
+  {t:"И где результаты? Я подожду… недолго.", emo:"shrug"},
+  {t:"Хм. Что-то темп упал. Или мне кажется?", emo:"shrug"},
+  {t:"Ну и? Касса сама себя не наполнит.", emo:"shrug"},
+  // приятное удивление
+  {t:"Ого, так бодро? Не ожидала.", emo:"surprised"},
+  {t:"Ничего себе обороты. Ты меня удивляешь.", emo:"surprised"}
 ];
 function idleTick(){
   if(paused || quizOpen || chatOpen) return;
   if(!$("menuScreen").hidden) return;
   if(!$("bossBubble").hidden) return;
   if(chatReady() && Math.random()<0.3){ openChat(); return; }
-  bossSay(pickNoRepeat(IDLE,"idle"), pick(["neutral","approve","sympathy"]));
+  const it = pickNoRepeat(IDLE,"idle"); bossSay(it.t, it.emo);
 }
 const CHAT_TITLES=["Знакомство","Рабочий настрой","Чуть теплее","Симпатия","Дружеский флирт","Доверие","Явный интерес","Тёплые чувства","Почти признание","Близкие"];
 const CHAT_NEED=5; // очков близости на уровень (тюнится)
@@ -1143,7 +1160,7 @@ function openQuiz(){
 
   const stage = STAGES[state.stage];
   $("quizBubbleText").textContent = pick(stage.motivations);
-  setQuizBoss("neutral");
+  setQuizBoss("serious");   // «ну, посмотрим, что ты знаешь» — руки скрещены
 
   $("quizQuestion").textContent = q.q;
   const wrap = $("quizAnswers"); wrap.innerHTML="";
@@ -1220,7 +1237,8 @@ function answer(i){
     sfx.bad();
     const penalty = Math.min(state.money * 0.10, incomePerSec() * 30);
     state.money = Math.max(0, state.money - penalty);
-    line = pickNoRepeat(stage.wrong, "bad"); emo = "stern";
+    // ранние этапы — строгий укор; поздние — мягкое разочарование (тёплая дуга)
+    line = pickNoRepeat(stage.wrong, "bad"); emo = state.stage <= 1 ? "stern" : "sad";
   }
   setQuizBoss(emo);
   $("quizBubbleText").textContent = line;
@@ -1247,6 +1265,11 @@ function promote(){
   sfx.promote();
   flourish("Повышение!\n" + STAGES[state.stage].title);
   submitScore(); save(); renderAll();
+  // радостная реакция начальницы на повышение
+  const cheer = ["Поздравляю! Теперь ты — "+STAGES[state.stage].title+". Я знала, что в тебе не ошиблась.",
+                 "Вот это рост! "+STAGES[state.stage].title+" — звучит по-новому. Горжусь.",
+                 "Новая должность тебе к лицу. Идём дальше — вместе."];
+  setTimeout(()=>bossSay(pick(cheer), "joy"), 900);
 }
 
 /* ---------------------------------------------------------------------------
