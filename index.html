@@ -422,6 +422,39 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .chat-answers{grid-template-columns:1fr;}
 .chat-answer{border-color:#e89cc0;}
 .chat-answer .txt{font-weight:700;}
+
+/* ===================== МИНИ-ИГРЫ ===================== */
+.game-card{max-width:520px;}
+.game-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.game-head span{font-family:"Baloo 2";font-weight:800;font-size:17px;color:var(--plum-deep);}
+.game-x{width:32px;height:32px;border-radius:10px;background:#f0e2c4;font-size:15px;color:#7a5a2a;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 var(--frame-deep);}
+.game-info{font-size:12px;font-weight:700;color:var(--ink-soft);text-align:center;margin-bottom:10px;line-height:1.35;}
+.game-stage{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.game-canvas{border-radius:12px;width:100%;max-width:480px;touch-action:none;box-shadow:0 6px 16px rgba(0,0,0,.25);}
+.game-result{text-align:center;margin-top:12px;}
+.gr-title{font-family:"Baloo 2";font-weight:800;font-size:21px;color:var(--gold-deep);}
+.gr-rew{font-family:"Baloo 2";font-weight:800;color:var(--green-deep);margin-top:4px;}
+.gr-line{font-style:italic;color:var(--ink-soft);font-weight:700;margin:8px 0;line-height:1.35;}
+/* шашки */
+.ck-board{display:grid;grid-template-columns:repeat(8,1fr);width:100%;max-width:380px;aspect-ratio:1;border-radius:10px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.28);}
+.ck-cell{position:relative;display:flex;align-items:center;justify-content:center;}
+.ck-cell.dark{background:#a9763f;} .ck-cell.light{background:#f4e2c2;}
+.ck-cell.sel{box-shadow:inset 0 0 0 3px #ffd24a;}
+.ck-cell.move::before{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:rgba(70,190,70,.75);}
+.ck-pc{width:74%;height:74%;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.ck-pc.p{background:radial-gradient(circle at 35% 30%,#fff,#dcdcdc);border:2px solid #aeaeae;}
+.ck-pc.a{background:radial-gradient(circle at 35% 30%,#777,#222);border:2px solid #000;}
+.ck-pc.k::after{content:"♛";color:#ffd24a;font-size:17px;}
+/* морской бой */
+.bs-wrap{display:flex;flex-direction:column;gap:7px;width:100%;align-items:center;}
+.bs-label{font-family:"Baloo 2";font-weight:800;font-size:12px;color:var(--ink-soft);}
+.bs-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;width:100%;max-width:280px;}
+.bs-cell{aspect-ratio:1;border-radius:5px;background:#cfe6fb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#3a6ea5;}
+.bs-grid.enemy .bs-cell{cursor:pointer;}
+.bs-cell.ship{background:#9aa7b3;}
+.bs-cell.miss{background:#e8eef4;color:#8aa0b3;}
+.bs-cell.hit{background:#e5564b;color:#fff;}
 </style>
 </head>
 <body>
@@ -604,7 +637,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   <div id="offlineOverlay" class="overlay" hidden>
     <div class="card offline">
       <div class="offline-title">Даниэла скучала 💌</div>
-      <div class="offline-body">«Я приглядывала за офисом, пока тебя не было. Возвращайся чаще — без тебя тут пусто.» Касса принесла:</div>
+      <div class="offline-body" id="offlineBody"></div>
       <div id="offlineAmount" class="offline-amount">0 ₽</div>
       <button id="offlineClose" class="primary-btn">Забрать</button>
     </div>
@@ -625,6 +658,16 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div class="finale-title" id="dateTitle">Свидание 💞</div>
       <div id="dateText" class="finale-body"></div>
       <button id="dateClose" class="primary-btn">💞 Прекрасный вечер</button>
+    </div>
+  </div>
+
+  <!-- МИНИ-ИГРЫ -->
+  <div id="gameOverlay" class="overlay" hidden>
+    <div class="card game-card">
+      <div class="game-head"><span id="gameTitle">Игра</span><button id="gameClose" class="game-x" aria-label="Закрыть">✕</button></div>
+      <div id="gameInfo" class="game-info"></div>
+      <div id="gameStage" class="game-stage"></div>
+      <div id="gameResult" class="game-result" hidden></div>
     </div>
   </div>
 
@@ -1320,6 +1363,186 @@ function chatAnswer(i){
   setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; quizHoldUntil=Date.now()+7000; renderHud(); renderLooks(); }, leveled?6500:4750);
 }
 
+/* ============================ МИНИ-ИГРЫ ============================ */
+const GAMES = ["pong","checkers","battleship"];
+let gameOpen=false, gameRAF=null;
+const GAME_WIN = [
+  "А ты азартный! Обыграл меня — признаю поражение. Победителю — приз 😉",
+  "Ого, какой напор! С тобой и играть, и работать — одно удовольствие. Держи награду.",
+  "Сдаюсь, ты сильнее. Люблю мужчин, которые умеют побеждать.",
+  "Проиграла — и почему-то совсем не расстроена. Молодец, заслужил.",
+  "Вот это класс! Ты полон сюрпризов. Это тебе за победу."
+];
+const GAME_LOSE = [
+  "Ха, на этот раз победа за мной! Но ты держался достойно, мне понравилось.",
+  "Не дуйся, проигрывать мне — это почти честь 😉 Реванш?",
+  "Я выиграла! Но, между нами, болела я за тебя.",
+  "Сегодня мой день. Завтра, может, повезёт и тебе, дорогой.",
+  "Победила, но без удовольствия — слишком уж приятный соперник."
+];
+function talkOrPlay(){
+  if(chatOpen || quizOpen || gameOpen || !chatReady()) return;
+  if(Math.random() < 0.4){ startGame(pick(GAMES)); return; }   // иногда вместо диалога — мини-игра
+  openChat();
+}
+function startGame(kind){
+  gameOpen=true; chatOpen=true; ensureAudio();
+  $("gameResult").hidden=true; $("gameResult").innerHTML=""; $("gameStage").innerHTML="";
+  $("gameOverlay").hidden=false;
+  if(kind==="pong") startPong();
+  else if(kind==="checkers") startCheckers();
+  else startBattleship();
+}
+function closeGame(){
+  if(gameRAF){ cancelAnimationFrame(gameRAF); gameRAF=null; }
+  $("gameOverlay").hidden=true; gameOpen=false; chatOpen=false;
+  $("gameStage").innerHTML=""; $("gameResult").innerHTML=""; $("gameResult").hidden=true;
+  chatCooldownUntil=Date.now()+15000; quizHoldUntil=Date.now()+7000;
+  renderHud();
+}
+function endGame(win, titleWin, titleLose){
+  if(!$("gameResult").hidden) return;          // защита от повторного завершения
+  if(gameRAF){ cancelAnimationFrame(gameRAF); gameRAF=null; }
+  let line, reward=0;
+  if(win){
+    reward = Math.max(1000, Math.floor(incomePerSec()*300));
+    state.money += reward; state.totalEarned += reward; addCloseness(2);
+    line = pick(GAME_WIN); sfx.promote(); confetti(40);
+  } else { line = pick(GAME_LOSE); sfx.bad(); }
+  const res=$("gameResult"); res.hidden=false;
+  res.innerHTML = `<div class="gr-title">${win?(titleWin||"Победа! 🏆"):(titleLose||"Поражение")}</div>`+
+    (win?`<div class="gr-rew">+${fmt(reward)} ₽ · +близость 💗</div>`:``)+
+    `<div class="gr-line">«${line}»</div>`+
+    `<button id="gameDone" class="primary-btn">Готово</button>`;
+  bossSay(line, win?"joy":"sympathy");
+  save(); renderHud(); renderLooks();
+  $("gameDone").addEventListener("click", closeGame);
+}
+
+/* --- Настольный теннис (Pong), 1 сет до 21, разница в 2 --- */
+function startPong(){
+  $("gameTitle").textContent="🏓 Настольный теннис — до 21";
+  $("gameInfo").textContent="Веди ракетку мышью или пальцем. Партия до 21 очка (с разницей в 2).";
+  const W=480,H=300,PH=64,PW=11;
+  $("gameStage").innerHTML=`<canvas id="pongCv" width="${W}" height="${H}" class="game-canvas"></canvas>`;
+  const cv=$("pongCv"), ctx=cv.getContext("2d");
+  let pY=H/2-PH/2, aY=H/2-PH/2, ps=0, as=0, over=false, ball;
+  function serve(dir){ ball={x:W/2,y:H/2,vx:dir*4.2,vy:(Math.random()*3-1.5),sp:4.2}; }
+  serve(Math.random()<.5?1:-1);
+  function moveTo(clientY){ const r=cv.getBoundingClientRect(); const y=(clientY-r.top)*(H/r.height); pY=Math.max(0,Math.min(H-PH,y-PH/2)); }
+  cv.addEventListener("pointermove",e=>moveTo(e.clientY));
+  cv.addEventListener("touchmove",e=>{ if(e.touches[0]){ moveTo(e.touches[0].clientY); e.preventDefault(); } },{passive:false});
+  function hit(py){ const rel=(ball.y-(py+PH/2))/(PH/2); ball.sp=Math.min(9,ball.sp+0.4); ball.vy=rel*4.2; ball.vx=(ball.vx>0?1:-1)*ball.sp; }
+  function win(){ if((ps>=21||as>=21)&&Math.abs(ps-as)>=2){ over=true; endGame(ps>as,"Партия твоя! 🏓","Партия за Даниэлой"); return true; } return false; }
+  function step(){
+    if(over) return;
+    aY += Math.max(-4.4,Math.min(4.4,(ball.y-PH/2-aY)*0.11)); aY=Math.max(0,Math.min(H-PH,aY));
+    ball.x+=ball.vx; ball.y+=ball.vy;
+    if(ball.y<7){ball.y=7;ball.vy=Math.abs(ball.vy);} if(ball.y>H-7){ball.y=H-7;ball.vy=-Math.abs(ball.vy);}
+    if(ball.vx<0 && ball.x-7<20+PW && ball.x-7>16 && ball.y>pY && ball.y<pY+PH){ ball.vx=Math.abs(ball.vx); hit(pY); }
+    if(ball.vx>0 && ball.x+7>W-20-PW && ball.x+7<W-16 && ball.y>aY && ball.y<aY+PH){ ball.vx=-Math.abs(ball.vx); hit(aY); }
+    if(ball.x<-4){ as++; if(!win()) serve(1); }
+    else if(ball.x>W+4){ ps++; if(!win()) serve(-1); }
+    draw(); if(!over) gameRAF=requestAnimationFrame(step);
+  }
+  function draw(){
+    ctx.fillStyle="#1f6e3a"; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle="rgba(255,255,255,.45)"; ctx.setLineDash([7,9]); ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#fff"; ctx.fillRect(20,pY,PW,PH);
+    ctx.fillStyle="#ffd27a"; ctx.fillRect(W-20-PW,aY,PW,PH);
+    ctx.beginPath(); ctx.arc(ball.x,ball.y,7,0,7); ctx.fill();
+    ctx.font="bold 24px 'Baloo 2',sans-serif"; ctx.textAlign="center"; ctx.fillStyle="#fff"; ctx.fillText(ps+" : "+as,W/2,32);
+  }
+  draw(); gameRAF=requestAnimationFrame(step);
+}
+
+/* --- Шашки (упрощённые русские) --- */
+function startCheckers(){
+  $("gameTitle").textContent="🔵 Шашки";
+  $("gameInfo").textContent="Ты — светлые (снизу). Если можешь бить — бьёшь. Срежь все шашки Даниэлы.";
+  const B=[]; for(let r=0;r<8;r++){B[r]=[];for(let c=0;c<8;c++){ let v=0; if((r+c)%2===1){ if(r<3)v=-1; else if(r>4)v=1; } B[r][c]=v; }}
+  let sel=null, chain=false;
+  const host=document.createElement("div"); host.className="ck-board"; $("gameStage").appendChild(host);
+  const cells=[];
+  for(let r=0;r<8;r++){ cells[r]=[]; for(let c=0;c<8;c++){ const d=document.createElement("div"); d.className="ck-cell "+(((r+c)%2)?"dark":"light"); if((r+c)%2) d.addEventListener("click",()=>onClick(r,c)); host.appendChild(d); cells[r][c]=d; } }
+  const sideOf=v=>v>0?1:(v<0?-1:0);
+  function caps(r,c){ const v=B[r][c]; if(!v) return []; const s=sideOf(v),o=[]; for(const [dr,dc] of [[1,1],[1,-1],[-1,1],[-1,-1]]){ const mr=r+dr,mc=c+dc,tr=r+2*dr,tc=c+2*dc; if(tr<0||tr>7||tc<0||tc>7) continue; if(B[mr][mc]!==0 && sideOf(B[mr][mc])===-s && B[tr][tc]===0) o.push({r:tr,c:tc,cr:mr,cc:mc}); } return o; }
+  function moves(r,c){ const v=B[r][c]; if(!v) return []; const ds=Math.abs(v)===2?[[1,1],[1,-1],[-1,1],[-1,-1]]:(v>0?[[-1,1],[-1,-1]]:[[1,1],[1,-1]]); const o=[]; for(const [dr,dc] of ds){ const tr=r+dr,tc=c+dc; if(tr>=0&&tr<8&&tc>=0&&tc<8&&B[tr][tc]===0) o.push({r:tr,c:tc}); } return o; }
+  function sideCap(s){ for(let r=0;r<8;r++)for(let c=0;c<8;c++) if(sideOf(B[r][c])===s && caps(r,c).length) return true; return false; }
+  function legal(r,c){ const s=sideOf(B[r][c]); if(!s) return []; return sideCap(s)?caps(r,c):moves(r,c); }
+  function sideMoves(s){ const all=[]; for(let r=0;r<8;r++)for(let c=0;c<8;c++) if(sideOf(B[r][c])===s){ legal(r,c).forEach(m=>all.push({r,c,m})); } return all; }
+  function crown(r,c){ if(B[r][c]===1&&r===0)B[r][c]=2; if(B[r][c]===-1&&r===7)B[r][c]=-2; }
+  function render(sel,opts){ for(let r=0;r<8;r++)for(let c=0;c<8;c++){ const d=cells[r][c]; if((r+c)%2===0){d.innerHTML="";continue;} d.className="ck-cell dark"; const v=B[r][c]; d.innerHTML = v? `<div class="ck-pc ${v>0?'p':'a'} ${Math.abs(v)===2?'k':''}"></div>`:""; } if(sel) cells[sel.r][sel.c].classList.add("sel"); (opts||[]).forEach(m=>cells[m.r][m.c].classList.add("move")); }
+  function onClick(r,c){
+    if(sideOf(B[r][c])===1 && !chain){ sel={r,c}; render(sel,legal(r,c)); return; }
+    if(!sel) return;
+    const opts=legal(sel.r,sel.c); const m=opts.find(o=>o.r===r&&o.c===c); if(!m) return;
+    doMove(sel.r,sel.c,m,1);
+  }
+  function doMove(r,c,m,s){
+    const v=B[r][c]; B[r][c]=0; B[m.r][m.c]=v;
+    if(m.cr!=null) B[m.cr][m.cc]=0;
+    crown(m.r,m.c);
+    if(m.cr!=null && caps(m.r,m.c).length){ // продолжение боя той же шашкой
+      if(s===1){ sel={r:m.r,c:m.c}; chain=true; render(sel,caps(m.r,m.c)); return; }
+      else { const nx=caps(m.r,m.c); doMove(m.r,m.c,pick(nx),-1); return; }
+    }
+    sel=null; chain=false; render();
+    if(s===1){ setTimeout(aiTurn,450); } else { checkEnd(); }
+  }
+  function aiTurn(){
+    const mv=sideMoves(-1);
+    if(!mv.length){ endGame(true,"Победа! У Даниэлы нет ходов 🏆"); return; }
+    const capsMv=mv.filter(x=>x.m.cr!=null);
+    const choice=pick(capsMv.length?capsMv:mv);
+    doMove(choice.r,choice.c,choice.m,-1);   // doMove(-1) сам вызовет checkEnd по завершении
+  }
+  function checkEnd(){
+    let p=0,a=0; for(let r=0;r<8;r++)for(let c=0;c<8;c++){ if(B[r][c]>0)p++; else if(B[r][c]<0)a++; }
+    if(a===0){ endGame(true,"Все шашки соперницы биты! 🏆"); return; }
+    if(p===0){ endGame(false,"Даниэла забрала все твои шашки"); return; }
+    if(!sideMoves(1).length){ endGame(false,"У тебя не осталось ходов"); }
+  }
+  render();
+}
+
+/* --- Морской бой --- */
+function startBattleship(){
+  $("gameTitle").textContent="🚢 Морской бой";
+  $("gameInfo").textContent="Стреляй по полю Даниэлы (сверху). Потопи весь её флот раньше, чем она — твой.";
+  const N=8, SHIPS=[3,2,2,1,1];
+  function emptyGrid(){ const g=[]; for(let i=0;i<N;i++){g[i]=new Array(N).fill(0);} return g; }
+  function place(){ const g=emptyGrid(); for(const len of SHIPS){ let ok=false,tries=0; while(!ok&&tries++<200){ const hor=Math.random()<.5; const r=Math.floor(Math.random()*(hor?N:N-len+1)); const c=Math.floor(Math.random()*(hor?N-len+1:N)); let free=true; for(let i=-1;i<=len;i++)for(let j=-1;j<=1;j++){ const rr=r+(hor?j:i), cc=c+(hor?i:j); if(rr>=0&&rr<N&&cc>=0&&cc<N&&g[rr][cc]===1){free=false;} } if(!free) continue; for(let i=0;i<len;i++){ g[hor?r:r+i][hor?c+i:c]=1; } ok=true; } } return g; }
+  const pg=place(), ag=place();           // 1=ship
+  const ps=emptyGrid(), as=emptyGrid();    // 0 none,1 miss,2 hit (shots: ps=на поле игрока(ходы AI), as=на поле врага(ходы игрока))
+  let pAlive=SHIPS.reduce((a,b)=>a+b,0), aAlive=pAlive, lock=false;
+  const aiQueue=[]; const aiTried=new Set();
+  const wrap=document.createElement("div"); wrap.className="bs-wrap";
+  wrap.innerHTML=`<div class="bs-label">Поле Даниэлы — стреляй сюда</div><div class="bs-grid enemy" id="bsEnemy"></div>`+
+                 `<div class="bs-label">Твой флот</div><div class="bs-grid own" id="bsOwn"></div>`;
+  $("gameStage").appendChild(wrap);
+  const eG=wrap.querySelector("#bsEnemy"), oG=wrap.querySelector("#bsOwn"), eC=[],oC=[];
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){ const e=document.createElement("div"); e.className="bs-cell"; e.addEventListener("click",()=>playerShoot(r,c)); eG.appendChild(e); eC.push(e); const o=document.createElement("div"); o.className="bs-cell"+(pg[r][c]?" ship":""); oG.appendChild(o); oC.push(o); }
+  const idx=(r,c)=>r*N+c;
+  function playerShoot(r,c){
+    if(lock||as[r][c]) return;
+    if(ag[r][c]){ as[r][c]=2; aAlive--; eC[idx(r,c)].className="bs-cell hit"; eC[idx(r,c)].textContent="✕";
+      if(aAlive<=0){ endGame(true,"Флот Даниэлы потоплен! 🏆"); return; } }
+    else { as[r][c]=1; eC[idx(r,c)].className="bs-cell miss"; eC[idx(r,c)].textContent="•"; lock=true; setTimeout(aiShoot,500); }
+  }
+  function aiShoot(){
+    let r,c;
+    while(true){ if(aiQueue.length){ const t=aiQueue.shift(); if(aiTried.has(idx(t.r,t.c))) continue; r=t.r;c=t.c; } else { r=Math.floor(Math.random()*N); c=Math.floor(Math.random()*N); if((r+c)%2!==0 && aTriedCount()<N*N*0.6){ continue; } } if(!aiTried.has(idx(r,c))) break; }
+    aiTried.add(idx(r,c));
+    if(pg[r][c]){ ps[r][c]=2; pAlive--; oC[idx(r,c)].className="bs-cell hit"; oC[idx(r,c)].textContent="✕";
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>{ const rr=r+dr,cc=c+dc; if(rr>=0&&rr<N&&cc>=0&&cc<N&&!aiTried.has(idx(rr,cc))) aiQueue.push({r:rr,c:cc}); });
+      if(pAlive<=0){ endGame(false,"Даниэла потопила твой флот"); return; }
+      setTimeout(aiShoot,500);
+    } else { ps[r][c]=1; oC[idx(r,c)].className="bs-cell miss"+(pg[r][c]?" ship":""); oC[idx(r,c)].textContent="•"; lock=false; }
+  }
+  function aTriedCount(){ return aiTried.size; }
+}
+
 let actx = null;
 function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); } }
 /* фоновая музыка */
@@ -1694,10 +1917,26 @@ function computeOffline(){
   const earn = incomePerSec() * OFFLINE.rate * elapsed;
   if(earn >= 1){
     state.money += earn; state.totalEarned += earn;
+    $("offlineBody").textContent = pick(RETURN_LINES);
     $("offlineAmount").textContent = fmt(earn)+" ₽";
     $("offlineOverlay").hidden = false;
   }
 }
+// Эмоциональные реплики Даниэлы при возвращении игрока (выбираются случайно)
+const RETURN_LINES = [
+  "Наконец-то ты вернулся! Без тебя и офис будто опустел, и цифры росли как-то нехотя. Касса принесла:",
+  "Я по тебе скучала, честно. Бизнес без тебя — как кофе без сахара. Хорошо, что ты снова здесь. Вот что мы заработали:",
+  "Ты не представляешь, как я ждала. Без твоей хватки всё держалось на честном слове. С тобой компания снова дышит. За время отсутствия накопилось:",
+  "Слава богу, ты пришёл! Я уж думала, придётся самой разгребать все сделки. С тобой мне куда спокойнее. Пока тебя не было, касса дала:",
+  "Без тебя дни тянулись бесконечно. Теперь, когда ты рядом, я точно знаю — мы свернём горы. А пока — вот наша прибыль:",
+  "Ты вернулся — и у меня сразу настроение поднялось. С таким партнёром бизнес обречён на успех. Накопилось за это время:",
+  "Я скучала по нашим разговорам… и по твоим результатам тоже. Без тебя всё было каким-то серым. Касса между тем принесла:",
+  "Как хорошо, что ты снова тут! Я уже начала разговаривать с отчётами от тоски. С тобой всё иначе. За отсутствие набежало:",
+  "Признаюсь: без тебя бизнес буксовал, а я нервничала. Теперь, когда ты здесь, всё встанет на свои места. Заработано:",
+  "Вернулся! А я как раз думала о тебе. С тобой компания расцветёт, я это чувствую. Пока тебя не было, мы получили:",
+  "Ты даже не знаешь, как мне тебя не хватало — и по работе, и… просто. Идём покорять рынок вместе. А вот и наш доход:",
+  "Наконец! Без тебя я держала оборону одна. Теперь нас двое — и нам всё по плечу. За время твоего отсутствия касса дала:"
+];
 
 /* ---------------------------------------------------------------------------
    13) ИГРОВОЙ ЦИКЛ (rAF + дельта-время)
@@ -1779,7 +2018,8 @@ function bindUI(){
   const vs = $("volSlider");
   vs.value = Math.round(musicVol()*100);
   vs.addEventListener("input", ()=>{ state.volume = vs.value/100; applyMusic(); save(); });
-  $("chatBtn").addEventListener("click", openChat);
+  $("chatBtn").addEventListener("click", talkOrPlay);
+  $("gameClose").addEventListener("click", closeGame);
 }
 window.addEventListener("DOMContentLoaded", async ()=>{
   bindUI();
