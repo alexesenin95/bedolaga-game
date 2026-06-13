@@ -31,7 +31,7 @@
 html,body{margin:0;height:100%;}
 body{
   font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  color:var(--ink);background:linear-gradient(160deg,var(--bg-1),var(--bg-2));
+  color:var(--ink);background:linear-gradient(160deg,#f5efe4,#e9dECB);
   overflow:hidden;user-select:none;-webkit-user-select:none;
 }
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;}
@@ -46,51 +46,65 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 
 /* ---- верхняя панель HUD ---- */
 .topbar{
-  flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);
-  padding:8px 14px;box-shadow:0 4px 0 var(--frame-deep), 0 8px 16px rgba(120,80,20,.18);
+  flex:0 0 auto;display:flex;align-items:center;gap:14px;
+  background:transparent;border:none;padding:0;box-shadow:none;position:relative;
 }
-.coins{
-  display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#fff3cf,#ffe09a);
-  border:2px solid var(--gold-deep);border-radius:999px;padding:5px 14px 5px 8px;
-  box-shadow:inset 0 1px 0 #fff;
-}
-.coin-ic{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe89a,var(--gold) 60%,var(--gold-deep));
-  border:2px solid var(--gold-deep);display:flex;align-items:center;justify-content:center;
-  font-family:"Baloo 2";font-weight:800;color:#8a5a00;font-size:14px;box-shadow:inset 0 1px 0 #fff;}
+/* денежная карточка */
+.coins{display:flex;align-items:center;gap:10px;background:#fff;border:none;border-radius:18px;
+  padding:8px 18px 8px 10px;box-shadow:0 6px 18px rgba(120,90,40,.16);}
+.coin-ic{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe89a,var(--gold) 55%,var(--gold-deep));
+  border:2px solid #fff;display:flex;align-items:center;justify-content:center;
+  font-family:"Baloo 2";font-weight:800;color:#8a5a00;font-size:16px;box-shadow:0 2px 5px rgba(180,130,30,.5);}
 .coin-ic::after{content:"₽";}
-#money{font-family:"Baloo 2";font-weight:800;font-size:22px;color:#8a5a00;line-height:1;}
-#rate{font-size:12px;font-weight:800;color:var(--ink-soft);margin-left:2px;}
-.brand{font-family:"Baloo 2";font-weight:800;font-size:24px;letter-spacing:.04em;
-  background:linear-gradient(180deg,#ffe7a6,var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;
-  -webkit-text-stroke:1.5px var(--frame-deep);margin:0 4px;}
-
-.career{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:230px;}
+#money{font-family:"Baloo 2";font-weight:800;font-size:24px;color:#3c2a18;line-height:1;}
+#rate{font-size:12px;font-weight:800;color:#19a36b;margin-left:2px;}
+/* логотип с короной */
+.brand{position:relative;font-family:"Unbounded","Baloo 2",sans-serif;font-weight:900;font-size:26px;letter-spacing:.06em;margin:0 6px;
+  background:linear-gradient(180deg,#ffe07a,#d98f1c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  filter:drop-shadow(0 2px 3px rgba(150,90,10,.35));}
+.brand::before{content:"♛";position:absolute;left:50%;top:-15px;transform:translateX(-50%);
+  -webkit-text-fill-color:#e2a01a;color:#e2a01a;font-size:15px;filter:none;}
+/* карточка карьеры с аватаром начальницы */
+.career{margin-left:auto;display:flex;flex-direction:row;align-items:center;gap:11px;background:#fff;border:none;border-radius:18px;
+  padding:7px 16px 7px 8px;box-shadow:0 6px 18px rgba(120,90,40,.16);min-width:300px;}
+.career-av{width:44px;height:44px;flex:0 0 auto;border-radius:50%;overflow:hidden;
+  background:radial-gradient(circle at 50% 30%,#fff6e6,#f3ddc0);border:2px solid #ffd27a;box-shadow:0 2px 6px rgba(150,100,30,.25);}
+.career-av img{width:100%;height:100%;object-fit:cover;object-position:50% 14%;}
+.career-info{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px;}
 .rank-row{display:flex;align-items:center;gap:8px;}
-#rankTitle{font-family:"Baloo 2";font-weight:700;font-size:15px;}
+#rankTitle{font-family:"Baloo 2";font-weight:800;font-size:15px;color:#3c2a18;white-space:nowrap;}
 .mult{font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
-  background:linear-gradient(180deg,var(--plum),var(--plum-deep));border-radius:999px;padding:2px 10px;
-  box-shadow:0 2px 0 var(--plum-deep);}
-.trust-wrap{display:flex;align-items:center;gap:8px;width:230px;}
-.trust-label{font-size:10px;font-weight:800;color:var(--plum-deep);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
-.bar-track{flex:1;height:14px;background:#f0e2c4;border:2px solid var(--frame);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 3px rgba(120,80,20,.18);}
+  background:linear-gradient(180deg,#b06bd6,#8e3fb4);border-radius:999px;padding:2px 11px;
+  box-shadow:0 2px 6px rgba(120,40,160,.4);}
+.trust-wrap{display:flex;align-items:center;gap:8px;}
+.trust-label{font-size:10px;font-weight:800;color:#9a6fb0;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+.bar-track{flex:1;height:13px;background:#ece1cb;border:none;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(120,80,20,.22);}
 .bar-fill{height:100%;width:0%;border-radius:999px;transition:width .25s ease;}
-.trust-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
-.icon-btn{width:42px;height:42px;border-radius:13px;border:2px solid var(--frame-deep);
-  background:linear-gradient(180deg,#fff7e6 0%,#ffe6b3 55%,#f6d28a 100%);
-  font-size:20px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 0 var(--frame-deep),0 6px 10px rgba(120,80,20,.25),inset 0 2px 0 rgba(255,255,255,.85),inset 0 -3px 5px rgba(180,130,50,.3);}
-.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--frame-deep),inset 0 2px 0 rgba(255,255,255,.7);}
-.audio-ctrl{display:flex;align-items:center;gap:8px;}
-.vol-slider{width:78px;accent-color:var(--gold-deep);cursor:pointer;height:6px;}
-@media (max-width:820px){.vol-slider{width:54px;}}
+.trust-fill{background:linear-gradient(180deg,#c07be0,#9a3fc0);}
+.icon-btn{width:46px;height:46px;border-radius:15px;border:none;background:#fff;
+  font-size:20px;display:flex;align-items:center;justify-content:center;color:#7a5a2a;
+  box-shadow:0 6px 16px rgba(120,90,40,.16);}
+.icon-btn:active{transform:translateY(2px);box-shadow:0 3px 8px rgba(120,90,40,.16);}
+.audio-ctrl{display:flex;align-items:center;gap:10px;position:relative;}
+/* выпадающее меню (громкость и пр.) */
+.menu-panel{position:absolute;top:54px;right:0;z-index:70;background:#fff;border-radius:16px;
+  padding:14px 16px;box-shadow:0 12px 30px rgba(80,50,10,.28);min-width:210px;display:flex;flex-direction:column;gap:10px;}
+.menu-panel[hidden]{display:none;}
+.mp-row{display:flex;align-items:center;gap:10px;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#5a4527;}
+.vol-slider{flex:1;accent-color:#8e3fb4;cursor:pointer;height:6px;}
+@media (max-width:820px){
+  .topbar{flex-wrap:wrap;gap:8px;}
+  .brand{order:-1;font-size:22px;}
+  .career{min-width:0;flex:1 1 200px;}
+  #money{font-size:20px;}
+}
 
 /* ---- основная зона: сцена (слева) + панель команды (справа) ---- */
 .main{flex:1 1 auto;display:flex;gap:10px;min-height:0;}
 .stage-col{flex:1.7 1 0;display:flex;flex-direction:column;gap:10px;min-width:0;}
-.side-col{flex:0 0 330px;display:flex;flex-direction:column;
-  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);
-  box-shadow:0 4px 0 var(--frame-deep), 0 8px 16px rgba(120,80,20,.18);overflow:hidden;}
+.side-col{flex:0 0 340px;display:flex;flex-direction:column;
+  background:rgba(255,255,255,.55);border:none;border-radius:22px;
+  box-shadow:0 8px 22px rgba(120,90,40,.14);overflow:hidden;}
 
 /* ===================== СЦЕНА ===================== */
 .scene{
@@ -139,21 +153,21 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 /* стол + компьютер = КНОПКА КЛИКА (ЗАГЛУШКА ASSETS.desk) */
 .desk{align-self:flex-end;margin-bottom:14px;}
 .click-btn{
-  position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
-  background:linear-gradient(180deg,#fff6e3,#ffe2ad);border:3px solid var(--frame-deep);
-  border-radius:20px;padding:14px 26px 12px;
-  box-shadow:0 6px 0 var(--frame-deep), 0 10px 18px rgba(120,80,20,.25), inset 0 2px 0 #fff;
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:linear-gradient(180deg,#4a3120,#281607);border:3px solid #e6b34a;
+  border-radius:22px;padding:16px 30px 14px;
+  box-shadow:0 9px 22px rgba(35,18,4,.5), inset 0 2px 0 rgba(255,220,150,.25), inset 0 0 0 2px rgba(255,200,120,.14);
   transition:transform .06s ease, box-shadow .06s ease;
 }
 .click-btn::before{content:"нажимай!";position:absolute;top:-26px;left:50%;transform:translateX(-50%);
-  font-family:"Baloo 2";font-weight:800;font-size:11px;color:var(--green-deep);
-  background:#fff;border:2px solid var(--green-deep);border-radius:999px;padding:2px 10px;
-  box-shadow:0 2px 0 var(--green-deep);animation:nudge 1.4s ease-in-out infinite;white-space:nowrap;}
-.click-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--frame-deep), 0 5px 10px rgba(120,80,20,.25), inset 0 2px 0 #fff;}
-.monitor{font-size:46px;line-height:1;}
+  font-family:"Baloo 2";font-weight:800;font-size:11px;color:#fff;
+  background:linear-gradient(180deg,#9cd84f,#5c9e27);border:none;border-radius:999px;padding:3px 12px;
+  box-shadow:0 3px 9px rgba(60,110,20,.5);animation:nudge 1.4s ease-in-out infinite;white-space:nowrap;}
+.click-btn:active{transform:translateY(4px);box-shadow:0 4px 10px rgba(35,18,4,.45), inset 0 2px 0 rgba(255,220,150,.25);}
+.monitor{font-size:46px;line-height:1;filter:drop-shadow(0 2px 5px rgba(0,0,0,.45));}
 .monitor img{width:64px;height:64px;object-fit:contain;}
-.click-text{font-family:"Baloo 2";font-weight:800;font-size:15px;color:#7a5410;}
-.click-sub{font-family:"Baloo 2";font-weight:800;font-size:13px;color:var(--green-deep);}
+.click-text{font-family:"Unbounded","Baloo 2";font-weight:800;font-size:15px;letter-spacing:.05em;color:#ffd98a;text-transform:uppercase;}
+.click-sub{font-family:"Baloo 2";font-weight:800;font-size:14px;color:#9cf07a;}
 
 /* «+N» и монетки при клике */
 .fx-layer{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden;}
@@ -162,35 +176,44 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .coinfx{position:absolute;font-size:18px;animation:coinFly .7s ease-out forwards;}
 
 /* бар «до задания» */
-.stage-bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;
-  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);padding:8px 14px;
-  box-shadow:0 4px 0 var(--frame-deep), 0 6px 12px rgba(120,80,20,.16);}
-.stage-bar .lbl{font-size:11px;font-weight:800;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
-.stage-fill{background:linear-gradient(180deg,#ffd86b,var(--gold-deep));}
+.stage-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  background:rgba(28,18,10,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:9px 16px;box-shadow:0 6px 16px rgba(0,0,0,.25);}
+.stage-bar .lbl{font-size:11px;font-weight:800;color:#ffe2a6;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.stage-bar .bar-track{background:rgba(255,255,255,.18);box-shadow:inset 0 1px 3px rgba(0,0,0,.3);}
+#stagePct{font-family:"Baloo 2";font-weight:800;font-size:12px;color:#fff;white-space:nowrap;min-width:34px;text-align:right;}
+.stage-fill{background:linear-gradient(180deg,#ffe07a,#e0960c);}
 
 /* ===================== ПАНЕЛЬ КОМАНДЫ ===================== */
-.panel-head{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:15px;color:#fff;
-  background:linear-gradient(180deg,var(--frame),var(--frame-deep));padding:10px 14px;
-  display:flex;align-items:center;gap:8px;}
-.panel-head::before{content:"👥";}
-.gen-list{flex:1 1 auto;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch;}
-.gen{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fffaf0,#fff1d6);
-  border:2px solid var(--frame);border-radius:var(--r-sm);padding:9px 10px;
-  box-shadow:0 3px 0 rgba(199,154,78,.5);}
-.gen-icon{width:46px;height:46px;flex:0 0 auto;border-radius:12px;background:radial-gradient(circle at 35% 30%,#fff,#ffe6b3);
-  border:2px solid var(--frame-deep);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:inset 0 1px 0 #fff;}
+.panel-head{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:14px;color:#7a5a2a;
+  background:transparent;padding:14px 18px 8px;display:flex;align-items:center;gap:9px;
+  text-transform:uppercase;letter-spacing:.04em;}
+.panel-head::before{content:"👥";font-size:18px;}
+.gen-list{flex:1 1 auto;overflow-y:auto;padding:4px 12px 12px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+.gen{display:flex;align-items:center;gap:12px;background:#fff;border:none;border-radius:18px;padding:11px 12px;
+  box-shadow:0 5px 14px rgba(120,90,40,.12);}
+.gen-icon{width:48px;height:48px;flex:0 0 auto;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.04);}
+.gen:nth-child(1) .gen-icon{background:#fdefcf;}
+.gen:nth-child(2) .gen-icon{background:#fde7c4;}
+.gen:nth-child(3) .gen-icon{background:#efe3fb;}
+.gen:nth-child(4) .gen-icon{background:#fbe0ef;}
+.gen:nth-child(5) .gen-icon{background:#e2ecf7;}
+.gen:nth-child(6) .gen-icon{background:#e0f0fb;}
 .gen-info{flex:1 1 auto;min-width:0;}
-.gen-name{font-family:"Baloo 2";font-weight:700;font-size:14px;line-height:1.1;}
-.gen-sub{font-size:11px;font-weight:700;color:var(--ink-soft);}
-.buy-btn{flex:0 0 auto;min-width:74px;text-align:center;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
-  background:linear-gradient(180deg,#b6ec6e 0%,#86cb3c 50%,#5c9e27 100%);border-radius:13px;padding:9px 10px;
-  text-shadow:0 1px 0 rgba(0,0,0,.22);
-  box-shadow:0 4px 0 #4b8420,0 6px 9px rgba(60,110,20,.3),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 5px rgba(60,110,20,.4);}
-.buy-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #4b8420,inset 0 2px 0 rgba(255,255,255,.45);}
+.gen-name{font-family:"Baloo 2";font-weight:800;font-size:14px;line-height:1.15;color:#3c2a18;}
+.gen-sub{font-size:12px;font-weight:800;color:#19a36b;}
+.buy-btn{flex:0 0 auto;display:flex;align-items:center;gap:8px;min-width:98px;justify-content:center;
+  font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
+  background:linear-gradient(180deg,#a6e85f 0%,#7cc23a 50%,#5c9e27 100%);border-radius:14px;padding:9px 12px;
+  text-shadow:0 1px 0 rgba(0,0,0,.18);box-shadow:0 4px 10px rgba(70,130,30,.35),inset 0 2px 0 rgba(255,255,255,.45);}
+.buy-btn:active{transform:translateY(2px);box-shadow:0 2px 6px rgba(70,130,30,.35),inset 0 2px 0 rgba(255,255,255,.4);}
+.buy-btn .b-main{display:flex;flex-direction:column;line-height:1.05;}
 .buy-btn .price{display:block;font-size:13px;}
-.buy-btn .lvl{display:block;font-size:9px;opacity:.85;font-weight:700;}
-.gen.locked .buy-btn{background:linear-gradient(180deg,#cfc4ad,#a99c80);box-shadow:0 4px 0 #8a7d62;}
-.gen.locked{opacity:.85;}
+.buy-btn .lvl{display:block;font-size:9px;opacity:.9;font-weight:700;}
+.buy-btn .chev{font-size:16px;opacity:.85;}
+.gen.locked .buy-btn{background:linear-gradient(180deg,#d3cab6,#a99c80);box-shadow:0 4px 10px rgba(140,120,80,.3);}
+.gen.locked{opacity:.92;}
 
 /* ===================== МОДАЛКИ ===================== */
 .overlay{position:absolute;inset:0;background:rgba(60,40,12,.5);backdrop-filter:blur(2px);
@@ -372,13 +395,17 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 
 /* БОЛТАЛКА: панель близости + окно диалога */
 .chat-bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;
-  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);padding:8px 12px;
-  box-shadow:0 4px 0 var(--frame-deep),0 6px 12px rgba(120,80,20,.16);}
+  background:rgba(28,18,10,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px 12px;box-shadow:0 6px 16px rgba(0,0,0,.25);}
 .chat-meta{display:flex;align-items:center;gap:7px;white-space:nowrap;}
 .chat-ic{font-size:16px;}
-.chat-title{font-family:"Baloo 2";font-weight:800;font-size:13px;color:var(--plum-deep);}
-.chat-lvl{font-size:11px;font-weight:800;color:var(--ink-soft);}
-.bar-track.mini{height:11px;max-width:170px;}
+.chat-title{font-family:"Baloo 2";font-weight:800;font-size:13px;color:#ffc6e3;}
+.chat-lvl{font-size:11px;font-weight:800;color:#f0d8e6;}
+.bar-track.mini{height:11px;max-width:150px;background:rgba(255,255,255,.18);}
+.boost-btn{background:linear-gradient(180deg,#3a2418,#241307);color:#ffd98a;border:2px solid #e6b34a;
+  box-shadow:0 4px 10px rgba(30,15,4,.45),inset 0 1px 0 rgba(255,210,140,.25);text-shadow:none;}
+.boost-btn:active{transform:translateY(2px);box-shadow:0 2px 6px rgba(30,15,4,.45);}
+.boost-btn:disabled{filter:none;opacity:1;box-shadow:0 4px 10px rgba(30,15,4,.45);}
 .chat-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
 .chat-btn{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
   background:linear-gradient(180deg,#f79ac8 0%,#e2659e 50%,#b23c76 100%);border-radius:14px;padding:10px 18px;
@@ -403,17 +430,25 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
   <div class="topbar">
     <div class="coins"><span class="coin-ic"></span><span id="money">0</span><span id="rate">+0/с</span></div>
-    <div class="brand head-font">БЕДОЛАГА</div>
+    <div class="brand">БЕДОЛАГА</div>
     <div class="career">
-      <div class="rank-row"><span id="rankTitle">Стажёр</span><span id="rankMult" class="mult">×1</span></div>
-      <div class="trust-wrap">
-        <span class="trust-label" id="trustLabel">Доверие</span>
-        <div class="bar-track"><div id="trustFill" class="bar-fill trust-fill"></div></div>
+      <div class="career-av" id="careerAv"><img src="assets/boss_neutral_face.webp" alt=""></div>
+      <div class="career-info">
+        <div class="rank-row"><span id="rankTitle">Стажёр</span><span id="rankMult" class="mult">×1</span></div>
+        <div class="trust-wrap">
+          <span class="trust-label" id="trustLabel">Доверие</span>
+          <div class="bar-track"><div id="trustFill" class="bar-fill trust-fill"></div></div>
+        </div>
       </div>
     </div>
     <div class="audio-ctrl">
-      <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
       <button id="muteBtn" class="icon-btn" aria-label="Звук вкл/выкл">🔊</button>
+      <button id="menuBtn" class="icon-btn" aria-label="Меню">☰</button>
+      <div id="menuPanel" class="menu-panel" hidden>
+        <div class="mp-row">🔊 Громкость
+          <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -509,6 +544,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div class="stage-bar">
         <span class="lbl">До задания начальницы</span>
         <div class="bar-track"><div id="stageFill" class="bar-fill stage-fill"></div></div>
+        <span id="stagePct">0%</span>
       </div>
 
       <div class="chat-bar">
@@ -516,6 +552,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
         <div class="bar-track mini"><div id="chatFill" class="bar-fill chat-fill"></div></div>
         <button id="chatBtn" class="chat-btn">💬 Поговорить</button>
         <button id="giftBtn" class="chat-btn gift-btn">🎁 Подарок</button>
+        <button id="boostBtn" class="chat-btn boost-btn">👑 ПРЕМИУМ ×2</button>
       </div>
     </div>
 
@@ -901,7 +938,7 @@ function defaultState(){
     stage:0, trust:0,
     lifelines:{ report:1, colleagues:1, mentor:1 },
     barProgress:0, muted:false, volume:0.5, partner:false, lastQuestion:-1,
-    chatLevel:1, chatProgress:0,
+    chatLevel:1, chatProgress:0, boostUntil:0,
     lastSave:Date.now(),
   };
 }
@@ -973,6 +1010,7 @@ function fmt(n){
   return (x>=100 ? x.toFixed(0) : x.toFixed(2).replace(/\.?0+$/,"")) + SUFFIX[i];
 }
 function multLabel(m){ return "×" + (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)); }
+function fmtTime(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
 const _last={};
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function pickNoRepeat(arr,key){ if(arr.length<2) return arr[0]; let v; do{ v=pick(arr); }while(v===_last[key]); _last[key]=v; return v; }
@@ -1313,9 +1351,10 @@ const sfx = {
 --------------------------------------------------------------------------- */
 function mult(){ return STAGES[state.stage].mult; }
 function affectionMult(){ return 1 + ((state.chatLevel||1)-1)*0.08; } // близость с Даниэлой даёт +8% дохода за уровень
+function boostMult(){ return (Date.now() < (state.boostUntil||0)) ? 2 : 1; } // премиум ×2 (по таймеру)
 function baseProduction(){ let s=0; for(let i=0;i<GENERATORS.length;i++) s += GENERATORS[i].income * (state.gens[i]||0); return s; }
-function incomePerSec(){ return baseProduction() * mult() * affectionMult(); }
-function clickValue(){ return Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) * mult() * affectionMult(); }
+function incomePerSec(){ return baseProduction() * mult() * affectionMult() * boostMult(); }
+function clickValue(){ return Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) * mult() * affectionMult() * boostMult(); }
 function genCost(i){ return Math.floor(GENERATORS[i].baseCost * Math.pow(GENERATORS[i].growth, state.gens[i]||0)); }
 function stageThreshold(){ return Math.max(60, incomePerSec() * 50); } // ~50с в простое (в 2 раза медленнее)
 
@@ -1515,7 +1554,7 @@ function buildGenList(){
       `<div class="gen-icon">${g.icon}</div>`+
       `<div class="gen-info"><div class="gen-name">${g.name}</div>`+
       `<div class="gen-sub">+${fmt(g.income)}/с</div></div>`+
-      `<button class="buy-btn"><span class="price">${fmt(genCost(i))} ₽</span><span class="lvl">ур. ${state.gens[i]||0}</span></button>`;
+      `<button class="buy-btn"><span class="b-main"><span class="price">${fmt(genCost(i))} ₽</span><span class="lvl">УР. ${state.gens[i]||0}</span></span><span class="chev">›</span></button>`;
     row.querySelector(".buy-btn").addEventListener("click", ()=>buyGen(i));
     list.appendChild(row);
     genRefs.push({ row, btn:row.querySelector(".buy-btn"), price:row.querySelector(".price"), lvl:row.querySelector(".lvl") });
@@ -1527,7 +1566,7 @@ function updateGenAfford(){
     const r=genRefs[i]; if(!r) return;
     const cost=genCost(i); const can = state.money >= cost;
     r.btn.disabled = !can; r.row.classList.toggle("locked", !can);
-    r.price.textContent = fmt(cost)+" ₽"; r.lvl.textContent = "ур. "+(state.gens[i]||0);
+    r.price.textContent = fmt(cost)+" ₽"; r.lvl.textContent = "УР. "+(state.gens[i]||0);
   });
 }
 function renderHud(){
@@ -1540,6 +1579,11 @@ function renderHud(){
   $("trustFill").style.width = Math.min(100, (state.trust/stage.need)*100)+"%";
   $("trustLabel").textContent = state.partner ? "Доверие · максимум ★" : ("Доверие · ещё "+Math.max(0, stage.need - state.trust));
   $("stageFill").style.width = Math.min(100, (state.barProgress/stageThreshold())*100)+"%";
+  $("stagePct").textContent = Math.min(100, Math.round((state.barProgress/stageThreshold())*100))+"%";
+  const bLeft = (state.boostUntil||0) - Date.now();
+  const bn = $("boostBtn");
+  if(bLeft > 0){ bn.disabled = true; bn.textContent = "×2  "+fmtTime(bLeft); }
+  else { bn.disabled = chatOpen || quizOpen; bn.textContent = "👑 ПРЕМИУМ ×2"; }
   const bonus = Math.round((affectionMult()-1)*100);
   $("chatLvl").textContent = "ур. "+(state.chatLevel||1)+"/10" + (bonus>0 ? " · +"+bonus+"% ₽" : "");
   $("chatTitle").textContent = CHAT_TITLES[(state.chatLevel||1)-1];
@@ -1702,6 +1746,16 @@ function bindUI(){
   $("finaleClose").addEventListener("click", ()=>{ $("finaleOverlay").hidden=true; });
   $("dateClose").addEventListener("click", ()=>{ $("dateOverlay").hidden=true; });
   $("giftBtn").addEventListener("click", giveGift);
+  $("boostBtn").addEventListener("click", ()=>{
+    if(Date.now() < (state.boostUntil||0)) return;          // уже активен
+    state.boostUntil = Date.now() + 15*60000;               // ×2 на 15 минут
+    sfx.promote(); flourish("Бонус ×2!\nна 15 минут"); confetti(30); save(); renderHud();
+  });
+  $("menuBtn").addEventListener("click", (e)=>{ e.stopPropagation(); $("menuPanel").hidden = !$("menuPanel").hidden; });
+  document.addEventListener("click", (e)=>{
+    const p=$("menuPanel");
+    if(p && !p.hidden && !$("menuBtn").contains(e.target) && !p.contains(e.target)) p.hidden=true;
+  });
   // Заставка: фоновое видео поверх картинки-фолбэка office_menu.jpg
   $("menuScreen").style.backgroundImage = 'url("'+MENU_IMG+'")';
   const menuVid = $("menuVideo");
