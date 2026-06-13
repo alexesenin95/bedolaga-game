@@ -1,2 +1,8 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Бинарные ассеты — не трогать переводы строк
+*.mp4 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
