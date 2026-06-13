@@ -529,17 +529,22 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
      ФОН-ОФИС:   office_1.png ... office_5.png            (фон сцены, cover)
      СТОЛ/ПК:    desk_1.png   ... desk_5.png              (объект-кнопка)
      ГЕРОЙ:      hero_1.png   ... hero_5.png              (полный рост, опора снизу)
-     НАЧАЛЬНИЦА: boss_1_neutral.png / boss_1_approve.png /
-                 boss_1_sympathy.png / boss_1_stern.png / boss_1_joy.png
-                 (и так для образов этапов 1..5; полный рост, опора снизу)
+     НАЧАЛЬНИЦА: boss_neutral.webp / boss_approve.webp / boss_sympathy.webp /
+                 boss_stern.webp / boss_joy.webp  (1024×1536, прозрачный фон,
+                 полный рост, опора снизу). Доп. позы про запас: boss_surprised,
+                 boss_sad, boss_calm, boss_serious, boss_shrug.
+                 (для этапов 2..5 позже подставятся отдельные наборы)
 --------------------------------------------------------------------------- */
 const BOSS_POSES = {
-  neutral:"assets/boss_1_neutral.png",
-  approve:"assets/boss_1_approve.png",
-  sympathy:"assets/boss_1_sympathy.png",
-  stern:"assets/boss_1_stern.png",
-  joy:"assets/boss_1_joy.png"
+  neutral:"assets/boss_neutral.webp",   // приветливый жест, тёплая улыбка
+  approve:"assets/boss_approve.webp",   // большой палец вверх
+  sympathy:"assets/boss_sympathy.webp", // смеётся, ладонь у рта (кокетливо)
+  stern:"assets/boss_stern.webp",       // злится, указывает пальцем
+  joy:"assets/boss_joy.webp"            // руки вверх, хохочет
 };
+// Доп. позы (1024×1536, прозрачный фон) — задел под расширение эмоций:
+// boss_surprised (удивление), boss_sad (расстроена), boss_calm (медитация),
+// boss_serious (руки скрещены), boss_shrug (недоумение).
 const MENU_IMG = "assets/office_menu.jpg";
 const MENU_VIDEO = "assets/intro.mp4";
 const ASSETS = {
