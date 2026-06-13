@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>БЕДОЛАГА</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   БЕДОЛАГА — горизонтальная версия (десктоп), стиль Playrix
+   Тёплая глянцевая казуальная тема: крем + золото + сочный зелёный.
+   Реплики начальницы — комикс-облачка. Персонажи — слоты под PNG.
+   ============================================================ */
+:root{
+  --bg-1:#FFE6B8; --bg-2:#F6C778;          /* тёплый фон-небо */
+  --panel:#FFF7E6; --panel-2:#FFEFCE;      /* кремовые панели */
+  --frame:#E7C886; --frame-deep:#C79A4E;   /* золотая рамка */
+  --ink:#5A4527;                            /* тёплый тёмный текст */
+  --ink-soft:#9A805A;                       /* вторичный текст */
+  --gold:#FFC02E; --gold-deep:#E2960C;      /* монеты/премиум */
+  --green:#86CB3C; --green-deep:#5C9E27;    /* кнопки купить/ок */
+  --blue:#54C0E8;                           /* акцент */
+  --plum:#E2659E; --plum-deep:#B23C76;      /* акцент начальницы */
+  --line:#1F1830;                           /* комикс-обводка */
+  --ok:#4CAF50; --bad:#E5564B;
+  --r:18px; --r-sm:13px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;}
+body{
+  font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color:var(--ink);background:linear-gradient(160deg,var(--bg-1),var(--bg-2));
+  overflow:hidden;user-select:none;-webkit-user-select:none;
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px;}
+.head-font{font-family:"Baloo 2",cursive;}
+
+/* ===================== РАСКЛАДКА (ландшафт) ===================== */
+#app{
+  width:100vw;height:100dvh;height:100vh;max-width:1320px;margin:0 auto;
+  display:flex;flex-direction:column;padding:10px;gap:10px;position:relative;
+}
+
+/* ---- верхняя панель HUD ---- */
+.topbar{
+  flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);
+  padding:8px 14px;box-shadow:0 4px 0 var(--frame-deep), 0 8px 16px rgba(120,80,20,.18);
+}
+.coins{
+  display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#fff3cf,#ffe09a);
+  border:2px solid var(--gold-deep);border-radius:999px;padding:5px 14px 5px 8px;
+  box-shadow:inset 0 1px 0 #fff;
+}
+.coin-ic{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe89a,var(--gold) 60%,var(--gold-deep));
+  border:2px solid var(--gold-deep);display:flex;align-items:center;justify-content:center;
+  font-family:"Baloo 2";font-weight:800;color:#8a5a00;font-size:14px;box-shadow:inset 0 1px 0 #fff;}
+.coin-ic::after{content:"₽";}
+#money{font-family:"Baloo 2";font-weight:800;font-size:22px;color:#8a5a00;line-height:1;}
+#rate{font-size:12px;font-weight:800;color:var(--ink-soft);margin-left:2px;}
+.brand{font-family:"Baloo 2";font-weight:800;font-size:24px;letter-spacing:.04em;
+  background:linear-gradient(180deg,#ffe7a6,var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-stroke:1.5px var(--frame-deep);margin:0 4px;}
+
+.career{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:230px;}
+.rank-row{display:flex;align-items:center;gap:8px;}
+#rankTitle{font-family:"Baloo 2";font-weight:700;font-size:15px;}
+.mult{font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
+  background:linear-gradient(180deg,var(--plum),var(--plum-deep));border-radius:999px;padding:2px 10px;
+  box-shadow:0 2px 0 var(--plum-deep);}
+.trust-wrap{display:flex;align-items:center;gap:8px;width:230px;}
+.trust-label{font-size:10px;font-weight:800;color:var(--plum-deep);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.bar-track{flex:1;height:14px;background:#f0e2c4;border:2px solid var(--frame);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 3px rgba(120,80,20,.18);}
+.bar-fill{height:100%;width:0%;border-radius:999px;transition:width .25s ease;}
+.trust-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--panel-2);border:2px solid var(--frame);
+  font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 var(--frame-deep);}
+.icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--frame-deep);}
+
+/* ---- основная зона: сцена (слева) + панель команды (справа) ---- */
+.main{flex:1 1 auto;display:flex;gap:10px;min-height:0;}
+.stage-col{flex:1.7 1 0;display:flex;flex-direction:column;gap:10px;min-width:0;}
+.side-col{flex:0 0 330px;display:flex;flex-direction:column;
+  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);
+  box-shadow:0 4px 0 var(--frame-deep), 0 8px 16px rgba(120,80,20,.18);overflow:hidden;}
+
+/* ===================== СЦЕНА ===================== */
+.scene{
+  flex:1 1 auto;position:relative;border:3px solid var(--frame);border-radius:var(--r);
+  overflow:hidden;min-height:300px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:8px;
+  padding:0 26px 0;box-shadow:0 4px 0 var(--frame-deep), 0 8px 18px rgba(120,80,20,.2);
+}
+/* фон-офис по этапам (ЗАГЛУШКА: стена+пол; заменяется PNG из ASSETS.office) */
+#app.stage-0 .scene{--wall:#dccfb0;--floor:#b29a72;}
+#app.stage-1 .scene{--wall:#e6d6ae;--floor:#bba572;}
+#app.stage-2 .scene{--wall:#cfe1e6;--floor:#9fc0c9;}
+#app.stage-3 .scene{--wall:#f2e6bd;--floor:#cdb277;}
+#app.stage-4 .scene{--wall:#f0d8c6;--floor:#caa088;}
+.scene{background-image:linear-gradient(to bottom,var(--wall) 0%,var(--wall) 60%,var(--floor) 60%,var(--floor) 100%);}
+.scene-tag{position:absolute;top:8px;left:12px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(90,69,39,.4);}
+
+/* персонажи (СЛОТЫ под PNG: object-fit contain, опора на «пол») */
+.char{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2;padding-bottom:18px;}
+.figure{
+  width:150px;height:210px;display:flex;align-items:flex-end;justify-content:center;font-size:96px;
+  filter:drop-shadow(0 10px 10px rgba(0,0,0,.22));
+  animation:bob 3.4s ease-in-out infinite;
+}
+.figure img{max-width:100%;max-height:100%;object-fit:contain;object-position:bottom;}
+.char.hero .figure{animation-delay:.6s;}
+.nameplate{font-family:"Baloo 2";font-weight:800;font-size:12px;color:#fff;padding:3px 12px;border-radius:999px;
+  box-shadow:0 2px 0 rgba(0,0,0,.18);white-space:nowrap;}
+.char.boss .nameplate{background:linear-gradient(180deg,var(--plum),var(--plum-deep));}
+.char.hero .nameplate{background:linear-gradient(180deg,#7fb0e0,#3f78b8);}
+.slot-hint{font-size:9px;font-weight:800;color:rgba(90,69,39,.45);text-transform:uppercase;letter-spacing:.06em;}
+
+/* комикс-облачко реплики начальницы */
+.comic-bubble{
+  position:absolute;left:3%;top:6%;max-width:48%;z-index:6;
+  background:#fff;color:#2a2030;border:3px solid var(--line);border-radius:22px;
+  padding:12px 16px;font-weight:800;font-size:15px;line-height:1.3;
+  box-shadow:5px 6px 0 rgba(31,24,48,.22);animation:popIn .22s ease;
+}
+.comic-bubble[hidden]{display:none;}
+.cb-name{display:block;font-family:"Baloo 2";font-size:11px;letter-spacing:.06em;color:var(--plum-deep);margin-bottom:3px;text-transform:uppercase;}
+.cb-tail{position:absolute;left:34px;bottom:-15px;width:26px;height:26px;background:#fff;
+  border-right:3px solid var(--line);border-bottom:3px solid var(--line);transform:rotate(45deg);}
+.cb-tail.left{left:30px;}
+
+/* стол + компьютер = КНОПКА КЛИКА (ЗАГЛУШКА ASSETS.desk) */
+.desk{align-self:flex-end;margin-bottom:14px;}
+.click-btn{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:linear-gradient(180deg,#fff6e3,#ffe2ad);border:3px solid var(--frame-deep);
+  border-radius:20px;padding:14px 26px 12px;
+  box-shadow:0 6px 0 var(--frame-deep), 0 10px 18px rgba(120,80,20,.25), inset 0 2px 0 #fff;
+  transition:transform .06s ease, box-shadow .06s ease;
+}
+.click-btn::before{content:"нажимай!";position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+  font-family:"Baloo 2";font-weight:800;font-size:11px;color:var(--green-deep);
+  background:#fff;border:2px solid var(--green-deep);border-radius:999px;padding:2px 10px;
+  box-shadow:0 2px 0 var(--green-deep);animation:nudge 1.4s ease-in-out infinite;white-space:nowrap;}
+.click-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--frame-deep), 0 5px 10px rgba(120,80,20,.25), inset 0 2px 0 #fff;}
+.monitor{font-size:46px;line-height:1;}
+.monitor img{width:64px;height:64px;object-fit:contain;}
+.click-text{font-family:"Baloo 2";font-weight:800;font-size:15px;color:#7a5410;}
+.click-sub{font-family:"Baloo 2";font-weight:800;font-size:13px;color:var(--green-deep);}
+
+/* «+N» и монетки при клике */
+.fx-layer{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden;}
+.floater{position:absolute;font-family:"Baloo 2";font-weight:800;color:var(--gold-deep);font-size:20px;
+  text-shadow:0 2px 0 #fff;animation:floatUp .85s ease-out forwards;}
+.coinfx{position:absolute;font-size:18px;animation:coinFly .7s ease-out forwards;}
+
+/* бар «до задания» */
+.stage-bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);padding:8px 14px;
+  box-shadow:0 4px 0 var(--frame-deep), 0 6px 12px rgba(120,80,20,.16);}
+.stage-bar .lbl{font-size:11px;font-weight:800;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.stage-fill{background:linear-gradient(180deg,#ffd86b,var(--gold-deep));}
+
+/* ===================== ПАНЕЛЬ КОМАНДЫ ===================== */
+.panel-head{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:15px;color:#fff;
+  background:linear-gradient(180deg,var(--frame),var(--frame-deep));padding:10px 14px;
+  display:flex;align-items:center;gap:8px;}
+.panel-head::before{content:"👥";}
+.gen-list{flex:1 1 auto;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch;}
+.gen{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fffaf0,#fff1d6);
+  border:2px solid var(--frame);border-radius:var(--r-sm);padding:9px 10px;
+  box-shadow:0 3px 0 rgba(199,154,78,.5);}
+.gen-icon{width:46px;height:46px;flex:0 0 auto;border-radius:12px;background:radial-gradient(circle at 35% 30%,#fff,#ffe6b3);
+  border:2px solid var(--frame-deep);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:inset 0 1px 0 #fff;}
+.gen-info{flex:1 1 auto;min-width:0;}
+.gen-name{font-family:"Baloo 2";font-weight:700;font-size:14px;line-height:1.1;}
+.gen-sub{font-size:11px;font-weight:700;color:var(--ink-soft);}
+.buy-btn{flex:0 0 auto;min-width:74px;text-align:center;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
+  background:linear-gradient(180deg,#9cd84f,var(--green-deep));border-radius:12px;padding:9px 8px;
+  text-shadow:0 1px 0 rgba(0,0,0,.18);box-shadow:0 4px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
+.buy-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
+.buy-btn .price{display:block;font-size:13px;}
+.buy-btn .lvl{display:block;font-size:9px;opacity:.85;font-weight:700;}
+.gen.locked .buy-btn{background:linear-gradient(180deg,#cfc4ad,#a99c80);box-shadow:0 4px 0 #8a7d62;}
+.gen.locked{opacity:.85;}
+
+/* ===================== МОДАЛКИ ===================== */
+.overlay{position:absolute;inset:0;background:rgba(60,40,12,.5);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;padding:18px;z-index:30;animation:fade .2s ease;}
+.overlay[hidden]{display:none;}
+.card{width:100%;max-width:540px;background:var(--panel);border:4px solid var(--frame);border-radius:22px;
+  padding:18px 18px 20px;box-shadow:0 8px 0 var(--frame-deep), 0 18px 40px rgba(80,50,10,.4);animation:popIn .25s ease;}
+
+/* квиз */
+.quiz-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+.boss-medallion{flex:0 0 auto;width:78px;height:78px;border-radius:50%;overflow:hidden;
+  background:radial-gradient(circle at 40% 35%,#fff,#f4d6e6);border:3px solid var(--plum);
+  display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 4px 0 var(--plum-deep);}
+.boss-medallion img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.quiz-bubble{position:relative;left:auto;top:auto;max-width:none;flex:1 1 auto;margin-top:4px;}
+.quiz-bubble .cb-tail{left:-15px;bottom:18px;border-right:0;border-bottom:0;border-left:3px solid var(--line);border-top:3px solid var(--line);}
+.question{font-family:"Baloo 2";font-weight:700;font-size:18px;line-height:1.3;margin-bottom:14px;}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:520px){.answers{grid-template-columns:1fr;}}
+.answer{display:flex;align-items:center;gap:10px;text-align:left;
+  background:linear-gradient(180deg,#fffaf0,#fff1d6);border:2px solid var(--frame);border-radius:14px;
+  padding:11px 12px;font-weight:800;font-size:14px;box-shadow:0 3px 0 rgba(199,154,78,.5);transition:all .1s ease;}
+.answer .ltr{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--frame);color:#fff;
+  font-family:"Baloo 2";display:flex;align-items:center;justify-content:center;font-size:13px;}
+.answer .txt{flex:1 1 auto;}
+.answer .vote{flex:0 0 auto;font-size:11px;color:var(--ink-soft);font-weight:800;}
+.answer:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 rgba(199,154,78,.5);}
+.answer.removed{opacity:.35;}
+.answer.mentor{border-color:var(--plum);box-shadow:0 0 0 2px var(--plum) inset,0 3px 0 var(--plum-deep);}
+.answer.correct{background:linear-gradient(180deg,#bdf0a8,#86cb3c);border-color:var(--green-deep);color:#244f0c;box-shadow:0 3px 0 var(--green-deep);}
+.answer.wrong{background:linear-gradient(180deg,#f7c0bb,#e5564b);border-color:#b53227;color:#fff;box-shadow:0 3px 0 #b53227;}
+.lifelines{display:flex;gap:8px;margin-top:14px;}
+.life{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:"Baloo 2";font-weight:800;font-size:12px;
+  background:linear-gradient(180deg,#eaf3ff,#cfe6fb);border:2px solid #6db2dd;border-radius:14px;padding:9px 4px;
+  box-shadow:0 4px 0 #4a90c0;}
+.life:active{transform:translateY(2px);box-shadow:0 2px 0 #4a90c0;}
+.life small{color:#2f6f9a;font-size:11px;}
+.life:disabled{filter:grayscale(.7) brightness(.96);box-shadow:0 4px 0 #999;}
+
+/* offline / finale */
+.offline-title,.finale-title{font-family:"Baloo 2";font-weight:800;font-size:24px;text-align:center;color:var(--gold-deep);}
+.offline-body,.finale-body{text-align:center;color:var(--ink-soft);font-size:14px;font-weight:700;margin-top:8px;line-height:1.4;}
+.offline-amount{text-align:center;font-family:"Baloo 2";font-weight:800;font-size:36px;color:var(--gold-deep);margin-top:10px;}
+.primary-btn{margin-top:16px;width:100%;font-family:"Baloo 2";font-weight:800;font-size:17px;color:#fff;
+  background:linear-gradient(180deg,#9cd84f,var(--green-deep));border-radius:16px;padding:14px;
+  text-shadow:0 1px 0 rgba(0,0,0,.2);box-shadow:0 5px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
+.primary-btn:active{transform:translateY(2px);box-shadow:0 3px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
+
+/* эффект повышения */
+.shimmer{position:absolute;inset:0;pointer-events:none;z-index:20;opacity:0;
+  background:radial-gradient(60% 60% at 50% 45%,rgba(255,210,90,.55),transparent 70%);}
+.shimmer.go{animation:shimmer 1.2s ease;}
+.toast{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);z-index:21;pointer-events:none;opacity:0;
+  font-family:"Baloo 2";font-weight:800;font-size:26px;color:#fff;text-align:center;white-space:pre-line;
+  -webkit-text-stroke:2px var(--gold-deep);text-shadow:0 4px 0 rgba(180,120,10,.5);}
+.toast.go{animation:toast 1.8s ease;}
+
+/* анимации */
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes nudge{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-4px)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(1.1)}}
+@keyframes coinFly{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx,20px),-60px) rotate(180deg)}}
+@keyframes popIn{0%{transform:scale(.92);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes fade{0%{opacity:0}100%{opacity:1}}
+@keyframes shimmer{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-62%)}}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important;}}
+
+/* узкий экран / портрет — складываем колонки, чтобы не ломалось */
+@media (max-width:820px), (max-aspect-ratio:9/10){
+  #app{height:auto;min-height:100vh;overflow:auto;}
+  .main{flex-direction:column;}
+  .side-col{flex:0 0 auto;max-height:42vh;}
+  .figure{width:110px;height:150px;font-size:64px;}
+  .comic-bubble{max-width:62%;}
+  .brand{font-size:18px;}
+  .career{min-width:0;}
+  .trust-wrap{width:170px;}
+}
+
+/* экран меню/старта (фон — офисная сцена) */
+.menu-screen{position:absolute;inset:0;z-index:60;background:#2a1c14 center/cover no-repeat;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;padding:0 20px 9vh;}
+.menu-screen[hidden]{display:none;}
+.menu-screen::before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(20,12,6,0) 38%,rgba(20,12,6,.74));}
+.menu-logo{position:relative;font-family:"Baloo 2";font-weight:800;font-size:clamp(40px,8vw,76px);letter-spacing:.04em;
+  color:#fff;-webkit-text-stroke:3px var(--frame-deep);text-shadow:0 6px 0 rgba(120,70,10,.5),0 12px 26px rgba(0,0,0,.55);}
+.menu-sub{position:relative;color:#ffe8c2;font-weight:800;font-size:clamp(13px,2.4vw,18px);text-shadow:0 2px 6px rgba(0,0,0,.6);margin-top:-2px;}
+.menu-play{position:relative;margin-top:14px;font-family:"Baloo 2";font-weight:800;font-size:22px;color:#fff;
+  background:linear-gradient(180deg,#9cd84f,var(--green-deep));border-radius:18px;padding:15px 58px;
+  text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 6px 0 #4b8420,0 10px 22px rgba(0,0,0,.4);animation:nudge 1.6s ease-in-out infinite;}
+.menu-play:active{transform:translateY(3px);box-shadow:0 3px 0 #4b8420,0 6px 12px rgba(0,0,0,.4);}
+/* начальница в окне квиза — полная поза (а не медальон) */
+.quiz-figure{flex:0 0 auto;width:118px;height:150px;display:flex;align-items:flex-end;justify-content:center;font-size:46px;}
+.quiz-figure img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.25));}
+
+/* фон-окружение: классический офис (ЗАГЛУШКА; заменится PNG из ASSETS.office[этап]) */
+.office-art{position:absolute;inset:0;z-index:0;overflow:hidden;}
+.office-art svg{width:100%;height:100%;display:block;}
+#app.stage-0 #officeArt{filter:saturate(.62) brightness(.9) contrast(.96);}
+#app.stage-1 #officeArt{filter:saturate(.8) brightness(.96);}
+#app.stage-2 #officeArt{filter:saturate(1) brightness(1.0);}
+#app.stage-3 #officeArt{filter:saturate(1.08) brightness(1.05);}
+#app.stage-4 #officeArt{filter:saturate(1.14) brightness(1.08) sepia(.08);}
+
+/* ГЕРОИНЯ крупным планом на фоне офиса */
+.scene{display:block;}
+.boss-hero{position:absolute;bottom:0;right:3%;height:100%;z-index:3;pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:center;font-size:140px;
+  filter:drop-shadow(0 14px 16px rgba(0,0,0,.4));animation:bob 3.6s ease-in-out infinite;}
+.boss-hero img{height:99%;width:auto;max-width:46vw;object-fit:contain;object-position:bottom;}
+.scene .click-btn{position:absolute;left:3.5%;bottom:5%;z-index:5;}
+#bossBubble{left:4%;right:auto;top:8%;max-width:50%;}
+#bossBubble .cb-tail{left:auto;right:-13px;top:34%;border-left:0;border-bottom:0;
+  border-top:3px solid var(--line);border-right:3px solid var(--line);}
+@media (max-width:820px), (max-aspect-ratio:9/10){
+  .boss-hero img{max-width:62vw;}
+  #bossBubble{max-width:64%;}
+}
+
+/* БОЛТАЛКА: панель близости + окно диалога */
+.chat-bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  background:var(--panel);border:3px solid var(--frame);border-radius:var(--r);padding:8px 12px;
+  box-shadow:0 4px 0 var(--frame-deep),0 6px 12px rgba(120,80,20,.16);}
+.chat-meta{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.chat-ic{font-size:16px;}
+.chat-title{font-family:"Baloo 2";font-weight:800;font-size:13px;color:var(--plum-deep);}
+.chat-lvl{font-size:11px;font-weight:800;color:var(--ink-soft);}
+.bar-track.mini{height:11px;max-width:170px;}
+.chat-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
+.chat-btn{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
+  background:linear-gradient(180deg,#ef7ab2,var(--plum-deep));border-radius:13px;padding:9px 16px;
+  text-shadow:0 1px 0 rgba(0,0,0,.2);box-shadow:0 4px 0 #8e2f5e;}
+.chat-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #8e2f5e;}
+.chat-btn:disabled{filter:grayscale(.5) brightness(.96);box-shadow:0 4px 0 #999;}
+.chat-head{font-family:"Baloo 2";font-weight:800;font-size:14px;color:var(--plum-deep);text-align:center;margin-bottom:10px;}
+.chat-answers{grid-template-columns:1fr;}
+.chat-answer{border-color:#e89cc0;}
+.chat-answer .txt{font-weight:700;}
+</style>
+</head>
+<body>
+<div id="app" class="stage-0">
+
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+  <div class="topbar">
+    <div class="coins"><span class="coin-ic"></span><span id="money">0</span><span id="rate">+0/с</span></div>
+    <div class="brand head-font">БЕДОЛАГА</div>
+    <div class="career">
+      <div class="rank-row"><span id="rankTitle">Стажёр</span><span id="rankMult" class="mult">×1</span></div>
+      <div class="trust-wrap">
+        <span class="trust-label">Доверие</span>
+        <div class="bar-track"><div id="trustFill" class="bar-fill trust-fill"></div></div>
+      </div>
+    </div>
+    <button id="muteBtn" class="icon-btn" aria-label="Звук вкл/выкл">🔊</button>
+  </div>
+
+  <!-- ОСНОВНАЯ ЗОНА -->
+  <div class="main">
+
+    <!-- левая колонка: сцена + бар задания -->
+    <div class="stage-col">
+            <div class="scene" id="scene">
+        <div class="office-art" id="officeArt"><svg viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="oWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4d9c1"/><stop offset="1" stop-color="#cdbf9e"/></linearGradient>
+<linearGradient id="oFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b89c6f"/><stop offset="1" stop-color="#997e54"/></linearGradient>
+<linearGradient id="oSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3f2"/><stop offset="1" stop-color="#e9f4f7"/></linearGradient>
+</defs>
+<rect x="0" y="0" width="1000" height="430" fill="url(#oWall)"/>
+<rect x="0" y="410" width="1000" height="170" fill="url(#oFloor)"/>
+<rect x="0" y="402" width="1000" height="12" fill="#7c6443"/>
+<g stroke="#856a45" stroke-width="2" opacity=".45">
+<line x1="120" y1="414" x2="55" y2="575"/><line x1="305" y1="414" x2="265" y2="575"/>
+<line x1="500" y1="414" x2="500" y2="575"/><line x1="700" y1="414" x2="735" y2="575"/><line x1="880" y1="414" x2="945" y2="575"/>
+</g>
+<g>
+<rect x="715" y="64" width="220" height="262" rx="6" fill="#f4efe6" stroke="#b9a988" stroke-width="7"/>
+<rect x="730" y="79" width="190" height="232" fill="url(#oSky)"/>
+<g stroke="#cfe2ea" stroke-width="7" opacity=".85">
+<line x1="730" y1="108" x2="920" y2="108"/><line x1="730" y1="140" x2="920" y2="140"/><line x1="730" y1="172" x2="920" y2="172"/>
+<line x1="730" y1="204" x2="920" y2="204"/><line x1="730" y1="236" x2="920" y2="236"/><line x1="730" y1="268" x2="920" y2="268"/>
+</g>
+<line x1="825" y1="79" x2="825" y2="311" stroke="#b9a988" stroke-width="6"/>
+</g>
+<g>
+<rect x="58" y="104" width="186" height="306" rx="6" fill="#9c7b50"/>
+<rect x="58" y="104" width="186" height="306" rx="6" fill="none" stroke="#7c6040" stroke-width="7"/>
+<line x1="58" y1="200" x2="244" y2="200" stroke="#7c6040" stroke-width="7"/>
+<line x1="58" y1="296" x2="244" y2="296" stroke="#7c6040" stroke-width="7"/>
+<g>
+<rect x="78" y="122" width="20" height="68" fill="#9d4b45"/><rect x="100" y="122" width="20" height="68" fill="#c8923f"/>
+<rect x="122" y="122" width="20" height="68" fill="#5d7e8c"/><rect x="144" y="122" width="20" height="68" fill="#7a9b6f"/>
+<rect x="172" y="134" width="54" height="56" fill="#b9b3a6"/>
+<rect x="80" y="216" width="54" height="64" fill="#bfae8e"/><rect x="142" y="218" width="20" height="62" fill="#9d4b45"/>
+<rect x="164" y="218" width="20" height="62" fill="#5d7e8c"/><rect x="186" y="218" width="20" height="62" fill="#c8923f"/>
+<rect x="80" y="314" width="20" height="64" fill="#5d7e8c"/><rect x="102" y="314" width="20" height="64" fill="#9d4b45"/>
+<rect x="130" y="324" width="86" height="54" fill="#b9b3a6"/>
+</g>
+</g>
+<g>
+<circle cx="500" cy="116" r="44" fill="#f3ece0" stroke="#7c6443" stroke-width="7"/>
+<circle cx="500" cy="116" r="4" fill="#4a3b2a"/>
+<line x1="500" y1="116" x2="500" y2="86" stroke="#4a3b2a" stroke-width="5" stroke-linecap="round"/>
+<line x1="500" y1="116" x2="526" y2="116" stroke="#4a3b2a" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g>
+<rect x="348" y="150" width="116" height="84" rx="4" fill="#fbf6ea" stroke="#b9a988" stroke-width="7"/>
+<line x1="368" y1="178" x2="444" y2="178" stroke="#d8cbb0" stroke-width="6"/>
+<line x1="368" y1="196" x2="444" y2="196" stroke="#d8cbb0" stroke-width="6"/>
+<line x1="368" y1="214" x2="420" y2="214" stroke="#d8cbb0" stroke-width="6"/>
+</g>
+<g>
+<rect x="905" y="346" width="78" height="64" rx="6" fill="#a9763f"/>
+<path d="M944 346 C902 296 907 244 944 224 C981 244 986 296 944 346Z" fill="#5f8f4e"/>
+<path d="M944 346 C918 306 921 266 944 251 C967 266 970 306 944 346Z" fill="#79a85f"/>
+</g>
+</svg></div>
+        <div class="shimmer" id="shimmer"></div>
+        <div class="toast" id="toast"></div>
+        <div class="fx-layer" id="fxLayer"></div>
+
+        <!-- комикс-облачко начальницы -->
+        <div class="comic-bubble" id="bossBubble" hidden>
+          <span class="cb-name">Вероника</span>
+          <span class="cb-text" id="bossBubbleText"></span>
+          <span class="cb-tail"></span>
+        </div>
+
+        <!-- ГЕРОИНЯ крупным планом (меняет позы/эмоции/реплики) -->
+        <div class="boss-hero" id="bossFace">🧑‍💼</div>
+
+        <!-- кнопка действия -->
+        <button id="clickBtn" class="click-btn">
+          <span class="monitor" id="monitor">🖥️</span>
+          <span class="click-text">Работать</span>
+          <span class="click-sub" id="clickSub">+1 ₽</span>
+        </button>
+      </div>
+
+      <div class="stage-bar">
+        <span class="lbl">До задания начальницы</span>
+        <div class="bar-track"><div id="stageFill" class="bar-fill stage-fill"></div></div>
+      </div>
+
+      <div class="chat-bar">
+        <div class="chat-meta"><span class="chat-ic">💗</span><span class="chat-title" id="chatTitle">Знакомство</span><span class="chat-lvl" id="chatLvl">ур. 1/10</span></div>
+        <div class="bar-track mini"><div id="chatFill" class="bar-fill chat-fill"></div></div>
+        <button id="chatBtn" class="chat-btn">💬 Поговорить</button>
+      </div>
+    </div>
+
+    <!-- правая колонка: команда / генераторы -->
+    <div class="side-col">
+      <div class="panel-head">Команда и процессы</div>
+      <div id="genList" class="gen-list"></div>
+    </div>
+  </div>
+
+  <!-- КВИЗ -->
+  <div id="quizOverlay" class="overlay" hidden>
+    <div class="quiz card">
+      <div class="quiz-top">
+        <div class="quiz-figure" id="quizBossFace">😐</div>
+        <div class="comic-bubble quiz-bubble">
+          <span class="cb-name">Вероника</span>
+          <span class="cb-text" id="quizBubbleText"></span>
+          <span class="cb-tail"></span>
+        </div>
+      </div>
+      <div id="quizQuestion" class="question"></div>
+      <div id="quizAnswers" class="answers"></div>
+      <div class="lifelines">
+        <button class="life" data-life="report">📊 Отчёт<small id="lifeReport">1</small></button>
+        <button class="life" data-life="colleagues">🧑‍🤝‍🧑 Коллеги<small id="lifeColleagues">1</small></button>
+        <button class="life" data-life="mentor">📞 Ментор<small id="lifeMentor">1</small></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- БОЛТАЛКА -->
+  <div id="chatOverlay" class="overlay" hidden>
+    <div class="card chat-card">
+      <div class="chat-head">💬 Разговор с Вероникой</div>
+      <div class="quiz-top">
+        <div class="quiz-figure" id="chatBossFace">😐</div>
+        <div class="comic-bubble quiz-bubble">
+          <span class="cb-name">Вероника</span>
+          <span class="cb-text" id="chatBubbleText"></span>
+          <span class="cb-tail"></span>
+        </div>
+      </div>
+      <div id="chatAnswers" class="answers chat-answers"></div>
+    </div>
+  </div>
+
+  <!-- ОФЛАЙН-ДОХОД -->
+  <div id="offlineOverlay" class="overlay" hidden>
+    <div class="card offline">
+      <div class="offline-title">С возвращением!</div>
+      <div class="offline-body">Пока тебя не было, офис заработал</div>
+      <div id="offlineAmount" class="offline-amount">0 ₽</div>
+      <button id="offlineClose" class="primary-btn">Забрать</button>
+    </div>
+  </div>
+
+  <!-- ФИНАЛ -->
+  <div id="finaleOverlay" class="overlay" hidden>
+    <div class="card finale">
+      <div class="finale-title">Партнёр 🥂</div>
+      <div id="finaleText" class="finale-body"></div>
+      <button id="finaleClose" class="primary-btn">Продолжить</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН МЕНЮ / СТАРТ -->
+  <div id="menuScreen" class="menu-screen">
+    <div class="menu-logo">БЕДОЛАГА</div>
+    <div class="menu-sub">путь от стажёра до партнёра</div>
+    <button id="playBtn" class="menu-play">Играть ▶</button>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+/* ============================================================================
+   БЕДОЛАГА — игровая логика (горизонтальная версия)
+   Логика/экономика/вопросы идентичны проверенной версии; изменено оформление,
+   раскладка (ландшафт), комикс-облачка и слоты-персонажи под PNG.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1) АССЕТЫ — слоты для будущих PNG. Впиши путь — заглушка заменится картинкой.
+   ОБРАЗЫ НАЧАЛЬНИЦЫ: на каждый из 5 этапов — свой образ (разная одежда/лоск),
+   и в каждом образе — набор эмоций. Рекомендуемые имена (папка ./assets/):
+
+     ФОН-ОФИС:   office_1.png ... office_5.png            (фон сцены, cover)
+     СТОЛ/ПК:    desk_1.png   ... desk_5.png              (объект-кнопка)
+     ГЕРОЙ:      hero_1.png   ... hero_5.png              (полный рост, опора снизу)
+     НАЧАЛЬНИЦА: boss_1_neutral.png / boss_1_approve.png /
+                 boss_1_sympathy.png / boss_1_stern.png / boss_1_joy.png
+                 (и так для образов этапов 1..5; полный рост, опора снизу)
+--------------------------------------------------------------------------- */
+const BOSS_POSES = {
+  neutral:"assets/boss_1_neutral.png",
+  approve:"assets/boss_1_approve.png",
+  sympathy:"assets/boss_1_sympathy.png",
+  stern:"assets/boss_1_stern.png",
+  joy:"assets/boss_1_joy.png"
+};
+const MENU_IMG = "assets/office_menu.jpg";
+const ASSETS = {
+  office: [
+    "assets/office_1.jpg",
+    "assets/office_2.jpg",
+    "assets/office_3.jpg",
+    "assets/office_4.jpg",
+    "assets/office_5.jpg"
+  ],  // фоны офиса по этапам  // фоны офиса по этапам
+  desk:   [null, null, null, null, null],   // объект-кнопка
+  hero:   [null, null, null, null, null],   // образ героя (ждёт PNG)
+  // ОБРАЗЫ НАЧАЛЬНИЦЫ: пока один образ (бордовый костюм) на всех этапах.
+  // На этапы 2..5 позже подставишь новые наборы (другая одежда + те же эмоции).
+  boss: [ BOSS_POSES, BOSS_POSES, BOSS_POSES, BOSS_POSES, BOSS_POSES ],
+};
+const EMO = { neutral:"😐", approve:"🙂", sympathy:"😏", stern:"😠", joy:"😄" };
+
+/* ---------------------------------------------------------------------------
+   2) БАЛАНС
+--------------------------------------------------------------------------- */
+const GENERATORS = [
+  { name:"Кофемашина",            icon:"☕",  baseCost:15,      income:0.5,  growth:1.12 },
+  { name:"Стажёр",                icon:"🧑‍🎓", baseCost:100,     income:3,    growth:1.12 },
+  { name:"Менеджер по продажам",  icon:"🤝",  baseCost:1100,    income:18,   growth:1.13 },
+  { name:"Маркетолог",            icon:"📣",  baseCost:12000,   income:110,  growth:1.13 },
+  { name:"Отдел разработки",      icon:"💻",  baseCost:130000,  income:700,  growth:1.14 },
+  { name:"Филиал компании",       icon:"🏢",  baseCost:1400000, income:4500, growth:1.14 },
+];
+const OFFLINE = { rate:0.5, capHours:4 };
+const CLICK_BASE = 1;
+const DT_CLAMP = 0.5;
+
+/* ---------------------------------------------------------------------------
+   3) ЭТАПЫ — должность, множитель, реплики (деловая мотивация + симпатия)
+--------------------------------------------------------------------------- */
+const STAGES = [
+  { title:"Стажёр", mult:1.0, need:5, okEmos:["approve","sympathy"],
+    motivations:[
+      "Аренда этого клоповника сама себя не оплатит. Думай.",
+      "Касса почти пуста. Покажи, что от тебя есть толк.",
+      "Если не вытянем выручку — закрываемся. Соберись.",
+      "У нас один шанс удержаться на плаву. Не упусти."],
+    correct:[
+      "Надо же, цифры поползли вверх. Не ожидала от стажёра.",
+      "Выручка растёт. Продолжай — пока ты меня не раздражаешь.",
+      "Хм. Не безнадёжен. Кофе мне принесёшь — заслужил знать, как я его пью.",
+      "Баланс в плюсе. Ладно, считай, что я тебя заметила.",
+      "Неплохо для новичка. Только не задирай нос.",
+      "Показатели не врут — ты что-то умеешь. Удивил.",
+      "Касса полнеет. Может, я в тебе и не ошиблась.",
+      "Аренда оплачена. С тобой не так безнадёжно, как казалось утром.",
+      "Прибыль есть. Смотри-ка, от тебя бывает польза.",
+      "Растём. Не привыкай к похвале — её больше не будет. Наверное.",
+      "Сошлось до копейки. А ты внимательнее, чем выглядишь."],
+    wrong:[
+      "Серьёзно? Вот за это я тебе плачу? Соберись.",
+      "Минус в отчёте. Стажёр, ты меня позоришь.",
+      "Это что было? Мы так аренду не оплатим.",
+      "Мимо. Один такой промах — и тебя тут не будет.",
+      "Цифры упали. Ты вообще читал хоть один отчёт?",
+      "Нет. Просто нет. Думай, прежде чем отвечать.",
+      "Убытки. И это ты называешь работой?",
+      "Опять не то. У меня заканчивается терпение.",
+      "Касса худеет от твоих ответов. Прекрати.",
+      "Ошибка. Ещё одна — и ищи себе другой стол."] },
+
+  { title:"Младший менеджер", mult:1.5, need:5, okEmos:["approve","sympathy"],
+    motivations:[
+      "Нужны деньги на первую нормальную рекламу. Реши задачу.",
+      "Пора, чтобы о нас узнали. Покажи деловую хватку.",
+      "Конверсию нужно поднимать. Я смотрю на тебя.",
+      "Дай мне повод доверить тебе бюджет покрупнее."],
+    correct:[
+      "Конверсия пошла вверх. А ты, оказывается, соображаешь.",
+      "Реклама окупается. Мне нравится, как ты мыслишь.",
+      "Клиентов прибыло. Продолжай удивлять — у тебя выходит.",
+      "Показатели растут. Ловлю себя на том, что жду твоих ответов.",
+      "Отлично сработано. С тобой день проходит куда интереснее.",
+      "Выручка плюсует. Кажется, я начинаю тебе доверять.",
+      "Хороший ход. Ты не такой простой, каким хотел казаться.",
+      "Бренд узнают. И, между нами, тебя тоже сложно не заметить.",
+      "Маржа выросла. Мне это… приятно. И не только из-за денег.",
+      "Молодец. Иногда ты так уверенно говоришь о цифрах, что я забываю отвести взгляд."],
+    wrong:[
+      "Мимо. Я ведь в тебя поверила — не разочаровывай.",
+      "Бюджет на рекламу слили. Что ты творишь?",
+      "Конверсия просела. Соберись, я на тебя рассчитывала.",
+      "Нет. И почему-то именно от тебя обидно вдвойне.",
+      "Клиенты уходят. Это не тот результат, что я ждала от тебя.",
+      "Ошибся. Ладно, я знаю, что ты можешь лучше.",
+      "Показатели вниз. Не заставляй меня в тебе сомневаться.",
+      "Промах. Я начала тобой гордиться — догоняй.",
+      "Так мы рынок не возьмём. Думай головой.",
+      "Не то. И, честно, я ждала большего — от тебя."] },
+
+  { title:"Руководитель отдела", mult:2.5, need:5, okEmos:["sympathy","approve","joy"],
+    motivations:[
+      "Масштабируемся: новое направление, новая команда. Не подведи.",
+      "Рынок ждёт — пора расти. Докажи, что готов.",
+      "Открываем новый отдел. Мне нужен твой верный ход.",
+      "Покажи, что я не зря держу тебя так близко."],
+    correct:[
+      "Новое направление в плюсе. С тобой работать… не так скучно, как я думала.",
+      "Команда растёт, показатели тоже. Останься сегодня подольше — обсудим планы.",
+      "Отдел приносит прибыль. Ты стал тем, на кого я опираюсь.",
+      "Масштабируемся уверенно. Кажется, я привыкла видеть тебя рядом.",
+      "Цифры блестящие. Как и твоя улыбка, когда ты их называешь.",
+      "Рост по всем фронтам. Иногда хочется, чтобы совещания не заканчивались.",
+      "Прекрасно. Ты понимаешь меня с полуслова — это редкость.",
+      "Выручка удвоилась. С тобой я чувствую, что всё под контролем.",
+      "Отличный результат. Давно я так не радовалась чужим успехам.",
+      "Отдел — в топе. И да, я заметила, что ты уходишь позже всех. Мне это нравится."],
+    wrong:[
+      "Ну вот, а я уже начала тобой гордиться. Догоняй.",
+      "Направление просело. Не разбивай мне сердце такими цифрами.",
+      "Ошибка. От руководителя отдела я жду большего.",
+      "Команда сбита с толку. Соберись — мне нужен ты в форме.",
+      "Минус. Я слишком в тебя верю, чтобы это спускать.",
+      "Не то. И смотришь виновато — ладно, исправляйся.",
+      "Показатели вниз. Не заставляй меня жалеть, что я тебя повысила.",
+      "Промах. Мне будет неловко объяснять это совету директоров.",
+      "Так мы не вырастем. А я очень хочу расти — с тобой.",
+      "Ошибся. Но я почему-то не могу на тебя долго злиться."] },
+
+  { title:"Заместитель директора", mult:4.0, need:5, okEmos:["sympathy","joy","approve"],
+    motivations:[
+      "На горизонте крупная сделка. Один точный ответ — и мы в лидерах.",
+      "Инвесторы наблюдают. Не упусти момент.",
+      "Эта сделка изменит всё. Соберись — и сделаем это.",
+      "Мне нужен рядом тот, на кого можно положиться целиком. Это ведь ты?"],
+    correct:[
+      "Сделка движется. Взять тебя — лучшее моё решение за год.",
+      "Мы выходим в лидеры. И не только в бизнесе ты меня впечатляешь.",
+      "Инвесторы довольны. А я довольна, что ты рядом.",
+      "Капитализация растёт. С тобой я ничего не боюсь.",
+      "Блестяще. Иногда я ловлю себя на мысли не о цифрах, а о тебе.",
+      "Контракт почти наш. Ты стал для меня больше, чем заместитель.",
+      "Рынок наш. И знаешь, без тебя эта победа была бы пустой.",
+      "Превосходно. Ты единственный, кому я доверяю по-настоящему.",
+      "Прибыль рекордная. А моё настроение зависит от того, заглянешь ли ты в кабинет.",
+      "Идеально. После таких дней мне совсем не хочется отпускать тебя домой."],
+    wrong:[
+      "Эх ты. Ладно, тебе — второй шанс. Не привыкай.",
+      "Сделка под угрозой. Соберись, я не хочу тебя терять.",
+      "Минус. От тебя — особенно обидно.",
+      "Промах. Но тебе я готова простить почти всё.",
+      "Не то. Инвесторы ждут — и я жду от тебя большего.",
+      "Ошибка. Хорошо, что это вижу только я.",
+      "Цифры дрогнули. А я так хотела гордиться тобой сегодня.",
+      "Так лидерами не становятся. Ну же, ты лучше этого.",
+      "Неверно. Посмотри на меня — я в тебя верю, не подведи.",
+      "Промахнулся. Иди сюда, разберём — я не дам тебе упасть."] },
+
+  { title:"Исполнительный директор", mult:7.0, need:5, okEmos:["joy","sympathy","approve"],
+    motivations:[
+      "Мы почти на вершине. Докажи, что достоин быть моим партнёром.",
+      "Последний рывок к легенде. Покажи класс.",
+      "Партнёрство близко. Один ответ — и мы у цели.",
+      "Я хочу видеть тебя ровней. Сделай так, чтобы я не сомневалась."],
+    correct:[
+      "Мы на вершине. Партнёр… мне нравится, как это звучит.",
+      "Капитал на максимуме. И, кажется, это уже не только про бизнес.",
+      "Компания — легенда. А ты человек, без которого её бы не было.",
+      "Рекорд за рекордом. С тобой я готова покорять что угодно.",
+      "Идеально. Знаешь, мы хорошая команда. Очень хорошая.",
+      "Рынок у наших ног. И моё сердце, кажется, тоже немного занято.",
+      "Превосходно, партнёр. Давай отпразднуем — только мы вдвоём.",
+      "Всё работает как часы. Потому что ты рядом.",
+      "Безупречно. Я долго искала такого, как ты. И в делах, и вообще.",
+      "Мы сделали это вместе. И я не представляю это «вместе» без тебя."],
+    wrong:[
+      "Даже партнёры ошибаются. Просто не передо мной в следующий раз.",
+      "Промах. Но тебе я давно всё прощаю.",
+      "Не то. Ничего — мы исправим это вдвоём.",
+      "Ошибка. Иди ко мне, подумаем вместе.",
+      "Цифры дрогнули. А моё отношение к тебе — нет.",
+      "Неверно. Но даже сейчас я смотрю на тебя с теплотой.",
+      "Так не пойдёт, партнёр. Соберись — я верю в тебя как ни в кого.",
+      "Промахнулся. Хорошо, что у нас есть мы, чтобы всё починить.",
+      "Минус. Зато плюс в том, что ты рядом.",
+      "Ошибся. Ну и пусть — главное, что мы вместе."] },
+];
+
+/* ---------------------------------------------------------------------------
+   4) БАНК ВОПРОСОВ (50). c — индекс верного варианта (до перемешивания).
+--------------------------------------------------------------------------- */
+const QUESTIONS = [
+  {q:"Что такое «целевая аудитория»?", a:["Все люди в стране","Группа людей, наиболее заинтересованная в продукте","Сотрудники компании","Конкуренты"], c:1},
+  {q:"Что означает ROI?", a:["Возврат на инвестиции (Return on Investment)","Розничный оборот индустрии","Регламент офисных инструкций","Рейтинг онлайн-известности"], c:0},
+  {q:"Что такое «маржа»?", a:["Общая выручка","Разница между ценой продажи и себестоимостью","Налог на прибыль","Зарплатный фонд"], c:1},
+  {q:"Что обычно дешевле для бизнеса?", a:["Привлечь нового клиента","Удержать существующего клиента","Открыть новый офис","Сменить логотип"], c:1},
+  {q:"Что такое «точка безубыточности»?", a:["Момент, когда доходы покрывают расходы","Самый прибыльный день месяца","Минимальная цена товара","Размер уставного капитала"], c:0},
+  {q:"Зачем нужна воронка продаж?", a:["Хранить документы","Отслеживать путь клиента от интереса к покупке","Считать налоги","Нанимать сотрудников"], c:1},
+  {q:"Что такое УТП?", a:["Скидка на товар","То, что выгодно отличает продукт от конкурентов","Условия трудового договора","Упаковка товара"], c:1},
+  {q:"Что выгоднее в долгосрочной перспективе?", a:["Демпинговать цены в ноль","Строить лояльность и ценность бренда","Игнорировать отзывы","Экономить на качестве"], c:1},
+  {q:"Что показывает метрика LTV?", a:["Срок аренды офиса","Совокупную прибыль с клиента за всё время","Лимит товарных запасов","Логистические тарифы"], c:1},
+  {q:"Что такое «оборотный капитал»?", a:["Деньги в недвижимости","Средства для текущей операционной деятельности","Прибыль за год","Кредит банка"], c:1},
+  {q:"Как лучше реагировать на негативный отзыв?", a:["Удалить и проигнорировать","Вежливо разобраться и предложить решение","Ответить грубостью","Засудить клиента"], c:1},
+  {q:"Что такое «целевой рынок»?", a:["Рынок закупки сырья","Конкретный сегмент покупателей, на который нацелен бизнес","Фондовая биржа","Оптовый склад"], c:1},
+  {q:"Что важно при делегировании задач?", a:["Делать всё самому","Чётко ставить задачу и доверять исполнителю","Ничего не объяснять","Контролировать каждую минуту"], c:1},
+  {q:"Что такое денежный поток (кэшфлоу)?", a:["Движение денег в компанию и из неё","Количество клиентов","Скорость интернета","План отпусков"], c:0},
+  {q:"Что обычно повышает средний чек?", a:["Грубое обслуживание","Допродажи и сопутствующие предложения","Сокращение ассортимента до одного товара","Закрытие магазина"], c:1},
+  {q:"Зачем бизнесу аналитика данных?", a:["Заполнить отчёт «для галочки»","Принимать решения на основе фактов","Тратить время","Запутать сотрудников"], c:1},
+  {q:"Что такое B2B?", a:["Продажи бизнеса бизнесу","Продажи частным лицам","Возврат брака","Банковский перевод"], c:0},
+  {q:"Что эффективнее для роста команды?", a:["Штрафовать за любую ошибку","Давать обратную связь и развивать сотрудников","Никогда не хвалить","Скрывать цели компании"], c:1},
+  {q:"Что такое «сегментация клиентов»?", a:["Разделение клиентов на группы по признакам","Увольнение клиентов","Снижение цен","Печать визиток"], c:0},
+  {q:"Когда стоит поднимать цену?", a:["Никогда","Когда ценность продукта оправдывает её","Случайным образом","Только себе в убыток"], c:1},
+  {q:"Что такое «конверсия»?", a:["Доля посетителей, совершивших целевое действие","Курс валют","Число сотрудников","Площадь офиса"], c:0},
+  {q:"Что важнее для стартапа на раннем этапе?", a:["Дорогой офис","Подтверждение спроса на продукт","Большой штат","Корпоративный мерч"], c:1},
+  {q:"Что такое «себестоимость»?", a:["Цена для покупателя","Затраты на производство единицы товара","Прибыль","Рыночная капитализация"], c:1},
+  {q:"Как лучше проверить новую идею продукта?", a:["Сразу вложить все деньги","Протестировать на небольшом сегменте (MVP)","Никому не рассказывать","Подождать пять лет"], c:1},
+  {q:"Что такое удержание клиентов (retention)?", a:["Способность сохранять клиентов и их повторные покупки","Задержка зарплаты","Хранение товара на складе","Удержание налога"], c:0},
+  {q:"Что лучше всего говорит о здоровье бизнеса?", a:["Число подписчиков в соцсетях","Стабильная прибыль и денежный поток","Размер офиса","Марка служебного авто"], c:1},
+  {q:"Зачем нужен бизнес-план?", a:["Для красоты","Чтобы структурировать цели, риски и финансы","Чтобы избежать налогов","Чтобы напугать конкурентов"], c:1},
+  {q:"Что такое отток клиентов (churn)?", a:["Прирост новых клиентов","Доля клиентов, переставших пользоваться продуктом","Скидка постоянным","Возврат товара"], c:1},
+  {q:"Что эффективнее в переговорах?", a:["Давить и угрожать","Искать взаимовыгодное решение","Молчать всё время","Соглашаться на всё"], c:1},
+  {q:"Что такое «брендинг»?", a:["Создание узнаваемого образа и репутации компании","Печать чеков","Уплата аренды","Найм охраны"], c:0},
+  {q:"Что повышает производительность команды?", a:["Бесконечные совещания без цели","Чёткие приоритеты и фокус на главном","Многозадачность во всём сразу","Отсутствие планов"], c:1},
+  {q:"Что такое «масштабирование» бизнеса?", a:["Рост выручки без пропорционального роста затрат","Переезд в другой город","Смена названия","Покупка мебели"], c:0},
+  {q:"Что важно перед запуском рекламы?", a:["Понять, кому и что вы рекламируете","Потратить весь бюджет за день","Дословно скопировать конкурента","Не ставить целей"], c:0},
+  {q:"Что такое «дебиторская задолженность»?", a:["Деньги, которые должны компании клиенты","Долг компании перед банком","Налог на имущество","Зарплата директора"], c:0},
+  {q:"Как лучше принимать решение о найме?", a:["По первому впечатлению за минуту","Оценивая навыки и соответствие задачам","По знаку зодиака","Кто первый позвонил"], c:1},
+  {q:"Что такое «средний чек»?", a:["Средняя сумма одной покупки","Зарплата кассира","Число товаров на складе","Размер скидки"], c:0},
+  {q:"Зачем компании репутация?", a:["Она не нужна","Она влияет на доверие и решение клиентов покупать","Только ради наград","Чтобы платить меньше налогов"], c:1},
+  {q:"Что выгоднее при ограниченном бюджете на маркетинг?", a:["Бить по всем каналам понемногу вслепую","Сфокусироваться на каналах, где есть ваша аудитория","Не измерять результат","Брать самый дешёвый канал без анализа"], c:1},
+  {q:"Что такое «операционные расходы»?", a:["Затраты на повседневную работу бизнеса","Прибыль","Инвестиции учредителей","Стоимость акций"], c:0},
+  {q:"Что помогает удерживать таланты в команде?", a:["Игнорировать рост сотрудников","Развитие, признание и адекватные условия","Постоянные переработки без отдыха","Отсутствие обратной связи"], c:1},
+  {q:"Что такое KPI?", a:["Измеримый показатель эффективности","Название должности","Вид налога","Тип договора"], c:0},
+  {q:"Когда скидка оправдана?", a:["Когда привлекает клиентов и окупается","Всегда и на всё","Когда уводит в убыток","Никогда ни при каких условиях"], c:0},
+  {q:"Что такое «рыночная ниша»?", a:["Узкий сегмент рынка с конкретной потребностью","Склад готовой продукции","Отдел кадров","Кредитная линия"], c:0},
+  {q:"Что важно при работе с поставщиками?", a:["Менять их каждую неделю","Надёжность, качество и условия","Всегда платить как можно позже","Не заключать договоров"], c:1},
+  {q:"Что такое «прибыль»?", a:["Вся выручка компании","Доходы минус расходы","Сумма на счёте в банке","Стоимость аренды"], c:1},
+  {q:"Что лучше для развития продукта?", a:["Игнорировать пользователей","Слушать обратную связь клиентов","Делать только то, что нравится директору","Не менять ничего годами"], c:1},
+  {q:"Что такое «ёмкость рынка»?", a:["Максимально возможный объём продаж на рынке","Размер склада","Число сотрудников","Площадь магазина"], c:0},
+  {q:"Что снижает риски бизнеса?", a:["Единственный клиент на всю выручку","Диверсификация доходов и клиентов","Отказ от планирования","Игнорирование финансов"], c:1},
+  {q:"Что важно в клиентском сервисе?", a:["Быстро и вежливо решать проблемы клиента","Заставлять клиента ждать","Перекладывать вину на клиента","Игнорировать обращения"], c:0},
+  {q:"Что объединяет успешные компании?", a:["Дорогая мебель","Понимание клиента и постоянное развитие","Большой штат любой ценой","Частая смена логотипа"], c:1},
+];
+
+/* ---------------------------------------------------------------------------
+   5) СОСТОЯНИЕ
+--------------------------------------------------------------------------- */
+const SAVE_KEY = "bedolaga_save_v2";
+function defaultState(){
+  return {
+    money:0, totalEarned:0,
+    gens:[0,0,0,0,0,0],
+    stage:0, trust:0,
+    lifelines:{ report:1, colleagues:1, mentor:1 },
+    barProgress:0, muted:false, partner:false, lastQuestion:-1,
+    chatLevel:1, chatProgress:0,
+    lastSave:Date.now(),
+  };
+}
+let state = defaultState();
+
+/* ---------------------------------------------------------------------------
+   6) ХРАНИЛИЩЕ (защита): SDK safeStorage -> localStorage -> память.
+   В превью прогресс между перезапусками не сохраняется (ожидаемо).
+--------------------------------------------------------------------------- */
+let ysdk = null, sdkStorage = null, player = null, sdkReady = false;
+const Storage = {
+  mem:{},
+  get(k){
+    try{ if(sdkStorage){ const v=sdkStorage.getItem(k); if(v!=null) return v; } }catch(e){}
+    try{ const v=localStorage.getItem(k); if(v!=null) return v; }catch(e){}
+    return (k in this.mem) ? this.mem[k] : null;
+  },
+  set(k,v){
+    this.mem[k]=v;
+    try{ if(sdkStorage) sdkStorage.setItem(k,v); }catch(e){}
+    try{ localStorage.setItem(k,v); }catch(e){}
+    try{ if(player && player.setData) player.setData({ [k]: v }); }catch(e){}
+  },
+};
+
+/* ---------------------------------------------------------------------------
+   7) ЯНДЕКС SDK (под защитой; без SDK — автономный режим)
+--------------------------------------------------------------------------- */
+function loadScript(src, timeout=4000){
+  return new Promise((res,rej)=>{
+    const s=document.createElement("script"); s.src=src; s.async=true;
+    const t=setTimeout(()=>rej(new Error("timeout")), timeout);
+    s.onload=()=>{clearTimeout(t);res();};
+    s.onerror=()=>{clearTimeout(t);rej(new Error("load"));};
+    document.head.appendChild(s);
+  });
+}
+async function initSDK(){
+  try{
+    if(typeof YaGames==="undefined"){ await loadScript("https://yandex.ru/games/sdk/v2"); }
+    ysdk = await YaGames.init();
+    try{ sdkStorage = await ysdk.getStorage(); }catch(e){}
+    try{ player = await ysdk.getPlayer(); }catch(e){}
+    try{ if(ysdk.on){ ysdk.on("game_api_pause", onPause); ysdk.on("game_api_resume", onResume); } }catch(e){}
+    sdkReady = true;
+  }catch(e){ sdkReady = false; }
+}
+function readyForPlayer(){ try{ ysdk.features.LoadingAPI.ready(); }catch(e){} }
+function submitScore(){ try{ if(ysdk && ysdk.leaderboards){ ysdk.leaderboards.setScore("capital", Math.floor(state.totalEarned)); } }catch(e){} }
+let paused=false;
+function onPause(){ paused=true; }
+function onResume(){ paused=false; }
+
+// === МОНЕТИЗАЦИЯ — намеренно НЕ реализована в этой версии (только хуки) =======
+// function showRewarded(onReward){ ysdk.adv.showRewardedVideo(...) }   // ×2 офлайн, подсказки
+// function showInterstitial(){ ysdk.adv.showFullscreenAdv(...) }       // на переходах между этапами
+// ============================================================================
+
+/* ---------------------------------------------------------------------------
+   8) ВСПОМОГАТЕЛЬНОЕ
+--------------------------------------------------------------------------- */
+const $ = id => document.getElementById(id);
+const SUFFIX = ["","K","M","B","T","Qa","Qi","Sx","Sp"];
+function fmt(n){
+  n = Math.floor(n);
+  if(n < 1000) return String(n);
+  let i=0, x=n;
+  while(x >= 1000 && i < SUFFIX.length-1){ x/=1000; i++; }
+  return (x>=100 ? x.toFixed(0) : x.toFixed(2).replace(/\.?0+$/,"")) + SUFFIX[i];
+}
+function multLabel(m){ return "×" + (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)); }
+const _last={};
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pickNoRepeat(arr,key){ if(arr.length<2) return arr[0]; let v; do{ v=pick(arr); }while(v===_last[key]); _last[key]=v; return v; }
+const IDLE=[
+  "Графики ползут вверх — мне это нравится.",
+  "Работай-работай. Я слежу за твоими успехами.",
+  "Хорошие цифры сегодня. И компания, кстати, приятная.",
+  "Не отвлекайся. Хотя на тебя отвлекаться приятно.",
+  "Капитал растёт. Продолжай в том же духе.",
+  "С тобой офис стал оживлённее.",
+  "Люблю, когда показатели в плюсе. И когда ты рядом — тоже.",
+  "Ещё немного — и обгоним конкурентов.",
+  "Мне нравится, как ты держишь темп.",
+  "Тишина в офисе — деньги в кассе. Молодец.",
+  "Иногда я смотрю на тебя дольше, чем на отчёты.",
+  "Кофе будешь? Шучу. Работай."
+];
+function idleTick(){
+  if(paused || quizOpen || chatOpen) return;
+  if(!$("menuScreen").hidden) return;
+  if(!$("bossBubble").hidden) return;
+  if(chatReady() && Math.random()<0.3){ openChat(); return; }
+  bossSay(pickNoRepeat(IDLE,"idle"), pick(["neutral","approve","sympathy"]));
+}
+const CHAT_TITLES=["Знакомство","Рабочий настрой","Чуть теплее","Симпатия","Дружеский флирт","Доверие","Явный интерес","Тёплые чувства","Почти признание","Близкие"];
+const CHAT_NEED=5; // очков близости на уровень (тюнится)
+const CHAT=[
+ [ // ур.1 — Знакомство (вежливо, держит дистанцию)
+  {q:"Ну что, освоился у нас? Только честно.",a:[
+    {t:"Почти. Стараюсь не подвести вас.",react:"Похвально. Старательных я ценю.",emo:"approve",warm:2},
+    {t:"Ещё привыкаю, но мне нравится.",react:"Привыкай быстрее, времени на раскачку нет.",emo:"neutral",warm:1},
+    {t:"С таким руководителем — легко.",react:"Лесть? Засчитано. Но работать всё равно придётся.",emo:"sympathy",warm:3}]},
+  {q:"Почему ты вообще выбрал нашу компанию?",a:[
+    {t:"Хочу расти и многому научиться.",react:"Правильный настрой. Посмотрим на деле.",emo:"approve",warm:2},
+    {t:"Честно? Нужна была работа.",react:"Хотя бы не врёшь. Это уже плюс.",emo:"neutral",warm:1},
+    {t:"Слышал, что тут сильный руководитель.",react:"Кто-то хорошо информирован. Мне нравится.",emo:"sympathy",warm:3}]},
+  {q:"Кофе, чай или ничего по утрам?",a:[
+    {t:"Кофе, иначе я не человек.",react:"Запомню. Кофеман — значит, выживешь здесь.",emo:"approve",warm:2},
+    {t:"Чай, я спокойный.",react:"Спокойные тут долго не живут. Шучу. Почти.",emo:"neutral",warm:1},
+    {t:"Что приготовите — то и буду.",react:"Ишь какой. Кофе сам себе сделаешь.",emo:"sympathy",warm:2}]}
+ ],
+ [ // ур.2 — Рабочий настрой
+  {q:"Что для тебя главное в работе — деньги или интерес?",a:[
+    {t:"Интерес. Деньги придут следом.",react:"Редкий ответ. Мне нравится ход твоих мыслей.",emo:"approve",warm:3},
+    {t:"Деньги, не буду скрывать.",react:"Честно и по-деловому. Уважаю.",emo:"approve",warm:2},
+    {t:"Главное — с кем работаешь.",react:"О, это почти комплимент. Продолжай.",emo:"sympathy",warm:3}]},
+  {q:"Тебя легко вывести из себя?",a:[
+    {t:"Почти нет, я держу лицо.",react:"Хладнокровие в бизнесе — золото.",emo:"approve",warm:2},
+    {t:"Бывает, но я справляюсь.",react:"Честно. Главное — не на клиентах.",emo:"neutral",warm:1},
+    {t:"Только когда вы строго смотрите.",react:"Тогда придётся смотреть строго почаще.",emo:"sympathy",warm:3}]},
+  {q:"Останешься сегодня сверхурочно, если попрошу?",a:[
+    {t:"Конечно, дело прежде всего.",react:"Вот это я понимаю. Надёжно.",emo:"approve",warm:2},
+    {t:"Останусь, но кофе с вас.",react:"Нахал. Ладно, договорились.",emo:"sympathy",warm:3},
+    {t:"Если только не до утра.",react:"Поглядим. Аппетит приходит во время работы.",emo:"neutral",warm:1}]}
+ ],
+ [ // ур.3 — Чуть теплее
+  {q:"Чем занимаешься, когда не в офисе?",a:[
+    {t:"Спорт, держу себя в форме.",react:"Заметно. То есть… это полезно, да.",emo:"sympathy",warm:3},
+    {t:"Читаю, учусь новому.",react:"Умный мужчина — это привлекательно. Для дела.",emo:"approve",warm:3},
+    {t:"Отсыпаюсь после ваших дедлайнов.",react:"Ха. Справедливо. Буду помягче. Может быть.",emo:"sympathy",warm:2}]},
+  {q:"Ты вообще умеешь отдыхать или только пашешь?",a:[
+    {t:"Умею, но редко получается.",react:"Узнаю себя. Мы похожи больше, чем кажется.",emo:"sympathy",warm:3},
+    {t:"Отдых для слабых.",react:"Опасный настрой. Но мне импонирует.",emo:"approve",warm:2},
+    {t:"Научите?",react:"Может, и научу. Когда закроем квартал.",emo:"sympathy",warm:3}]},
+  {q:"Какая музыка у тебя в наушниках на работе?",a:[
+    {t:"Что-то бодрое, для темпа.",react:"Энергичный. Это чувствуется в цифрах.",emo:"approve",warm:2},
+    {t:"Тишина, я люблю фокус.",react:"Сосредоточенный. Редкое качество.",emo:"approve",warm:2},
+    {t:"Угадаете с трёх раз?",react:"Игры? Что ж, я люблю играть. И выигрывать.",emo:"sympathy",warm:3}]}
+ ],
+ [ // ур.4 — Симпатия проклёвывается
+  {q:"Скажи честно — я строгая начальница?",a:[
+    {t:"Строгая, но справедливая.",react:"Дипломат. Далеко пойдёшь.",emo:"approve",warm:2},
+    {t:"Строгая. Но к вам не придраться.",react:"Осторожнее с комплиментами, я запоминаю.",emo:"sympathy",warm:3},
+    {t:"С вами не страшно, а интересно.",react:"Интересно, значит… Хороший ответ.",emo:"joy",warm:3}]},
+  {q:"Тебе комфортнее, когда я рядом или когда не маячу над душой?",a:[
+    {t:"Когда рядом — я собраннее.",react:"Вот как. Буду маячить чаще.",emo:"sympathy",warm:3},
+    {t:"Дайте свободы — покажу результат.",react:"Самостоятельность. Уважаю и доверяю.",emo:"approve",warm:2},
+    {t:"Рядом — определённо приятнее.",react:"Приятнее? Ты сегодня смелый.",emo:"joy",warm:3}]},
+  {q:"Если бы не работа, мы бы подружились, как думаешь?",a:[
+    {t:"Думаю, да. Легко с вами.",react:"Легко… мне с тобой тоже, признаюсь.",emo:"sympathy",warm:3},
+    {t:"А мы разве ещё не друзья?",react:"Кто-то торопит события. Мне это нравится.",emo:"joy",warm:3},
+    {t:"Дружба с боссом — это сложно.",react:"Сложно? Я люблю сложные задачи.",emo:"sympathy",warm:2}]}
+ ],
+ [ // ур.5 — Дружеский флирт
+  {q:"Признавайся, ты со всеми такой обаятельный или только со мной?",a:[
+    {t:"Только когда есть повод. Вы — повод.",react:"Ох. Засчитано, и не один раз.",emo:"joy",warm:3},
+    {t:"Я скромный, это вы преувеличиваете.",react:"Скромность тебе не идёт. Но мило.",emo:"sympathy",warm:2},
+    {t:"А вы заметили? Это уже что-то.",react:"Заметила. И, кажется, не только я.",emo:"joy",warm:3}]},
+  {q:"Что бы ты сделал, если бы стал боссом на день?",a:[
+    {t:"Дал бы всем выходной. И вам тоже.",react:"Щедро. Особенно последнее.",emo:"joy",warm:3},
+    {t:"Поднял бы всем премии.",react:"Деловой подход. Команда бы тебя полюбила.",emo:"approve",warm:2},
+    {t:"Позвал бы вас на обед обсудить стратегию.",react:"Стратегию, конечно. Я бы согласилась.",emo:"joy",warm:3}]},
+  {q:"Тебе идёт этот костюм. Сам выбирал?",a:[
+    {t:"Спасибо. Старался выглядеть достойно.",react:"Старания не зря. Очень достойно.",emo:"sympathy",warm:3},
+    {t:"Для вас стараюсь.",react:"Опять ты за своё. И опять работает.",emo:"joy",warm:3},
+    {t:"А вы, смотрю, приглядываетесь.",react:"Может, и приглядываюсь. Имею право.",emo:"joy",warm:3}]}
+ ],
+ [ // ур.6 — Доверие
+  {q:"Бывает, что устаёшь от всего этого? Только честно.",a:[
+    {t:"Бывает. Но рядом с целью — легче.",react:"Хорошо, что у нас одна цель. И, кажется, не только рабочая.",emo:"sympathy",warm:3},
+    {t:"Иногда. Спасает, что не один.",react:"Ты и правда не один. Помни это.",emo:"sympathy",warm:3},
+    {t:"С вами усталость не чувствуется.",react:"Льстец. Но мне приятно это слышать.",emo:"joy",warm:2}]},
+  {q:"Расскажи, чего ты на самом деле хочешь добиться?",a:[
+    {t:"Стать тем, кем вы будете гордиться.",react:"Я уже немного горжусь. Не зазнавайся.",emo:"joy",warm:3},
+    {t:"Построить что-то большое. Может, с вами.",react:"«С вами» звучит заманчиво. Продолжай мечтать.",emo:"joy",warm:3},
+    {t:"Пока — не подвести вас.",react:"Ты не подводишь. Совсем наоборот.",emo:"sympathy",warm:2}]},
+  {q:"Кому ты звонишь первым, когда хорошие новости?",a:[
+    {t:"Теперь, наверное, вам.",react:"Мне? Что ж… буду ждать звонка.",emo:"joy",warm:3},
+    {t:"Семье. И вам по работе.",react:"По работе. Ну конечно. Пусть так.",emo:"sympathy",warm:2},
+    {t:"А можно прийти лично?",react:"Можно. Дверь для тебя открыта.",emo:"joy",warm:3}]}
+ ],
+ [ // ур.7 — Явный интерес
+  {q:"Если честно, я часто о тебе думаю. А ты?",a:[
+    {t:"Чаще, чем стоило бы признавать.",react:"Какое совпадение. Опасное совпадение.",emo:"joy",warm:3},
+    {t:"Постоянно. И не только как о боссе.",react:"Смело. Мне нравится, когда смело.",emo:"joy",warm:3},
+    {t:"Думаю, как бы вас не подвести.",react:"Опять работа. Ну хоть честно.",emo:"sympathy",warm:2}]},
+  {q:"Что бы ты выбрал — повышение или ужин со мной?",a:[
+    {t:"Ужин. Повышение подождёт.",react:"Правильный ответ. Единственно верный.",emo:"joy",warm:3},
+    {t:"А нельзя и то, и другое?",react:"Хитрый. Мне такие нравятся.",emo:"joy",warm:3},
+    {t:"Повышение… чтобы быть вам ровней.",react:"Амбициозно. И трогательно одновременно.",emo:"sympathy",warm:3}]},
+  {q:"Ты свободен по вечерам или мне записываться?",a:[
+    {t:"Для вас — всегда свободен.",react:"«Всегда» — опасное слово. Ловлю на нём.",emo:"joy",warm:3},
+    {t:"Запишитесь. Шучу, приходите без записи.",react:"Нахал. Приду.",emo:"joy",warm:3},
+    {t:"Зависит, кто приглашает.",react:"Приглашаю я. Этого достаточно?",emo:"sympathy",warm:3}]}
+ ],
+ [ // ур.8 — Тёплые чувства
+  {q:"С тобой я стала мягче. Это заметно?",a:[
+    {t:"Заметно. И вам идёт.",react:"Это всё ты виноват. Приятно виноват.",emo:"joy",warm:3},
+    {t:"Для меня вы всегда были настоящей.",react:"Ты умеешь сказать так, что теплеет внутри.",emo:"sympathy",warm:3},
+    {t:"Главное, чтоб конкуренты не заметили.",react:"Ха. Бережёшь мою репутацию. Милый.",emo:"joy",warm:2}]},
+  {q:"Если скажу, что скучаю в выходные — это слишком?",a:[
+    {t:"Нет. Я тоже скучаю.",react:"Значит, договорились скучать вместе пореже.",emo:"joy",warm:3},
+    {t:"Это лучшее, что я слышал за неделю.",react:"Тогда буду говорить чаще.",emo:"joy",warm:3},
+    {t:"Может, проведём их вместе?",react:"А ты не теряешься. Я подумаю… да.",emo:"joy",warm:3}]},
+  {q:"Ты стал для меня важнее любого контракта. Веришь?",a:[
+    {t:"Верю. И отвечаю тем же.",react:"Вот теперь я спокойна. И счастлива.",emo:"joy",warm:3},
+    {t:"Контракты приходят и уходят. А мы?",react:"А мы — остаёмся. Если ты не против.",emo:"sympathy",warm:3},
+    {t:"Это лучшая оценка в моей карьере.",react:"Не только в карьере, надеюсь.",emo:"joy",warm:2}]}
+ ],
+ [ // ур.9 — Почти признание
+  {q:"Кажется, между нами уже давно не только работа. Согласен?",a:[
+    {t:"Согласен. И рад этому.",react:"Я тоже рада. Очень.",emo:"joy",warm:3},
+    {t:"Я ждал, когда вы это скажете.",react:"Ждал… а я боялась. Глупо, да?",emo:"sympathy",warm:3},
+    {t:"Давно. Просто боялся спугнуть.",react:"Не спугнёшь. Я не из пугливых.",emo:"joy",warm:3}]},
+  {q:"Если приглашу не на совещание, а на свидание — придёшь?",a:[
+    {t:"Уже собираюсь. Куда и во сколько?",react:"Какой быстрый. Мне нравится.",emo:"joy",warm:3},
+    {t:"Думал, вы никогда не спросите.",react:"Вот и спросила. Не подведи.",emo:"joy",warm:3},
+    {t:"А это не против правил компании?",react:"Я тут пишу правила. И делаю исключение — для тебя.",emo:"sympathy",warm:3}]},
+  {q:"Скажи честно: я тебе нравлюсь?",a:[
+    {t:"Очень. Давно и серьёзно.",react:"Наконец-то вслух. У меня даже руки дрожат.",emo:"joy",warm:3},
+    {t:"Больше, чем боссу стоит признаваться.",react:"Тогда мы оба нарушители. Прекрасно.",emo:"joy",warm:3},
+    {t:"А по моим глазам не видно?",react:"Видно. Просто хотела услышать.",emo:"sympathy",warm:3}]}
+ ],
+ [ // ур.10 — Близкие (партнёры + тепло)
+  {q:"Мы теперь партнёры — и в делах, и не только. Не страшно?",a:[
+    {t:"С вами — ничего не страшно.",react:"И мне. Кажется, мы непобедимы.",emo:"joy",warm:3},
+    {t:"Страшно было раньше. Теперь — нет.",react:"Вот и я наконец дышу свободно.",emo:"sympathy",warm:3},
+    {t:"Главное, что мы вместе.",react:"Вместе. Моё любимое слово теперь.",emo:"joy",warm:3}]},
+  {q:"Признайся, ты с самого начала на меня заглядывался?",a:[
+    {t:"С первого вашего строгого взгляда.",react:"Так вот почему ты так старался. Хитрец.",emo:"joy",warm:3},
+    {t:"Кто бы устоял перед таким боссом?",react:"Льстец до последнего. И мне это нравится.",emo:"joy",warm:3},
+    {t:"Заглядывался. И до сих пор не могу отвести взгляд.",react:"Тогда и не отводи. Никогда.",emo:"sympathy",warm:3}]},
+  {q:"Что дальше — покорим рынок или сбежим в отпуск вдвоём?",a:[
+    {t:"Сначала рынок, потом отпуск. Вместе.",react:"Идеальный план. Как и ты.",emo:"joy",warm:3},
+    {t:"Отпуск. Рынок подождёт нас.",react:"Бунтарь. Обожаю. Собираю чемодан.",emo:"joy",warm:3},
+    {t:"Куда вы — туда и я.",react:"Тогда держись. Я знаю много мест.",emo:"joy",warm:3}]}
+ ]
+];
+let chatOpen=false, currentChat=null, chatCooldownUntil=0; const _lastChatQ={};
+function chatReady(){ return Date.now()>=chatCooldownUntil; }
+function faceImg(id,emo){ const src=ASSETS.boss[state.stage] && ASSETS.boss[state.stage][emo]; $(id).innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo]; }
+function openChat(){
+  if(chatOpen || quizOpen) return;
+  chatOpen=true; ensureAudio();
+  const lvl=Math.min(state.chatLevel||1, CHAT.length);
+  const pool=CHAT[lvl-1];
+  let q; do{ q=pick(pool); }while(pool.length>1 && q===_lastChatQ[lvl]); _lastChatQ[lvl]=q;
+  currentChat={q, answered:false};
+  faceImg("chatBossFace","neutral");
+  $("chatBubbleText").textContent=q.q;
+  const wrap=$("chatAnswers"); wrap.innerHTML="";
+  q.a.forEach((opt,i)=>{
+    const b=document.createElement("button"); b.className="answer chat-answer";
+    b.innerHTML=`<span class="txt">${opt.t}</span>`;
+    b.addEventListener("click", ()=>chatAnswer(i));
+    wrap.appendChild(b);
+  });
+  $("chatOverlay").hidden=false;
+}
+function chatAnswer(i){
+  if(!currentChat || currentChat.answered) return;
+  currentChat.answered=true;
+  const opt=currentChat.q.a[i];
+  Array.from($("chatAnswers").children).forEach(b=>b.disabled=true);
+  faceImg("chatBossFace", opt.emo);
+  $("chatBubbleText").textContent=opt.react;
+  state.chatProgress=(state.chatProgress||0)+(opt.warm||1);
+  let leveled=false;
+  if(state.chatProgress>=CHAT_NEED && (state.chatLevel||1)<10){ state.chatLevel=(state.chatLevel||1)+1; state.chatProgress=0; leveled=true; }
+  if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\\nуровень "+state.chatLevel), 250); }
+  else sfx.ok();
+  bossSay(opt.react, opt.emo);
+  renderHud(); save();
+  chatCooldownUntil=Date.now()+9000;
+  setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; renderHud(); }, 1900);
+}
+
+let actx = null;
+function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); } }
+function beep(freq, dur=0.08, type="sine", vol=0.05){
+  if(state.muted || !actx) return;
+  try{
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+const sfx = {
+  click(){ beep(520,0.05,"triangle",0.04); },
+  buy(){ beep(640,0.08,"sine",0.05); setTimeout(()=>beep(860,0.07,"sine",0.05),60); },
+  ok(){ beep(680,0.1,"sine",0.06); setTimeout(()=>beep(1020,0.14,"sine",0.06),100); },
+  bad(){ beep(180,0.22,"sawtooth",0.05); },
+  promote(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.16,"triangle",0.06), i*110)); },
+};
+
+/* ---------------------------------------------------------------------------
+   9) ИГРОВАЯ ЛОГИКА
+--------------------------------------------------------------------------- */
+function mult(){ return STAGES[state.stage].mult; }
+function baseProduction(){ let s=0; for(let i=0;i<GENERATORS.length;i++) s += GENERATORS[i].income * (state.gens[i]||0); return s; }
+function incomePerSec(){ return baseProduction() * mult(); }
+function clickValue(){ return Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) * mult(); }
+function genCost(i){ return Math.floor(GENERATORS[i].baseCost * Math.pow(GENERATORS[i].growth, state.gens[i]||0)); }
+function stageThreshold(){ return Math.max(30, incomePerSec() * 25); } // ~25с в простое
+
+function doClick(){
+  ensureAudio();
+  const v = clickValue();
+  state.money += v; state.totalEarned += v; state.barProgress += v;
+  spawnFloater("+"+fmt(v)); coinBurst(); pulseClick(); sfx.click();
+  checkStageBar(); renderHud();
+}
+function buyGen(i){
+  const cost = genCost(i);
+  if(state.money < cost) return;
+  state.money -= cost; state.gens[i] = (state.gens[i]||0) + 1;
+  sfx.buy(); buildGenList(); renderHud(); save();
+}
+function checkStageBar(){
+  if(quizOpen) return;
+  if(state.barProgress >= stageThreshold()){ state.barProgress = 0; openQuiz(); }
+}
+
+/* ---------------------------------------------------------------------------
+   10) КВИЗ
+--------------------------------------------------------------------------- */
+let quizOpen=false, currentQuiz=null;
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function pickQuestionIndex(){
+  let idx; do { idx = Math.floor(Math.random()*QUESTIONS.length); } while(QUESTIONS.length>1 && idx===state.lastQuestion);
+  state.lastQuestion = idx; return idx;
+}
+function openQuiz(){
+  quizOpen = true; ensureAudio();
+  const idx = pickQuestionIndex();
+  const q = QUESTIONS[idx];
+  const opts = q.a.map((t,i)=>({ t, correct:i===q.c }));
+  shuffle(opts);
+  currentQuiz = { idx, opts, answered:false };
+
+  const stage = STAGES[state.stage];
+  $("quizBubbleText").textContent = pick(stage.motivations);
+  setQuizBoss("neutral");
+
+  $("quizQuestion").textContent = q.q;
+  const wrap = $("quizAnswers"); wrap.innerHTML="";
+  const letters = ["А","Б","В","Г"];
+  opts.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.className="answer"; b.dataset.i=i;
+    b.innerHTML = `<span class="ltr">${letters[i]}</span><span class="txt">${o.t}</span><span class="vote"></span>`;
+    b.addEventListener("click", ()=>answer(i));
+    wrap.appendChild(b);
+  });
+  refreshLifelineButtons();
+  $("quizOverlay").hidden = false;
+}
+function refreshLifelineButtons(){
+  $("lifeReport").textContent = state.lifelines.report;
+  $("lifeColleagues").textContent = state.lifelines.colleagues;
+  $("lifeMentor").textContent = state.lifelines.mentor;
+  document.querySelectorAll(".life").forEach(btn=>{
+    const k = btn.dataset.life;
+    btn.disabled = (currentQuiz && currentQuiz.answered) || state.lifelines[k] <= 0;
+  });
+}
+function answerButtons(){ return Array.from($("quizAnswers").children); }
+function correctPos(){ return currentQuiz.opts.findIndex(o=>o.correct); }
+
+function useLifeline(kind){
+  if(!currentQuiz || currentQuiz.answered) return;
+  if(state.lifelines[kind] <= 0) return;
+  state.lifelines[kind]--;
+  const btns = answerButtons();
+  const cPos = correctPos();
+
+  if(kind==="report"){
+    const wrongs = currentQuiz.opts.map((o,i)=>i).filter(i=>i!==cPos);
+    shuffle(wrongs);
+    wrongs.slice(0,2).forEach(i=>{ btns[i].classList.add("removed"); btns[i].disabled=true; });
+  } else if(kind==="colleagues"){
+    const votes = new Array(btns.length).fill(0);
+    let correctShare = 50 + Math.floor(Math.random()*20);
+    votes[cPos] = correctShare;
+    let rest = 100 - correctShare;
+    const others = currentQuiz.opts.map((o,i)=>i).filter(i=>i!==cPos && !btns[i].classList.contains("removed"));
+    others.forEach((i,k)=>{ const v = (k===others.length-1) ? rest : Math.floor(Math.random()*(rest+1)); votes[i]=v; rest-=v; });
+    btns.forEach((b,i)=>{ b.querySelector(".vote").textContent = votes[i] ? votes[i]+"%" : ""; });
+  } else if(kind==="mentor"){
+    let pick = cPos;
+    if(Math.random() > 0.8){
+      const wrongs = currentQuiz.opts.map((o,i)=>i).filter(i=>i!==cPos && !btns[i].classList.contains("removed"));
+      if(wrongs.length) pick = wrongs[Math.floor(Math.random()*wrongs.length)];
+    }
+    btns[pick].classList.add("mentor");
+  }
+  refreshLifelineButtons();
+}
+
+function answer(i){
+  if(!currentQuiz || currentQuiz.answered) return;
+  currentQuiz.answered = true;
+  const cPos = correctPos();
+  const correct = (i===cPos);
+  const btns = answerButtons();
+  btns.forEach(b=>b.disabled=true);
+  btns[cPos].classList.add("correct");
+  if(!correct) btns[i].classList.add("wrong");
+
+  const stage = STAGES[state.stage];
+  let line, emo;
+  if(correct){
+    sfx.ok();
+    state.trust = Math.min(stage.need, state.trust + 1);
+    line = pickNoRepeat(stage.correct, "ok"); emo = pick(stage.okEmos);
+  } else {
+    sfx.bad();
+    const penalty = Math.min(state.money * 0.10, incomePerSec() * 30);
+    state.money = Math.max(0, state.money - penalty);
+    line = pickNoRepeat(stage.wrong, "bad"); emo = "stern";
+  }
+  setQuizBoss(emo);
+  $("quizBubbleText").textContent = line;
+  refreshLifelineButtons(); renderHud();
+  bossSay(line, emo);
+  save();
+
+  setTimeout(()=>{ closeQuiz(); if(correct && state.trust >= stage.need) promote(); }, 1700);
+}
+function closeQuiz(){ $("quizOverlay").hidden = true; quizOpen=false; currentQuiz=null; }
+
+function promote(){
+  if(state.stage >= STAGES.length-1){
+    if(!state.partner){
+      state.partner = true;
+      $("finaleText").textContent = "Ты прошёл путь от бедолаги-стажёра до равного партнёра Вероники. Компания на вершине — а вы оказались отличной командой. Можно развивать бизнес без предела.";
+      $("finaleOverlay").hidden = false;
+      submitScore();
+    }
+    state.trust = 0; save(); renderAll(); return;
+  }
+  state.stage++; state.trust = 0;
+  state.lifelines = { report:1, colleagues:1, mentor:1 };
+  sfx.promote();
+  flourish("Повышение!\n" + STAGES[state.stage].title);
+  submitScore(); save(); renderAll();
+}
+
+/* ---------------------------------------------------------------------------
+   11) РЕНДЕР
+--------------------------------------------------------------------------- */
+let genRefs = [];
+function buildGenList(){
+  const list = $("genList"); list.innerHTML=""; genRefs=[];
+  GENERATORS.forEach((g,i)=>{
+    const row=document.createElement("div");
+    row.className="gen"; row.dataset.i=i;
+    row.innerHTML =
+      `<div class="gen-icon">${g.icon}</div>`+
+      `<div class="gen-info"><div class="gen-name">${g.name}</div>`+
+      `<div class="gen-sub">+${fmt(g.income)}/с</div></div>`+
+      `<button class="buy-btn"><span class="price">${fmt(genCost(i))} ₽</span><span class="lvl">ур. ${state.gens[i]||0}</span></button>`;
+    row.querySelector(".buy-btn").addEventListener("click", ()=>buyGen(i));
+    list.appendChild(row);
+    genRefs.push({ row, btn:row.querySelector(".buy-btn"), price:row.querySelector(".price"), lvl:row.querySelector(".lvl") });
+  });
+  updateGenAfford();
+}
+function updateGenAfford(){
+  GENERATORS.forEach((g,i)=>{
+    const r=genRefs[i]; if(!r) return;
+    const cost=genCost(i); const can = state.money >= cost;
+    r.btn.disabled = !can; r.row.classList.toggle("locked", !can);
+    r.price.textContent = fmt(cost)+" ₽"; r.lvl.textContent = "ур. "+(state.gens[i]||0);
+  });
+}
+function renderHud(){
+  $("money").textContent = fmt(state.money);
+  $("rate").textContent  = "+"+fmt(incomePerSec())+"/с";
+  $("clickSub").textContent = "+"+fmt(clickValue())+" ₽";
+  const stage = STAGES[state.stage];
+  $("rankTitle").textContent = state.partner ? "Партнёр 🥂" : stage.title;
+  $("rankMult").textContent = multLabel(stage.mult);
+  $("trustFill").style.width = Math.min(100, (state.trust/stage.need)*100)+"%";
+  $("stageFill").style.width = Math.min(100, (state.barProgress/stageThreshold())*100)+"%";
+  $("chatLvl").textContent = "ур. "+(state.chatLevel||1)+"/10";
+  $("chatTitle").textContent = CHAT_TITLES[(state.chatLevel||1)-1];
+  $("chatFill").style.width = Math.min(100, ((state.chatProgress||0)/CHAT_NEED)*100)+"%";
+  $("chatBtn").disabled = !(chatReady() && !chatOpen && !quizOpen);
+  $("chatBtn").textContent = chatReady() ? "💬 Поговорить" : "💬 чуть позже";
+  updateGenAfford();
+}
+
+/* персонажи-слоты (PNG или эмодзи-заглушка) */
+function setFigure(elId, src, fallbackEmoji){
+  const el = $(elId);
+  el.innerHTML = src ? `<img src="${src}" alt="">` : fallbackEmoji;
+}
+function setBossFigure(emo){
+  const src = ASSETS.boss[state.stage] && ASSETS.boss[state.stage][emo];
+  setFigure("bossFace", src, EMO[emo]);
+}
+function setQuizBoss(emo){
+  const src = ASSETS.boss[state.stage] && ASSETS.boss[state.stage][emo];
+  const el = $("quizBossFace");
+  el.innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo];
+}
+function renderScene(){
+  $("app").className = "stage-"+state.stage;
+  const sc = $("scene");
+  const office = ASSETS.office[state.stage];
+  $("officeArt").style.display = office ? "none" : "block";
+  sc.style.backgroundImage = office ? `url("${office}")` : "";
+  sc.style.backgroundSize = office ? "cover" : "";
+  sc.style.backgroundPosition = "center";
+  // герой
+  // стол/компьютер
+  const desk = ASSETS.desk[state.stage];
+  $("monitor").innerHTML = desk ? `<img src="${desk}" alt="">` : "🖥️";
+  // начальница (нейтраль)
+  setBossFigure("neutral");
+}
+function renderAll(){ renderScene(); buildGenList(); renderHud(); }
+
+/* комикс-облачко на сцене */
+let bubbleTimer=null;
+function bossSay(text, emo){
+  setBossFigure(emo||"neutral");
+  $("bossBubbleText").textContent = text;
+  $("bossBubble").hidden = false;
+  clearTimeout(bubbleTimer);
+  bubbleTimer=setTimeout(()=>{ $("bossBubble").hidden = true; setBossFigure("neutral"); }, 4500);
+}
+
+/* эффекты клика */
+function spawnFloater(text){
+  const layer=$("fxLayer"); const r=$("clickBtn").getBoundingClientRect(); const s=$("scene").getBoundingClientRect();
+  const x = (r.left - s.left) + r.width/2; const y = (r.top - s.top);
+  const f=document.createElement("div"); f.className="floater"; f.textContent=text;
+  f.style.left=(x-12+(Math.random()*20-10))+"px"; f.style.top=(y-6)+"px";
+  layer.appendChild(f); setTimeout(()=>f.remove(), 850);
+}
+function coinBurst(){
+  const layer=$("fxLayer"); const r=$("clickBtn").getBoundingClientRect(); const s=$("scene").getBoundingClientRect();
+  const x = (r.left - s.left) + r.width/2; const y = (r.top - s.top) + 6;
+  for(let k=0;k<3;k++){
+    const c=document.createElement("div"); c.className="coinfx"; c.textContent="🪙";
+    c.style.left=(x-8)+"px"; c.style.top=y+"px"; c.style.setProperty("--dx",(Math.random()*60-30)+"px");
+    layer.appendChild(c); setTimeout(()=>c.remove(), 720);
+  }
+}
+function pulseClick(){ const m=$("monitor"); m.style.transform="scale(1.14)"; setTimeout(()=>m.style.transform="",90); }
+function flourish(text){
+  const sh=$("shimmer"), t=$("toast");
+  sh.classList.remove("go"); void sh.offsetWidth; sh.classList.add("go");
+  t.textContent=text; t.classList.remove("go"); void t.offsetWidth; t.classList.add("go");
+}
+
+/* ---------------------------------------------------------------------------
+   12) ОФЛАЙН-ДОХОД
+--------------------------------------------------------------------------- */
+function computeOffline(){
+  if(!state.lastSave) return;
+  // На Яндексе можно брать серверное время: ysdk.serverTime()
+  const now = Date.now();
+  let elapsed = Math.max(0, (now - state.lastSave) / 1000);
+  elapsed = Math.min(elapsed, OFFLINE.capHours * 3600);
+  const earn = incomePerSec() * OFFLINE.rate * elapsed;
+  if(earn >= 1){
+    state.money += earn; state.totalEarned += earn;
+    $("offlineAmount").textContent = fmt(earn)+" ₽";
+    $("offlineOverlay").hidden = false;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   13) ИГРОВОЙ ЦИКЛ (rAF + дельта-время)
+--------------------------------------------------------------------------- */
+let last = 0;
+function loop(now){
+  if(!last) last = now;
+  let dt = (now - last)/1000; last = now;
+  if(dt > DT_CLAMP) dt = DT_CLAMP;
+  if(!paused){
+    const inc = incomePerSec()*dt;
+    if(inc>0){ state.money += inc; state.totalEarned += inc; state.barProgress += inc; checkStageBar(); }
+    renderHud();
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ---------------------------------------------------------------------------
+   14) СОХРАНЕНИЕ / ЗАГРУЗКА
+--------------------------------------------------------------------------- */
+function save(){ state.lastSave = Date.now(); try{ Storage.set(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadState(){
+  const raw = Storage.get(SAVE_KEY); if(!raw) return;
+  try{
+    const s = JSON.parse(raw);
+    state = Object.assign(defaultState(), s);
+    if(!Array.isArray(state.gens) || state.gens.length!==GENERATORS.length) state.gens=[0,0,0,0,0,0];
+    state.lifelines = Object.assign({report:1,colleagues:1,mentor:1}, s.lifelines||{});
+    if(state.stage<0||state.stage>=STAGES.length) state.stage=0;
+  }catch(e){ state = defaultState(); }
+}
+
+/* ---------------------------------------------------------------------------
+   ИНИЦИАЛИЗАЦИЯ
+--------------------------------------------------------------------------- */
+function bindUI(){
+  $("clickBtn").addEventListener("click", doClick);
+  $("muteBtn").addEventListener("click", ()=>{
+    state.muted = !state.muted; $("muteBtn").textContent = state.muted ? "🔇" : "🔊"; save();
+  });
+  document.querySelectorAll(".life").forEach(btn=>btn.addEventListener("click", ()=>useLifeline(btn.dataset.life)));
+  $("offlineClose").addEventListener("click", ()=>{ $("offlineOverlay").hidden=true; });
+  $("finaleClose").addEventListener("click", ()=>{ $("finaleOverlay").hidden=true; });
+  $("menuScreen").style.backgroundImage = 'url("'+MENU_IMG+'")';
+  $("playBtn").addEventListener("click", ()=>{ ensureAudio(); $("menuScreen").hidden = true; });
+  $("chatBtn").addEventListener("click", openChat);
+}
+window.addEventListener("DOMContentLoaded", async ()=>{
+  bindUI();
+  await initSDK();
+  loadState();
+  computeOffline();
+  $("muteBtn").textContent = state.muted ? "🔇" : "🔊";
+  renderAll();
+  if(sdkReady) readyForPlayer();
+  requestAnimationFrame(loop);
+  setInterval(save, 10000);
+  setInterval(()=>{ if(Math.random()<0.34) idleTick(); }, 9000);
+  document.addEventListener("visibilitychange", ()=>{ if(document.hidden) save(); });
+  window.addEventListener("beforeunload", save);
+});
+</script>
+</body>
+</html>
