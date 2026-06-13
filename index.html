@@ -1132,6 +1132,40 @@ const CHAT=[
     {t:"Куда вы — туда и я.",react:"Тогда держись. Я знаю много мест.",emo:"joy",warm:3}]}
  ]
 ];
+// Эмоциональные/флиртующие добавки к реакции — тем смелее, чем выше близость.
+const CHAT_TAILS = [
+ [ // ур.1–3 — тепло, лёгкая игривость
+  "Мне нравится, как ты мыслишь.",
+  "С тобой неожиданно приятно говорить.",
+  "Продолжай в том же духе — я присматриваюсь к тебе.",
+  "Ты всё интереснее с каждым днём.",
+  "Хм, а ты не так прост, как казался на собеседовании.",
+  "Знаешь, утро в офисе с тобой проходит бодрее.",
+  "Я редко это говорю, но — молодец.",
+  "Кажется, я начинаю тебе доверять." ],
+ [ // ур.4–6 — явный интерес, мягкий флирт
+  "И, между нами, смотреть на тебя — отдельное удовольствие.",
+  "Иногда я ловлю себя на том, что жду наших разговоров.",
+  "Ты мне нравишься. Как сотрудник, конечно… и не только.",
+  "С тобой даже скучные отчёты становятся теплее.",
+  "Не зазнавайся, но я думаю о тебе чаще, чем стоило бы.",
+  "Если бы не работа, я бы давно позвала тебя на кофе.",
+  "Ты опасно обаятелен, имей это в виду.",
+  "Мне нравится, когда ты рядом. Очень." ],
+ [ // ур.7–10 — недвусмысленные (но чистые) намёки
+  "Давай начистоту: ты мне дорог не только как партнёр по бизнесу.",
+  "Останься сегодня подольше — обсудим планы. И, может, не только рабочие 😉",
+  "Я всё чаще представляю нас не в переговорной, а где-нибудь вдвоём у моря.",
+  "Между нами уже давно не только цифры. И мне это очень нравится.",
+  "Если бы ты сейчас пригласил меня на ужин — я бы не отказалась.",
+  "Ты стал мне кем-то очень близким. Думаю, ты и сам это чувствуешь.",
+  "Иногда так хочется забыть про субординацию и просто тебя обнять.",
+  "Признаюсь: ты занимаешь мои мысли куда больше, чем весь этот бизнес." ]
+];
+function pickTail(lvl){
+  const tier = lvl<=3 ? 0 : (lvl<=6 ? 1 : 2);
+  return pickNoRepeat(CHAT_TAILS[tier], "tail"+tier);
+}
 let chatOpen=false, currentChat=null, chatCooldownUntil=0; const _lastChatQ={};
 function chatReady(){ return Date.now()>=chatCooldownUntil; }
 function faceImg(id,emo){ const src=BOSS_FACES[emo]; $(id).innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo]; }
@@ -1157,16 +1191,18 @@ function chatAnswer(i){
   if(!currentChat || currentChat.answered) return;
   currentChat.answered=true;
   const opt=currentChat.q.a[i];
+  // более развёрнутая, эмоциональная реакция: базовая реплика + флиртующий «хвост» по уровню близости
+  const react = opt.react + " " + pickTail(state.chatLevel||1);
   // показываем ТОЛЬКО реакцию Даниэлы Васильевны: убираем кнопки выбора, меняем её эмоцию
   $("chatAnswers").innerHTML="";
   faceImg("chatBossFace", opt.emo);
-  $("chatBubbleText").textContent=opt.react;
+  $("chatBubbleText").textContent=react;
   state.chatProgress=(state.chatProgress||0)+(opt.warm||1);
   let leveled=false;
   if(state.chatProgress>=CHAT_NEED && (state.chatLevel||1)<10){ state.chatLevel=(state.chatLevel||1)+1; state.chatProgress=0; leveled=true; }
   if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\\nуровень "+state.chatLevel), 250); }
   else sfx.ok();
-  bossSay(opt.react, opt.emo);
+  bossSay(react, opt.emo);
   renderHud(); save();
   chatCooldownUntil=Date.now()+9000;
   // на повышении уровня даём дольше полюбоваться реакцией и обновляем панель образов
@@ -1202,7 +1238,7 @@ function baseProduction(){ let s=0; for(let i=0;i<GENERATORS.length;i++) s += GE
 function incomePerSec(){ return baseProduction() * mult(); }
 function clickValue(){ return Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) * mult(); }
 function genCost(i){ return Math.floor(GENERATORS[i].baseCost * Math.pow(GENERATORS[i].growth, state.gens[i]||0)); }
-function stageThreshold(){ return Math.max(30, incomePerSec() * 25); } // ~25с в простое
+function stageThreshold(){ return Math.max(60, incomePerSec() * 50); } // ~50с в простое (в 2 раза медленнее)
 
 function doClick(){
   ensureAudio();
@@ -1540,8 +1576,10 @@ function loop(now){
   let dt = (now - last)/1000; last = now;
   if(dt > DT_CLAMP) dt = DT_CLAMP;
   if(!paused){
-    const inc = incomePerSec()*dt;
-    if(inc>0){ state.money += inc; state.totalEarned += inc; state.barProgress += inc; checkStageBar(); }
+    if(!quizOpen){                                  // во время викторины накопление на паузе
+      const inc = incomePerSec()*dt;
+      if(inc>0){ state.money += inc; state.totalEarned += inc; state.barProgress += inc; checkStageBar(); }
+    }
     renderHud();
   }
   requestAnimationFrame(loop);
