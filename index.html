@@ -6,7 +6,7 @@
 <title>БЕДОЛАГА</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    БЕДОЛАГА — горизонтальная версия (десктоп), стиль Playrix
@@ -76,9 +76,11 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .bar-track{flex:1;height:14px;background:#f0e2c4;border:2px solid var(--frame);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 3px rgba(120,80,20,.18);}
 .bar-fill{height:100%;width:0%;border-radius:999px;transition:width .25s ease;}
 .trust-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
-.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--panel-2);border:2px solid var(--frame);
-  font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 var(--frame-deep);}
-.icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--frame-deep);}
+.icon-btn{width:42px;height:42px;border-radius:13px;border:2px solid var(--frame-deep);
+  background:linear-gradient(180deg,#fff7e6 0%,#ffe6b3 55%,#f6d28a 100%);
+  font-size:20px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 var(--frame-deep),0 6px 10px rgba(120,80,20,.25),inset 0 2px 0 rgba(255,255,255,.85),inset 0 -3px 5px rgba(180,130,50,.3);}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--frame-deep),inset 0 2px 0 rgba(255,255,255,.7);}
 
 /* ---- основная зона: сцена (слева) + панель команды (справа) ---- */
 .main{flex:1 1 auto;display:flex;gap:10px;min-height:0;}
@@ -178,9 +180,10 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .gen-name{font-family:"Baloo 2";font-weight:700;font-size:14px;line-height:1.1;}
 .gen-sub{font-size:11px;font-weight:700;color:var(--ink-soft);}
 .buy-btn{flex:0 0 auto;min-width:74px;text-align:center;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
-  background:linear-gradient(180deg,#9cd84f,var(--green-deep));border-radius:12px;padding:9px 8px;
-  text-shadow:0 1px 0 rgba(0,0,0,.18);box-shadow:0 4px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
-.buy-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
+  background:linear-gradient(180deg,#b6ec6e 0%,#86cb3c 50%,#5c9e27 100%);border-radius:13px;padding:9px 10px;
+  text-shadow:0 1px 0 rgba(0,0,0,.22);
+  box-shadow:0 4px 0 #4b8420,0 6px 9px rgba(60,110,20,.3),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 5px rgba(60,110,20,.4);}
+.buy-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #4b8420,inset 0 2px 0 rgba(255,255,255,.45);}
 .buy-btn .price{display:block;font-size:13px;}
 .buy-btn .lvl{display:block;font-size:9px;opacity:.85;font-weight:700;}
 .gen.locked .buy-btn{background:linear-gradient(180deg,#cfc4ad,#a99c80);box-shadow:0 4px 0 #8a7d62;}
@@ -205,33 +208,39 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 @media (max-width:520px){.answers{grid-template-columns:1fr;}}
 .answer{display:flex;align-items:center;gap:10px;text-align:left;
-  background:linear-gradient(180deg,#fffaf0,#fff1d6);border:2px solid var(--frame);border-radius:14px;
-  padding:11px 12px;font-weight:800;font-size:14px;box-shadow:0 3px 0 rgba(199,154,78,.5);transition:all .1s ease;}
-.answer .ltr{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--frame);color:#fff;
-  font-family:"Baloo 2";display:flex;align-items:center;justify-content:center;font-size:13px;}
+  background:linear-gradient(180deg,#fffdf7 0%,#fff3da 55%,#ffe8bd 100%);border:2px solid var(--frame-deep);border-radius:15px;
+  padding:12px 13px;font-weight:800;font-size:14px;transition:all .1s ease;
+  box-shadow:0 4px 0 rgba(180,135,60,.6),0 6px 10px rgba(150,100,30,.18),inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 5px rgba(200,160,90,.25);}
+.answer .ltr{flex:0 0 auto;width:28px;height:28px;border-radius:9px;color:#fff;
+  background:linear-gradient(180deg,#f0b65a,var(--frame-deep));
+  font-family:"Baloo 2";display:flex;align-items:center;justify-content:center;font-size:14px;
+  text-shadow:0 1px 1px rgba(0,0,0,.3);box-shadow:inset 0 2px 0 rgba(255,255,255,.6),0 2px 3px rgba(120,80,20,.4);}
 .answer .txt{flex:1 1 auto;}
 .answer .vote{flex:0 0 auto;font-size:11px;color:var(--ink-soft);font-weight:800;}
-.answer:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 rgba(199,154,78,.5);}
+.answer:not(:disabled):active{transform:translateY(3px);box-shadow:0 1px 0 rgba(180,135,60,.6),inset 0 2px 0 rgba(255,255,255,.7);}
 .answer.removed{opacity:.35;}
 .answer.mentor{border-color:var(--plum);box-shadow:0 0 0 2px var(--plum) inset,0 3px 0 var(--plum-deep);}
 .answer.correct{background:linear-gradient(180deg,#bdf0a8,#86cb3c);border-color:var(--green-deep);color:#244f0c;box-shadow:0 3px 0 var(--green-deep);}
 .answer.wrong{background:linear-gradient(180deg,#f7c0bb,#e5564b);border-color:#b53227;color:#fff;box-shadow:0 3px 0 #b53227;}
 .lifelines{display:flex;gap:8px;margin-top:14px;}
-.life{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:"Baloo 2";font-weight:800;font-size:12px;
-  background:linear-gradient(180deg,#eaf3ff,#cfe6fb);border:2px solid #6db2dd;border-radius:14px;padding:9px 4px;
-  box-shadow:0 4px 0 #4a90c0;}
-.life:active{transform:translateY(2px);box-shadow:0 2px 0 #4a90c0;}
-.life small{color:#2f6f9a;font-size:11px;}
-.life:disabled{filter:grayscale(.7) brightness(.96);box-shadow:0 4px 0 #999;}
+.life{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:"Baloo 2";font-weight:800;
+  background:linear-gradient(180deg,#f4faff 0%,#d6ebfc 55%,#b6dbf6 100%);border:2px solid #4a90c0;border-radius:15px;padding:10px 4px;
+  box-shadow:0 5px 0 #3a78a8,0 7px 10px rgba(40,90,140,.25),inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 5px rgba(80,140,190,.3);}
+.life:active{transform:translateY(3px);box-shadow:0 2px 0 #3a78a8,inset 0 2px 0 rgba(255,255,255,.8);}
+.life .ic{font-size:23px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));}
+.life .lbl{font-size:12px;color:#1f5f8a;}
+.life small{color:#2f6f9a;font-size:12px;font-weight:800;background:#fff;border-radius:999px;padding:0 7px;box-shadow:inset 0 0 0 1px #9cc8e6;}
+.life:disabled{filter:grayscale(.7) brightness(.96);box-shadow:0 5px 0 #999;}
 
 /* offline / finale */
 .offline-title,.finale-title{font-family:"Baloo 2";font-weight:800;font-size:24px;text-align:center;color:var(--gold-deep);}
 .offline-body,.finale-body{text-align:center;color:var(--ink-soft);font-size:14px;font-weight:700;margin-top:8px;line-height:1.4;}
 .offline-amount{text-align:center;font-family:"Baloo 2";font-weight:800;font-size:36px;color:var(--gold-deep);margin-top:10px;}
-.primary-btn{margin-top:16px;width:100%;font-family:"Baloo 2";font-weight:800;font-size:17px;color:#fff;
-  background:linear-gradient(180deg,#9cd84f,var(--green-deep));border-radius:16px;padding:14px;
-  text-shadow:0 1px 0 rgba(0,0,0,.2);box-shadow:0 5px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
-.primary-btn:active{transform:translateY(2px);box-shadow:0 3px 0 #4b8420, inset 0 1px 0 rgba(255,255,255,.4);}
+.primary-btn{margin-top:16px;width:100%;font-family:"Baloo 2";font-weight:800;font-size:18px;color:#fff;
+  background:linear-gradient(180deg,#b6ec6e 0%,#86cb3c 50%,#5c9e27 100%);border-radius:16px;padding:15px;
+  text-shadow:0 1px 0 rgba(0,0,0,.25);
+  box-shadow:0 6px 0 #4b8420,0 9px 16px rgba(60,110,20,.35),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -4px 7px rgba(60,110,20,.4);}
+.primary-btn:active{transform:translateY(3px);box-shadow:0 3px 0 #4b8420,inset 0 2px 0 rgba(255,255,255,.5);}
 
 /* эффект повышения */
 .shimmer{position:absolute;inset:0;pointer-events:none;z-index:20;opacity:0;
@@ -241,6 +250,14 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   font-family:"Baloo 2";font-weight:800;font-size:26px;color:#fff;text-align:center;white-space:pre-line;
   -webkit-text-stroke:2px var(--gold-deep);text-shadow:0 4px 0 rgba(180,120,10,.5);}
 .toast.go{animation:toast 1.8s ease;}
+
+/* праздничное конфетти при переезде в новый офис */
+.confetti{position:absolute;top:-16px;width:9px;height:15px;border-radius:2px;z-index:9;pointer-events:none;
+  animation-name:confettiFall;animation-timing-function:cubic-bezier(.3,.5,.6,1);animation-fill-mode:forwards;}
+@keyframes confettiFall{
+  0%{opacity:0;transform:translateY(0) translateX(0) rotate(0)}
+  8%{opacity:1}
+  100%{opacity:.15;transform:translateY(760px) translateX(var(--dx,0)) rotate(760deg)}}
 
 /* анимации */
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -272,16 +289,35 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .menu-screen[hidden]{display:none;}
 .menu-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#2a1c14;}
 .menu-screen::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(20,12,6,0) 38%,rgba(20,12,6,.74));}
-.menu-logo{position:relative;z-index:2;font-family:"Baloo 2";font-weight:800;font-size:clamp(40px,8vw,76px);letter-spacing:.04em;
-  color:#fff;-webkit-text-stroke:3px var(--frame-deep);text-shadow:0 6px 0 rgba(120,70,10,.5),0 12px 26px rgba(0,0,0,.55);}
-.menu-sub{position:relative;z-index:2;color:#ffe8c2;font-weight:800;font-size:clamp(13px,2.4vw,18px);text-shadow:0 2px 6px rgba(0,0,0,.6);margin-top:-2px;}
-.menu-play{position:relative;z-index:2;margin-top:14px;font-family:"Baloo 2";font-weight:800;font-size:22px;color:#fff;
-  background:linear-gradient(180deg,#9cd84f,var(--green-deep));border-radius:18px;padding:15px 58px;
-  text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 6px 0 #4b8420,0 10px 22px rgba(0,0,0,.4);animation:nudge 1.6s ease-in-out infinite;}
-.menu-play:active{transform:translateY(3px);box-shadow:0 3px 0 #4b8420,0 6px 12px rgba(0,0,0,.4);}
+.menu-logo{position:relative;z-index:2;font-family:"Unbounded","Baloo 2",sans-serif;font-weight:900;
+  font-size:clamp(46px,9.5vw,96px);letter-spacing:.01em;line-height:.92;
+  background:linear-gradient(180deg,#fff4d2 0%,#ffd564 44%,#f0a233 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(120,55,0,.5)) drop-shadow(0 12px 28px rgba(0,0,0,.6));
+  animation:logoIn .7s cubic-bezier(.2,.9,.3,1.2) both;}
+.menu-sub{position:relative;z-index:2;font-family:"Unbounded","Nunito",sans-serif;color:#ffe8c2;font-weight:700;
+  font-size:clamp(12px,2.3vw,16px);letter-spacing:.08em;text-transform:uppercase;
+  text-shadow:0 2px 6px rgba(0,0,0,.7);margin-top:4px;}
+.menu-play{position:relative;z-index:2;margin-top:24px;font-family:"Unbounded","Baloo 2",sans-serif;font-weight:800;
+  font-size:clamp(20px,4.4vw,28px);letter-spacing:.06em;color:#5a2c00;text-transform:uppercase;
+  background:linear-gradient(180deg,#ffe7a0 0%,#ffc44e 48%,#ff9d1c 100%);border:none;border-radius:999px;padding:18px 72px;
+  text-shadow:0 1px 0 rgba(255,255,255,.55);overflow:hidden;
+  box-shadow:0 9px 0 #c4660a,0 18px 34px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.8),inset 0 -4px 8px rgba(170,80,0,.4);
+  animation:playPulse 1.3s ease-in-out infinite;}
+.menu-play::after{content:"";position:absolute;top:0;left:-60%;width:42%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-18deg);
+  animation:playShine 2.8s ease-in-out infinite;}
+.menu-play:active{transform:translateY(5px) scale(.99);
+  box-shadow:0 4px 0 #c4660a,0 8px 16px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.7);}
+@keyframes logoIn{0%{opacity:0;transform:translateY(18px) scale(.86)}100%{opacity:1;transform:none}}
+@keyframes playPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes playShine{0%{left:-60%}55%,100%{left:130%}}
 /* начальница в окне квиза — полная поза (а не медальон) */
-.quiz-figure{flex:0 0 auto;width:118px;height:150px;display:flex;align-items:flex-end;justify-content:center;font-size:46px;}
-.quiz-figure img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.25));}
+.quiz-figure{flex:0 0 auto;width:112px;height:112px;border-radius:50%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-size:46px;
+  background:radial-gradient(circle at 50% 32%,#fff6e6,#f3ddc0);border:4px solid #fff;
+  box-shadow:0 6px 14px rgba(0,0,0,.28),inset 0 0 0 3px #e0a73c;}
+.quiz-figure img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;filter:none;}
 
 /* фон-окружение: классический офис (ЗАГЛУШКА; заменится PNG из ASSETS.office[этап]) */
 .office-art{position:absolute;inset:0;z-index:0;overflow:hidden;}
@@ -342,9 +378,10 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .bar-track.mini{height:11px;max-width:170px;}
 .chat-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
 .chat-btn{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
-  background:linear-gradient(180deg,#ef7ab2,var(--plum-deep));border-radius:13px;padding:9px 16px;
-  text-shadow:0 1px 0 rgba(0,0,0,.2);box-shadow:0 4px 0 #8e2f5e;}
-.chat-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #8e2f5e;}
+  background:linear-gradient(180deg,#f79ac8 0%,#e2659e 50%,#b23c76 100%);border-radius:14px;padding:10px 18px;
+  text-shadow:0 1px 0 rgba(0,0,0,.25);
+  box-shadow:0 4px 0 #8e2f5e,0 6px 10px rgba(150,40,90,.3),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 5px rgba(150,40,90,.4);}
+.chat-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #8e2f5e,inset 0 2px 0 rgba(255,255,255,.5);}
 .chat-btn:disabled{filter:grayscale(.5) brightness(.96);box-shadow:0 4px 0 #999;}
 .chat-head{font-family:"Baloo 2";font-weight:800;font-size:14px;color:var(--plum-deep);text-align:center;margin-bottom:10px;}
 .chat-answers{grid-template-columns:1fr;}
@@ -436,7 +473,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 
         <!-- комикс-облачко начальницы -->
         <div class="comic-bubble" id="bossBubble" hidden>
-          <span class="cb-name">Вероника</span>
+          <span class="cb-name">Даниэла Васильевна</span>
           <span class="cb-text" id="bossBubbleText"></span>
           <span class="cb-tail"></span>
         </div>
@@ -453,7 +490,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 
         <!-- панель образов начальницы по уровням близости (закрытые затемнены) -->
         <div class="looks-panel" id="looksPanel">
-          <div class="looks-title">Образы Вероники</div>
+          <div class="looks-title">Образы Даниэлы</div>
           <div class="looks-grid" id="looksGrid"></div>
         </div>
       </div>
@@ -483,7 +520,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div class="quiz-top">
         <div class="quiz-figure" id="quizBossFace">😐</div>
         <div class="comic-bubble quiz-bubble">
-          <span class="cb-name">Вероника</span>
+          <span class="cb-name">Даниэла Васильевна</span>
           <span class="cb-text" id="quizBubbleText"></span>
           <span class="cb-tail"></span>
         </div>
@@ -491,9 +528,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div id="quizQuestion" class="question"></div>
       <div id="quizAnswers" class="answers"></div>
       <div class="lifelines">
-        <button class="life" data-life="report">📊 Отчёт<small id="lifeReport">1</small></button>
-        <button class="life" data-life="colleagues">🧑‍🤝‍🧑 Коллеги<small id="lifeColleagues">1</small></button>
-        <button class="life" data-life="mentor">📞 Ментор<small id="lifeMentor">1</small></button>
+        <button class="life" data-life="report"><span class="ic">📊</span><span class="lbl">Отчёт</span><small id="lifeReport">1</small></button>
+        <button class="life" data-life="colleagues"><span class="ic">🤝</span><span class="lbl">Коллеги</span><small id="lifeColleagues">1</small></button>
+        <button class="life" data-life="mentor"><span class="ic">📞</span><span class="lbl">Ментор</span><small id="lifeMentor">1</small></button>
       </div>
     </div>
   </div>
@@ -501,11 +538,11 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   <!-- БОЛТАЛКА -->
   <div id="chatOverlay" class="overlay" hidden>
     <div class="card chat-card">
-      <div class="chat-head">💬 Разговор с Вероникой</div>
+      <div class="chat-head">💬 Разговор с Даниэлой Васильевной</div>
       <div class="quiz-top">
         <div class="quiz-figure" id="chatBossFace">😐</div>
         <div class="comic-bubble quiz-bubble">
-          <span class="cb-name">Вероника</span>
+          <span class="cb-name">Даниэла Васильевна</span>
           <span class="cb-text" id="chatBubbleText"></span>
           <span class="cb-tail"></span>
         </div>
@@ -576,6 +613,14 @@ const BOSS_POSES = {
   calm:"assets/boss_calm.webp",           // медитация, покой
   serious:"assets/boss_serious.webp",     // руки скрещены, серьёзна
   shrug:"assets/boss_shrug.webp"          // пожимает плечами, недоумение
+};
+// Портреты-бюсты (голова+плечи, 512×512) для аватара в окне викторины и чата.
+const BOSS_FACES = {
+  neutral:"assets/boss_neutral_face.webp",   approve:"assets/boss_approve_face.webp",
+  sympathy:"assets/boss_sympathy_face.webp", stern:"assets/boss_stern_face.webp",
+  joy:"assets/boss_joy_face.webp",           surprised:"assets/boss_surprised_face.webp",
+  sad:"assets/boss_sad_face.webp",           calm:"assets/boss_calm_face.webp",
+  serious:"assets/boss_serious_face.webp",   shrug:"assets/boss_shrug_face.webp"
 };
 // Доп. позы (1024×1536, прозрачный фон) — задел под расширение эмоций:
 // boss_surprised (удивление), boss_sad (расстроена), boss_calm (медитация),
@@ -947,10 +992,10 @@ const LOOK_IMAGES=[null,null,null,null,null,null,null,null,null,null];
 const CHAT_NEED=5; // очков близости на уровень (тюнится)
 const CHAT=[
  [ // ур.1 — Знакомство (вежливо, держит дистанцию)
-  {q:"Ну что, освоился у нас? Только честно.",a:[
-    {t:"Почти. Стараюсь не подвести вас.",react:"Похвально. Старательных я ценю.",emo:"approve",warm:2},
-    {t:"Ещё привыкаю, но мне нравится.",react:"Привыкай быстрее, времени на раскачку нет.",emo:"neutral",warm:1},
-    {t:"С таким руководителем — легко.",react:"Лесть? Засчитано. Но работать всё равно придётся.",emo:"sympathy",warm:3}]},
+  {q:"Будем знакомы: я Даниэла Васильевна, владелица компании. А ты — наш новый сотрудник. Освоился?",a:[
+    {t:"Почти, Даниэла Васильевна. Стараюсь не подвести.",react:"Похвально. Старательных я ценю — а меня, Даниэлу Васильевну, впечатлить непросто.",emo:"approve",warm:2},
+    {t:"Ещё привыкаю, но мне нравится.",react:"Привыкай быстрее. И зови меня Даниэла Васильевна — без лишней робости.",emo:"neutral",warm:1},
+    {t:"С таким руководителем, как вы, — легко.",react:"Лесть? Засчитано. Но работать всё равно придётся, дорогой.",emo:"sympathy",warm:3}]},
   {q:"Почему ты вообще выбрал нашу компанию?",a:[
     {t:"Хочу расти и многому научиться.",react:"Правильный настрой. Посмотрим на деле.",emo:"approve",warm:2},
     {t:"Честно? Нужна была работа.",react:"Хотя бы не врёшь. Это уже плюс.",emo:"neutral",warm:1},
@@ -1089,7 +1134,7 @@ const CHAT=[
 ];
 let chatOpen=false, currentChat=null, chatCooldownUntil=0; const _lastChatQ={};
 function chatReady(){ return Date.now()>=chatCooldownUntil; }
-function faceImg(id,emo){ const src=ASSETS.boss[state.stage] && ASSETS.boss[state.stage][emo]; $(id).innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo]; }
+function faceImg(id,emo){ const src=BOSS_FACES[emo]; $(id).innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo]; }
 function openChat(){
   if(chatOpen || quizOpen) return;
   chatOpen=true; ensureAudio();
@@ -1112,7 +1157,7 @@ function chatAnswer(i){
   if(!currentChat || currentChat.answered) return;
   currentChat.answered=true;
   const opt=currentChat.q.a[i];
-  // показываем ТОЛЬКО реакцию Вероники: убираем кнопки выбора, меняем её эмоцию
+  // показываем ТОЛЬКО реакцию Даниэлы Васильевны: убираем кнопки выбора, меняем её эмоцию
   $("chatAnswers").innerHTML="";
   faceImg("chatBossFace", opt.emo);
   $("chatBubbleText").textContent=opt.react;
@@ -1286,26 +1331,58 @@ function answer(i){
 }
 function closeQuiz(){ $("quizOverlay").hidden = true; quizOpen=false; currentQuiz=null; }
 
+// Поздравления Даниэлы Васильевны при переезде в новый офис (без повторов за сессию)
+const CONGRATS = [
+  "Поздравляю! Мы переезжаем в новый офис — твои труды не прошли даром. Здесь нам с тобой будет уютнее 🎉",
+  "Чувствуешь? Новые стены, новый уровень. Это всё ты, дорогой. Я горжусь 🎉",
+  "Вот это да — компания выросла, и мы вместе с ней. Добро пожаловать в наш новый дом 🥂",
+  "Новый офис, новые горизонты. С тобой расти — одно удовольствие ✨",
+  "Смотри, как преобразилось всё вокруг. Твоя заслуга. Я в тебе не ошиблась 🎉",
+  "Мы поднялись ещё на ступеньку. Здесь и работается, и… дышится легче, когда ты рядом ✨",
+  "Переезжаем! И знаешь, я уже привыкла, что рядом — именно ты 🥂",
+  "Эти стены мы заслужили. Точнее — заслужил ты. Идём дальше, вместе 🎉"
+];
+let _congratsBag = [];
+function nextCongrats(){
+  if(_congratsBag.length === 0) _congratsBag = shuffle(CONGRATS.slice());
+  return _congratsBag.pop();
+}
+// Праздничное конфетти на сцене
+function confetti(n){
+  const layer = $("fxLayer"); if(!layer) return;
+  const colors = ["#ffd86b","#ff7eb3","#7ed0ff","#9cff8b","#ffae5c","#fff0a0"];
+  for(let i=0;i<(n||60);i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = (Math.random()*100) + "%";
+    c.style.background = colors[i % colors.length];
+    c.style.setProperty("--dx", (Math.random()*160-80) + "px");
+    c.style.animationDelay = (Math.random()*0.5) + "s";
+    c.style.animationDuration = (1.7 + Math.random()*1.3) + "s";
+    layer.appendChild(c);
+    setTimeout(()=>c.remove(), 3400);
+  }
+}
+
 function promote(){
   if(state.stage >= STAGES.length-1){
     if(!state.partner){
       state.partner = true;
-      $("finaleText").textContent = "Ты прошёл путь от бедолаги-стажёра до равного партнёра Вероники. Компания на вершине — а вы оказались отличной командой. Можно развивать бизнес без предела.";
+      $("finaleText").textContent = "Ты прошёл путь от бедолаги-стажёра до равного партнёра Даниэлы Васильевны. Компания на вершине — а вы оказались отличной командой. Можно развивать бизнес без предела.";
       $("finaleOverlay").hidden = false;
-      submitScore();
+      confetti(90); submitScore();
     }
     state.trust = 0; save(); renderAll(); return;
   }
   state.stage++; state.trust = 0;
   state.lifelines = { report:1, colleagues:1, mentor:1 };
   sfx.promote();
-  flourish("Повышение!\n" + STAGES[state.stage].title);
-  submitScore(); save(); renderAll();
-  // радостная реакция начальницы на повышение
-  const cheer = ["Поздравляю! Теперь ты — "+STAGES[state.stage].title+". Я знала, что в тебе не ошиблась.",
-                 "Вот это рост! "+STAGES[state.stage].title+" — звучит по-новому. Горжусь.",
-                 "Новая должность тебе к лицу. Идём дальше — вместе."];
-  setTimeout(()=>bossSay(pick(cheer), "joy"), 900);
+  confetti(75);                                   // праздничное конфетти
+  flourish("Новый офис!\n" + STAGES[state.stage].title);
+  submitScore(); save();
+  setTimeout(renderAll, 280);                     // смена офиса на пике вспышки — эффект торжественного reveal
+  // персональное поздравление Даниэлы Васильевны (новое каждый раз)
+  setTimeout(()=>bossSay(nextCongrats(), "joy"), 1200);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1363,7 +1440,7 @@ function setBossFigure(emo){
   setFigure("bossFace", src, EMO[emo]);
 }
 function setQuizBoss(emo){
-  const src = ASSETS.boss[state.stage] && ASSETS.boss[state.stage][emo];
+  const src = BOSS_FACES[emo];            // в викторине — портрет-бюст, не полный рост
   const el = $("quizBossFace");
   el.innerHTML = src ? `<img src="${src}" alt="">` : EMO[emo];
 }
