@@ -1595,7 +1595,9 @@ function bossSay(text, emo){
   $("bossBubbleText").textContent = text;
   $("bossBubble").hidden = false;
   clearTimeout(bubbleTimer);
-  bubbleTimer=setTimeout(()=>{ $("bossBubble").hidden = true; setBossFigure("neutral"); }, 4500);
+  // время показа зависит от длины реплики, чтобы успеть прочитать (≈75 мс/символ, 4.5–14 с)
+  const ms = Math.min(14000, Math.max(4500, 1800 + text.length*75));
+  bubbleTimer=setTimeout(()=>{ $("bossBubble").hidden = true; setBossFigure("neutral"); }, ms);
 }
 
 /* эффекты клика */
