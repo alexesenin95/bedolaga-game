@@ -1206,7 +1206,7 @@ function chatAnswer(i){
   renderHud(); save();
   chatCooldownUntil=Date.now()+9000;
   // на повышении уровня даём дольше полюбоваться реакцией и обновляем панель образов
-  setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; renderHud(); renderLooks(); }, leveled?2600:1900);
+  setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; quizHoldUntil=Date.now()+7000; renderHud(); renderLooks(); }, leveled?2600:1900);
 }
 
 let actx = null;
@@ -1253,8 +1253,10 @@ function buyGen(i){
   state.money -= cost; state.gens[i] = (state.gens[i]||0) + 1;
   sfx.buy(); buildGenList(); renderHud(); save();
 }
+let quizHoldUntil = 0;   // не показывать вопрос до этого момента (пауза после личной беседы)
 function checkStageBar(){
-  if(quizOpen) return;
+  if(quizOpen || chatOpen) return;
+  if(Date.now() < quizHoldUntil) return;            // после разговора с Даниэлой — передышка перед вопросом
   if(state.barProgress >= stageThreshold()){ state.barProgress = 0; openQuiz(); }
 }
 
@@ -1576,7 +1578,7 @@ function loop(now){
   let dt = (now - last)/1000; last = now;
   if(dt > DT_CLAMP) dt = DT_CLAMP;
   if(!paused){
-    if(!quizOpen){                                  // во время викторины накопление на паузе
+    if(!quizOpen && !chatOpen){                     // во время викторины и личной беседы накопление на паузе
       const inc = incomePerSec()*dt;
       if(inc>0){ state.money += inc; state.totalEarned += inc; state.barProgress += inc; checkStageBar(); }
     }
