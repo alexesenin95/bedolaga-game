@@ -35,6 +35,7 @@ body{
   overflow:hidden;user-select:none;-webkit-user-select:none;
 }
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;}
+button *{pointer-events:none;}  /* клик по тексту/иконке внутри кнопки = клик по кнопке */
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px;}
 .head-font{font-family:"Baloo 2",cursive;}
 
@@ -458,12 +459,17 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .bs-wrap{display:flex;flex-direction:column;gap:7px;width:100%;align-items:center;}
 .bs-label{font-family:"Baloo 2";font-weight:800;font-size:12px;color:var(--ink-soft);}
 .bs-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;width:100%;max-width:280px;}
-.bs-cell{aspect-ratio:1;border-radius:5px;background:#cfe6fb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#3a6ea5;}
+.bs-cell{position:relative;aspect-ratio:1;border-radius:5px;background:#cfe6fb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#3a6ea5;}
+.bs-boom{position:absolute;inset:-35%;pointer-events:none;z-index:3;}
+.bs-boom::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,#ffe08a 28%,#ff8a1a 52%,rgba(255,90,20,.5) 70%,transparent 75%);
+  animation:boomCore .55s ease-out forwards;}
+@keyframes boomCore{0%{opacity:0;transform:scale(.2)}25%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
 .bs-grid.enemy .bs-cell{cursor:pointer;}
 .bs-cell.ship{background:#9aa7b3;}
 .bs-cell.miss{background:#e8eef4;color:#8aa0b3;}
 .bs-cell.hit{background:#e5564b;color:#fff;}
-.chat-answer.rude{border-color:#e08a8a;background:linear-gradient(180deg,#fff0ee,#ffdcd6);}
+/* грубые варианты внешне не выделяются (без красной подсветки) */
 .game-intro{display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center;}
 .gi-face{width:96px;height:96px;border-radius:50%;object-fit:cover;object-position:50% 12%;border:3px solid #fff;box-shadow:0 6px 14px rgba(0,0,0,.25);}
 .gi-text{font-weight:700;color:var(--ink-soft);font-style:italic;line-height:1.4;}
@@ -482,6 +488,19 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .ob-text{font-weight:700;color:#5a4527;font-size:13px;line-height:1.4;}
 .ob-btn{margin-top:0;width:auto;align-self:flex-end;padding:9px 18px;font-size:14px;}
 .ob-highlight{box-shadow:0 0 0 4px #ffd24a,0 0 22px 6px rgba(255,200,80,.75)!important;border-radius:14px!important;}
+/* сердечки-пузырьки и пульс бара отношений */
+.heart-fx{position:fixed;bottom:20%;z-index:85;pointer-events:none;
+  filter:drop-shadow(0 0 6px rgba(255,120,180,.85));animation:heartUp 1.7s ease-out forwards;}
+@keyframes heartUp{0%{opacity:0;transform:translateY(0) scale(.4)}15%{opacity:1}70%{opacity:1;transform:translateY(-26vh) scale(1.05)}100%{opacity:0;transform:translateY(-33vh) scale(1.5)}}
+.chat-fill.pulse{animation:barPulse 1.2s ease;}
+@keyframes barPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 3px rgba(255,130,190,.65),0 0 20px 7px rgba(255,130,190,.75)}}
+.chat-bar.pulse-wrap{animation:barPulse 1.2s ease;}
+/* молнии/искры при покупке буста */
+.spark-fx{position:fixed;z-index:86;pointer-events:none;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 0 5px rgba(255,200,60,.9));animation:sparkFly .72s ease-out forwards;}
+@keyframes sparkFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.15)}}
+.coins.spark-pop{animation:coinsPop .4s ease;}
+@keyframes coinsPop{0%,100%{transform:scale(1)}40%{transform:scale(1.08);box-shadow:0 0 0 3px rgba(255,200,60,.6),0 8px 22px rgba(255,170,30,.5)}}
 
 /* ============ МОБИЛЬНЫЙ АДАПТИВ (портрет / узкие экраны) ============ */
 @media (max-width:560px){
@@ -755,9 +774,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   <div id="bankOverlay" class="overlay" hidden>
     <div class="card finale">
       <img id="bankFace" class="promo-face" src="assets/boss_sad.webp" alt="">
-      <div class="finale-title">Бизнес разорился 💔</div>
+      <div class="finale-title" id="bankTitle">Бизнес разорился 💔</div>
       <div id="bankText" class="finale-body"></div>
-      <div class="bank-tag">Это не конец — нужно помочь Даниэле</div>
+      <div class="bank-tag" id="bankTag">Это не конец — нужно помочь Даниэле</div>
       <button id="bankHelp" class="primary-btn">Помогу! 💪</button>
     </div>
   </div>
@@ -1181,6 +1200,10 @@ function fmt(n){
   while(x >= 1000 && i < SUFFIX.length-1){ x/=1000; i++; }
   return (x>=100 ? x.toFixed(0) : x.toFixed(2).replace(/\.?0+$/,"")) + SUFFIX[i];
 }
+// формат скорости/дохода с десятичной долей (для <1000), запятая как разделитель
+function fmtRate(n){ return n<1000 ? (Math.round(n*10)/10).toFixed(1).replace(".",",") : fmt(n); }
+// открыто ли «сюжетное» диалоговое окно (на время которого пауза накопления)
+function dialogOpen(){ return !$("promoOverlay").hidden || !$("bankOverlay").hidden || !$("finaleOverlay").hidden || !$("dateOverlay").hidden; }
 function multLabel(m){ return "×" + (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)); }
 function fmtTime(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
 const _last={};
@@ -1606,8 +1629,12 @@ function openChat(){
   const lvl=Math.min(state.chatLevel||1, CHAT.length);
   const pool=CHAT[lvl-1].concat(ADDQ);   // вопросы уровня + общий банк → больше вариативности
   let q; do{ q=pick(pool); }while(pool.length>1 && q===_lastChatQ[lvl]); _lastChatQ[lvl]=q;
-  const opts=q.a.slice(); opts.push(pick(RUDE_OPTS));   // добавляем грубый вариант ответа
-  currentChat={q, opts, answered:false};
+  const opts=q.a.slice();
+  // единственный «верный» ответ (даёт рост отношений) — самый тёплый из обычных
+  let progIdx=0, best=-Infinity;
+  opts.forEach((o,k)=>{ const w=(o.warm==null?1:o.warm); if(w>best){ best=w; progIdx=k; } });
+  opts.push(pick(RUDE_OPTS));                           // грубый вариант — последним
+  currentChat={q, opts, progIdx, answered:false};
   faceImg("chatBossFace","neutral");
   $("chatBubbleText").textContent=q.q;
   const wrap=$("chatAnswers"); wrap.innerHTML="";
@@ -1623,23 +1650,30 @@ function chatAnswer(i){
   if(!currentChat || currentChat.answered) return;
   currentChat.answered=true;
   const opt=currentChat.opts[i];
-  const warm = (opt.warm==null?1:opt.warm);
-  // флиртующий «хвост» добавляем только к доброжелательным ответам
-  const react = opt.react + (warm>0 ? " "+pickTail(state.chatLevel||1) : "");
-  // показываем ТОЛЬКО реакцию Даниэлы Васильевны: убираем кнопки выбора, меняем её эмоцию
+  const isRude = !!opt.rude;
+  const isProg = (i===currentChat.progIdx) && !isRude;   // только один обычный ответ даёт прогресс
+  let warm = 0;
+  if(isRude) warm = (opt.warm==null?-3:opt.warm);
+  else if(isProg) warm = Math.max(1,(opt.warm==null?1:opt.warm));
+  const fire = isRude && (state.chatLevel||1)<=1 && ((state.chatProgress||0)+warm) < 0;  // отношения ушли в минус → увольнение
+  // флиртующий «хвост» — только к верному (прогрессивному) ответу
+  const react = opt.react + (isProg ? " "+pickTail(state.chatLevel||1) : "");
   $("chatAnswers").innerHTML="";
   faceImg("chatBossFace", opt.emo);
   $("chatBubbleText").textContent=react;
   const before = state.chatLevel||1;
   const leveled = addCloseness(warm);
-  if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\nуровень "+state.chatLevel), 250); }
-  else if(warm<0){ sfx.bad(); if((state.chatLevel||1)<before) setTimeout(()=>flourish("Отношения охладели 💔\nуровень "+state.chatLevel), 250); }
-  else sfx.ok();
+  if(isProg){ sfx.ok(); heartsBurst(); if(leveled){ sfx.promote(); setTimeout(()=>flourish("Сближение 💗\nуровень "+state.chatLevel), 250); } }
+  else if(isRude){ sfx.bad(); if(!fire && (state.chatLevel||1)<before) setTimeout(()=>flourish("Отношения охладели 💔\nуровень "+state.chatLevel), 250); }
+  else sfx.ok();   // нейтральный обычный ответ — без прогресса
   bossSay(react, opt.emo);
   renderHud(); save();
   chatCooldownUntil=Date.now()+15000;
-  // окно с реакцией Даниэлы держится в 2,5 раза дольше — больше времени прочитать ответ
-  setTimeout(()=>{ $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; quizHoldUntil=Date.now()+7000; renderHud(); renderLooks(); }, leveled?6500:4750);
+  setTimeout(()=>{
+    $("chatOverlay").hidden=true; chatOpen=false; currentChat=null; quizHoldUntil=Date.now()+7000; renderHud(); renderLooks();
+    if(isProg) pulseChatBar();   // плавная розовая пульсация бара отношений (когда он снова виден)
+    if(fire) bossFire();
+  }, leveled?6500:4750);
 }
 
 /* ============================ МИНИ-ИГРЫ ============================ */
@@ -1659,9 +1693,11 @@ const GAME_LOSE = [
   "Сегодня мой день. Завтра, может, повезёт и тебе, дорогой.",
   "Победила, но без удовольствия — слишком уж приятный соперник."
 ];
+let _lastGame=null;
+function pickGame(){ const opts=GAMES.filter(g=>g!==_lastGame); const g=pick(opts.length?opts:GAMES); _lastGame=g; return g; }
 function talkOrPlay(){
   if(chatOpen || quizOpen || gameOpen) return;   // ручное нажатие срабатывает всегда (кулдаун — только для авто-инициативы)
-  if(Math.random() < 0.4){ startGameIntro(pick(GAMES)); return; }   // иногда вместо диалога — мини-игра (с предварительным вызовом)
+  if(Math.random() < 0.4){ startGameIntro(pickGame()); return; }   // иногда вместо диалога — мини-игра (без повтора подряд)
   openChat();
 }
 const GAME_NAMES = {pong:"настольный теннис 🏓", checkers:"шашки 🔵", battleship:"морской бой 🚢"};
@@ -1729,7 +1765,7 @@ function startPong(){
   function moveTo(clientY){ const r=cv.getBoundingClientRect(); const y=(clientY-r.top)*(H/r.height); pY=Math.max(0,Math.min(H-PH,y-PH/2)); }
   cv.addEventListener("pointermove",e=>moveTo(e.clientY));
   cv.addEventListener("touchmove",e=>{ if(e.touches[0]){ moveTo(e.touches[0].clientY); e.preventDefault(); } },{passive:false});
-  function hit(py){ const rel=(ball.y-(py+PH/2))/(PH/2); ball.sp=Math.min(9,ball.sp+0.4); ball.vy=rel*4.2; ball.vx=(ball.vx>0?1:-1)*ball.sp; }
+  function hit(py){ const rel=(ball.y-(py+PH/2))/(PH/2); ball.sp=Math.min(14, ball.sp*1.1); ball.vy=rel*4.2; ball.vx=(ball.vx>0?1:-1)*ball.sp; }   // +10% скорости за каждое отбивание
   function win(){ if((ps>=11||as>=11)&&Math.abs(ps-as)>=2){ over=true; endGame(ps>as,"Партия твоя! 🏓","Партия за Даниэлой"); return true; } return false; }
   function step(){
     if(over) return;
@@ -1812,6 +1848,7 @@ function startBattleship(){
   function place(){ const g=emptyGrid(), ships=[]; for(const len of SHIPS){ let ok=false,tries=0; while(!ok&&tries++<200){ const hor=Math.random()<.5; const r=Math.floor(Math.random()*(hor?N:N-len+1)); const c=Math.floor(Math.random()*(hor?N-len+1:N)); let free=true; for(let i=-1;i<=len;i++)for(let j=-1;j<=1;j++){ const rr=r+(hor?j:i), cc=c+(hor?i:j); if(rr>=0&&rr<N&&cc>=0&&cc<N&&g[rr][cc]===1){free=false;} } if(!free) continue; const cells=[]; for(let i=0;i<len;i++){ const rr=hor?r:r+i, cc=hor?c+i:c; g[rr][cc]=1; cells.push([rr,cc]); } ships.push(cells); ok=true; } } return {g, ships}; }
   const P=place(), A=place(); const pg=P.g, ag=A.g, aShips=A.ships;   // 1=ship; aShips — корабли Даниэлы для детекта потопления
   function flashLabel(t){ const l=document.createElement("div"); l.className="bs-flash"; l.textContent=t; $("gameStage").appendChild(l); setTimeout(()=>l.remove(),900); }
+  function boomAt(cell){ const b=document.createElement("div"); b.className="bs-boom"; cell.appendChild(b); setTimeout(()=>b.remove(),600); }
   const ps=emptyGrid(), as=emptyGrid();    // 0 none,1 miss,2 hit (shots: ps=на поле игрока(ходы AI), as=на поле врага(ходы игрока))
   let pAlive=SHIPS.reduce((a,b)=>a+b,0), aAlive=pAlive, lock=false;
   const aiQueue=[]; const aiTried=new Set();
@@ -1827,6 +1864,7 @@ function startBattleship(){
     if(ag[r][c]){ as[r][c]=2; aAlive--; eC[idx(r,c)].className="bs-cell hit"; eC[idx(r,c)].textContent="✕";
       const ship=aShips.find(s=>s.some(([rr,cc])=>rr===r&&cc===c));
       const sunk=ship && ship.every(([rr,cc])=>as[rr][cc]===2);
+      boomAt(eC[idx(r,c)]);   // красочный взрыв из клетки
       if(sunk){ ship.forEach(([rr,cc])=>{ eC[idx(rr,cc)].className="bs-cell sunk"; }); flashLabel("Убил! 💥"); }
       else flashLabel("Ранил!");
       if(aAlive<=0){ endGame(true,"Флот Даниэлы потоплен! 🏆"); return; } }
@@ -1881,9 +1919,9 @@ function baseProduction(){ let s=0; for(let i=0;i<GENERATORS.length;i++) s += GE
 function incomePerSec(){ return baseProduction() * mult() * affectionMult() * boostMult(); }
 function clickValue(){ return (Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) + (state.qual||0)) * mult() * affectionMult() * boostMult(); }
 function qualCost(){ return Math.floor(25 * Math.pow(1.35, state.qual||0)); }   // геометрический рост цены квалификации
-function buyQual(){ const c=qualCost(); if(state.money < c) return; state.money -= c; state.qual=(state.qual||0)+1; sfx.buy(); buildGenList(); renderHud(); save(); }
+function buyQual(){ const c=qualCost(); if(state.money < c) return; state.money -= c; state.qual=(state.qual||0)+1; sfx.buy(); buildGenList(); renderHud(); save(); sparkBurst($("rate")); }
 function genCost(i){ return Math.floor(GENERATORS[i].baseCost * Math.pow(GENERATORS[i].growth, state.gens[i]||0)); }
-function stageThreshold(){ return Math.max(180, incomePerSec() * 150); } // ~150с в простое (в 3 раза дольше)
+function stageThreshold(){ return Math.max(540, incomePerSec() * 450); } // ещё ×3 дольше
 
 function doClick(){
   ensureAudio();
@@ -1896,7 +1934,7 @@ function buyGen(i){
   const cost = genCost(i);
   if(state.money < cost) return;
   state.money -= cost; state.gens[i] = (state.gens[i]||0) + 1;
-  sfx.buy(); buildGenList(); renderHud(); save();
+  sfx.buy(); buildGenList(); renderHud(); save(); sparkBurst($("rate"));
 }
 let quizHoldUntil = 0;   // не показывать вопрос до этого момента (пауза после личной беседы)
 function checkStageBar(){
@@ -2051,6 +2089,38 @@ function confetti(n){
     setTimeout(()=>c.remove(), 3400);
   }
 }
+// Сердечки-пузырьки вверх при «верном» ответе в чате
+function heartsBurst(){
+  const em=["💗","💕","🫧","💞","💓"];
+  for(let k=0;k<14;k++){
+    const h=document.createElement("div"); h.className="heart-fx";
+    h.textContent=em[k%em.length];
+    h.style.left=(34+Math.random()*32)+"%";
+    h.style.fontSize=(18+Math.random()*18)+"px";
+    h.style.animationDelay=(Math.random()*0.5)+"s";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 2400);
+  }
+}
+function pulseChatBar(){ const f=$("chatFill"); if(f){ f.classList.remove("pulse"); void f.offsetWidth; f.classList.add("pulse"); setTimeout(()=>f.classList.remove("pulse"),1300); } }
+// Молнии/искры у индикатора скорости при покупке буста (разлёт ~1/3 экрана)
+function sparkBurst(el){
+  if(!el) return;
+  const r=el.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const ems=["⚡","✦","✨","💥","⭐"];
+  const reach=Math.min(window.innerWidth,window.innerHeight)/3;
+  for(let k=0;k<16;k++){
+    const s=document.createElement("div"); s.className="spark-fx"; s.textContent=ems[k%ems.length];
+    const ang=Math.random()*Math.PI*2, dist=reach*(0.45+Math.random()*0.55);
+    s.style.left=cx+"px"; s.style.top=cy+"px";
+    s.style.setProperty("--dx",(Math.cos(ang)*dist)+"px");
+    s.style.setProperty("--dy",(Math.sin(ang)*dist)+"px");
+    s.style.fontSize=(12+Math.random()*18)+"px";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),760);
+  }
+  const coins=document.querySelector(".coins"); if(coins){ coins.classList.remove("spark-pop"); void coins.offsetWidth; coins.classList.add("spark-pop"); setTimeout(()=>coins.classList.remove("spark-pop"),420); }
+}
 
 function promote(){
   if(state.stage >= STAGES.length-1){
@@ -2108,12 +2178,25 @@ function promoNext(){
 }
 
 // ----- Разорение бизнеса (3 неверных ответа за игру) -----
-function bankruptcy(){
+function showRestart(face, title, text, tag, btn){
   quizOpen=false; chatOpen=false; gameOpen=false;
   $("quizOverlay").hidden=true; $("chatOverlay").hidden=true; $("gameOverlay").hidden=true;
-  $("bankFace").src = BOSS_FACES.sad;
-  $("bankText").textContent = "Всё рухнуло… Три ошибки — и компании конец. Я плачу, не стыжусь этого: столько труда, столько надежд — и снова с нуля. Но знаешь что? Я всё равно верю в тебя. Только с тобой у меня хватит сил начать сначала и однажды вырасти в бизнес мирового уровня. Без тебя мне не справиться. Давай попробуем ещё раз — вместе?";
+  $("bankFace").src = face;
+  $("bankTitle").textContent = title;
+  $("bankText").textContent = text;
+  $("bankTag").textContent = tag;
+  $("bankHelp").textContent = btn;
   $("bankOverlay").hidden=false;
+}
+function bankruptcy(){
+  showRestart(BOSS_FACES.sad, "Бизнес разорился 💔",
+    "Всё рухнуло… Три ошибки — и компании конец. Я плачу, не стыжусь этого: столько труда, столько надежд — и снова с нуля. Но знаешь что? Я всё равно верю в тебя. Только с тобой у меня хватит сил начать сначала и однажды вырасти в бизнес мирового уровня. Без тебя мне не справиться. Давай попробуем ещё раз — вместе?",
+    "Это не конец — нужно помочь Даниэле", "Помогу! 💪");
+}
+function bossFire(){
+  showRestart(BOSS_FACES.stern, "Ты уволен! 😤",
+    "Всё, с меня хватит! Я столько в тебя вложила, а ты только и делал, что грубил и разочаровывал. Я зла и, честно, обижена до глубины души. Иди. Видеть тебя не хочу… по крайней мере сейчас. Но если ты правда захочешь всё исправить и вернуть моё доверие — что ж, докажи это с самого начала.",
+    "Придётся начать всё заново", "Восстановить доверие 🙏");
 }
 function helpRestart(){
   // перезапуск с пропуском онбординга
@@ -2170,7 +2253,7 @@ function buildGenList(){
     row.innerHTML =
       `<div class="gen-icon">${g.icon}</div>`+
       `<div class="gen-info"><div class="gen-name">${g.name}</div>`+
-      `<div class="gen-sub">+${fmt(g.income)}/с</div></div>`+
+      `<div class="gen-sub">+${fmtRate(g.income)}/с</div></div>`+
       `<button class="buy-btn"><span class="b-main"><span class="price">${fmt(genCost(i))} ₽</span><span class="lvl">УР. ${state.gens[i]||0}</span></span><span class="chev">›</span></button>`;
     row.querySelector(".buy-btn").addEventListener("click", ()=>buyGen(i));
     list.appendChild(row);
@@ -2189,7 +2272,7 @@ function updateGenAfford(){
 }
 function renderHud(){
   $("money").textContent = fmt(state.money);
-  $("rate").textContent  = "+"+fmt(incomePerSec())+"/с";
+  $("rate").textContent  = "+"+fmtRate(incomePerSec())+"/с";
   $("clickSub").textContent = "+"+fmt(clickValue())+" ₽";
   const stage = STAGES[state.stage];
   $("rankTitle").textContent = state.partner ? "Партнёр 🥂" : stage.title;
@@ -2339,7 +2422,7 @@ function loop(now){
   let dt = (now - last)/1000; last = now;
   if(dt > DT_CLAMP) dt = DT_CLAMP;
   if(!paused){
-    if(!quizOpen && !chatOpen){                     // во время викторины и личной беседы накопление на паузе
+    if(!quizOpen && !chatOpen && !dialogOpen()){     // викторина, беседа и диалоговые окна ставят накопление на паузу
       const inc = incomePerSec()*dt;
       if(inc>0){ state.money += inc; state.totalEarned += inc; state.barProgress += inc; checkStageBar(); }
     }
