@@ -467,6 +467,21 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .game-intro{display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center;}
 .gi-face{width:96px;height:96px;border-radius:50%;object-fit:cover;object-position:50% 12%;border:3px solid #fff;box-shadow:0 6px 14px rgba(0,0,0,.25);}
 .gi-text{font-weight:700;color:var(--ink-soft);font-style:italic;line-height:1.4;}
+.promo-face{width:96px;height:96px;border-radius:50%;object-fit:cover;object-position:50% 12%;border:3px solid #fff;box-shadow:0 6px 14px rgba(0,0,0,.25);display:block;margin:0 auto 8px;}
+.bank-tag{margin-top:12px;font-family:"Baloo 2";font-weight:800;color:var(--plum-deep);text-align:center;}
+.mp-reset{margin-top:4px;width:100%;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#b53227;
+  background:#ffe4e0;border:2px solid #e08a8a;border-radius:12px;padding:9px;}
+.mp-reset:active{transform:translateY(1px);}
+/* онбординг */
+.ob-box{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:80;width:min(560px,94vw);
+  display:flex;gap:12px;align-items:center;background:#fff;border-radius:18px;padding:12px 14px;
+  box-shadow:0 12px 34px rgba(60,40,10,.4);animation:popIn .25s ease;}
+.ob-box[hidden]{display:none;}
+.ob-face{width:64px;height:64px;flex:0 0 auto;border-radius:50%;object-fit:cover;object-position:50% 12%;border:2px solid #ffd27a;}
+.ob-body{flex:1 1 auto;display:flex;flex-direction:column;gap:8px;min-width:0;}
+.ob-text{font-weight:700;color:#5a4527;font-size:13px;line-height:1.4;}
+.ob-btn{margin-top:0;width:auto;align-self:flex-end;padding:9px 18px;font-size:14px;}
+.ob-highlight{box-shadow:0 0 0 4px #ffd24a,0 0 22px 6px rgba(255,200,80,.75)!important;border-radius:14px!important;}
 
 /* ============ МОБИЛЬНЫЙ АДАПТИВ (портрет / узкие экраны) ============ */
 @media (max-width:560px){
@@ -523,7 +538,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div class="career-av" id="careerAv"><img src="assets/boss_neutral_face.webp" alt=""></div>
       <div class="career-info">
         <div class="rank-row"><span id="rankTitle">Стажёр</span><span id="rankMult" class="mult">×1</span></div>
-        <div class="trust-wrap">
+        <div class="trust-wrap" id="trustWrap">
           <span class="trust-label" id="trustLabel">Доверие</span>
           <div class="bar-track"><div id="trustFill" class="bar-fill trust-fill"></div></div>
         </div>
@@ -536,6 +551,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
         <div class="mp-row">🔊 Громкость
           <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
         </div>
+        <button id="resetBtn" class="mp-reset">🔄 Начать заново</button>
       </div>
     </div>
   </div>
@@ -723,6 +739,33 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
       <div id="gameStage" class="game-stage"></div>
       <div id="gameResult" class="game-result" hidden></div>
     </div>
+  </div>
+
+  <!-- ПОВЫШЕНИЕ: новый офис → новая должность -->
+  <div id="promoOverlay" class="overlay" hidden>
+    <div class="card finale">
+      <img id="promoFace" class="promo-face" src="assets/boss_neutral_face.webp" alt="">
+      <div class="finale-title" id="promoTitle">Новый офис 🏢</div>
+      <div id="promoText" class="finale-body"></div>
+      <button id="promoNext" class="primary-btn">Дальше ▶</button>
+    </div>
+  </div>
+
+  <!-- РАЗОРЕНИЕ -->
+  <div id="bankOverlay" class="overlay" hidden>
+    <div class="card finale">
+      <img id="bankFace" class="promo-face" src="assets/boss_sad.webp" alt="">
+      <div class="finale-title">Бизнес разорился 💔</div>
+      <div id="bankText" class="finale-body"></div>
+      <div class="bank-tag">Это не конец — нужно помочь Даниэле</div>
+      <button id="bankHelp" class="primary-btn">Помогу! 💪</button>
+    </div>
+  </div>
+
+  <!-- ОНБОРДИНГ (нижний диалог с подсветкой элементов) -->
+  <div id="obBox" class="ob-box" hidden>
+    <img id="obFace" class="ob-face" src="assets/boss_neutral_face.webp" alt="">
+    <div class="ob-body"><div id="obText" class="ob-text"></div><button id="obNext" class="primary-btn ob-btn">Понял!</button></div>
   </div>
 
   <!-- ЭКРАН МЕНЮ / СТАРТ -->
@@ -1022,6 +1065,37 @@ const QUESTIONS = [
   {q:"Что снижает риски бизнеса?", a:["Единственный клиент на всю выручку","Диверсификация доходов и клиентов","Отказ от планирования","Игнорирование финансов"], c:1},
   {q:"Что важно в клиентском сервисе?", a:["Быстро и вежливо решать проблемы клиента","Заставлять клиента ждать","Перекладывать вину на клиента","Игнорировать обращения"], c:0},
   {q:"Что объединяет успешные компании?", a:["Дорогая мебель","Понимание клиента и постоянное развитие","Большой штат любой ценой","Частая смена логотипа"], c:1},
+  // +30 вопросов (длина верного ответа специально не выделяется среди прочих)
+  {q:"Что такое «целевой сегмент»?", a:["Отдельная группа клиентов со схожими потребностями","Самый крупный из всех клиентов компании","Любой случайный покупатель в магазине","Конкурент на этом же рынке сбыта"], c:0},
+  {q:"Зачем бизнесу финансовая подушка?", a:["Чтобы выдать всем сотрудникам премии","Чтобы пережить спад и непредвиденные расходы","Чтобы немедленно закрыть всю компанию","Чтобы платить поставщикам в десять раз больше"], c:1},
+  {q:"Что выгоднее при выходе на новый рынок?", a:["Сразу вложить абсолютно все свободные деньги","Скопировать конкурента слово в слово без анализа","Проверить спрос небольшим пробным запуском","Полностью отказаться от любой рекламы товара"], c:2},
+  {q:"Что показывает рентабельность?", a:["Сколько у фирмы офисов в разных городах","Насколько эффективно вложения приносят прибыль","Сколько сотрудников работает сверхурочно","Какого цвета фирменный логотип компании"], c:1},
+  {q:"Как удержать ценного сотрудника?", a:["Давать рост, признание и достойные условия","Грузить переработками без выходных и отдыха","Никогда не повышать и не хвалить его","Скрывать от него все планы компании"], c:0},
+  {q:"Что важно при ценообразовании?", a:["Ставить цену строго ниже любых конкурентов","Менять цену каждый день случайным образом","Учитывать ценность для клиента и себестоимость","Никогда и ни при каких условиях не менять"], c:2},
+  {q:"Зачем компании обратная связь клиентов?", a:["Чтобы просто заполнить ещё один отчёт","Чтобы улучшать продукт и удерживать людей","Чтобы тратить рабочее время впустую","Чтобы спорить с каждым недовольным"], c:1},
+  {q:"Что такое масштабируемая модель?", a:["Бизнес растёт без пропорционального роста затрат","Компания просто переезжает в город побольше","Фирма раз в год меняет своё название","Все процессы держатся на одном человеке"], c:0},
+  {q:"Как реагировать на сильного конкурента?", a:["Притвориться, что его вовсе не существует","Сразу обрушить цены себе в большой убыток","Усилить своё уникальное преимущество для клиента","Скопировать у него всё до мелочей сразу"], c:2},
+  {q:"Что такое точка контакта с клиентом?", a:["Юридический адрес головного офиса фирмы","Любое взаимодействие клиента с брендом","Место, где хранится товар на складе","Дата подписания договора с поставщиком"], c:1},
+  {q:"Чем опасна зависимость от одного клиента?", a:["Ничем, это очень удобно и спокойно","Его уход может обрушить всю выручку","Это всегда гарантирует стабильный рост","Это снижает налоги и расходы фирмы"], c:1},
+  {q:"Что делает бренд сильным?", a:["Частая смена названия и логотипа подряд","Самые низкие цены среди всех на рынке","Узнаваемость, доверие и чёткая репутация","Большое число случайных разовых покупателей"], c:2},
+  {q:"Зачем нужна сегментация рекламы?", a:["Чтобы показывать её сразу абсолютно всем","Чтобы бить точно в свою аудиторию","Чтобы потратить весь бюджет за один день","Чтобы реклама вообще не имела цели"], c:1},
+  {q:"Что такое валовая прибыль?", a:["Выручка минус себестоимость проданного","Все деньги на банковском счёте фирмы","Сумма всех зарплат за прошлый год","Стоимость аренды офисного помещения"], c:0},
+  {q:"Как принимать решения в бизнесе?", a:["Только по настроению и первому порыву","Опираясь на данные, факты и цифры","Спрашивая совета у случайных прохожих","Подбрасывая монетку в сложных случаях"], c:1},
+  {q:"Что повышает повторные продажи?", a:["Грубость персонала и долгое ожидание","Полное игнорирование жалоб покупателей","Забота о клиенте и стабильное качество","Резкое и частое повышение всех цен"], c:2},
+  {q:"Зачем тестировать гипотезы?", a:["Чтобы потянуть время и ничего не делать","Чтобы проверить идею до крупных вложений","Чтобы запутать собственную команду","Чтобы избежать любой отчётности"], c:1},
+  {q:"Что такое лид?", a:["Готовый подписанный договор с клиентом","Сотрудник отдела продаж компании","Потенциальный клиент, проявивший интерес","Скидка для самых постоянных покупателей"], c:2},
+  {q:"Как вести себя в кризис?", a:["Паниковать и срочно всё распродавать","Сохранять расходы под контролем и искать спрос","Делать вид, что вообще ничего не случилось","Тратить последние деньги на дорогой офис"], c:1},
+  {q:"Что важно в командной работе?", a:["Чёткие роли, доверие и общая цель","Чтобы каждый тянул одеяло на себя","Полное отсутствие любого общения","Скрывать информацию от коллег по работе"], c:0},
+  {q:"Зачем считать себестоимость?", a:["Чтобы похвастаться цифрами перед друзьями","Чтобы верно установить цену и не уйти в минус","Чтобы усложнить жизнь бухгалтеру фирмы","Чтобы вообще никогда не менять ассортимент"], c:1},
+  {q:"Что такое отстройка от конкурентов?", a:["Переезд подальше от чужих офисов","Снижение качества ради дешевизны товара","Чёткое отличие, ради которого выбирают тебя","Полное копирование чужих решений"], c:2},
+  {q:"Как растить средний чек?", a:["Грубить клиентам на самой кассе","Предлагать полезные дополнения к покупке","Убрать вообще весь ассортимент кроме одного","Закрыть магазин в часы наплыва людей"], c:1},
+  {q:"Что такое воронка найма?", a:["Путь кандидата от отклика до выхода на работу","Список всех уволенных за год сотрудников","Очередь клиентов в офис в час пик","График отпусков всего коллектива"], c:0},
+  {q:"Зачем бизнесу миссия и ценности?", a:["Чтобы красиво смотрелось на сайте","Чтобы объединять команду и притягивать клиентов","Чтобы платить поменьше налогов в год","Чтобы запутать прямых конкурентов"], c:1},
+  {q:"Что делать с убыточным продуктом?", a:["Вкладывать в него ещё больше вслепую","Проанализировать причины и решить его судьбу","Просто игнорировать растущие потери","Срочно поднять на него цену втрое"], c:1},
+  {q:"Что такое удержание (retention)?", a:["Доля новых клиентов за первый месяц","Размер задержанной зарплаты сотрудников","Способность сохранять клиентов и их покупки","Объём товара, лежащего на складе"], c:2},
+  {q:"Как проверить нишу перед стартом?", a:["Открыть бизнес и надеяться на удачу","Изучить спрос, конкурентов и платёжеспособность","Спросить только у близких родственников","Полностью довериться моде этого сезона"], c:1},
+  {q:"Что важно в делегировании?", a:["Делать всю работу самому до выгорания","Раздать задачи и ни разу не проверить","Ясно ставить задачу и доверять исполнителю","Контролировать буквально каждую минуту"], c:2},
+  {q:"Зачем планировать бюджет?", a:["Чтобы было что показать инвесторам разок","Чтобы управлять деньгами и избегать кассовых ям","Чтобы потратить всё в первый же месяц","Чтобы вообще не вести никакого учёта"], c:1},
 ];
 
 /* ---------------------------------------------------------------------------
@@ -1036,6 +1110,7 @@ function defaultState(){
     lifelines:{ report:1, colleagues:1, mentor:1 },
     barProgress:0, muted:false, volume:0.5, partner:false, lastQuestion:-1,
     chatLevel:1, chatProgress:0, boostUntil:0,
+    wrongTotal:0, onboarded:false,
     lastSave:Date.now(),
   };
 }
@@ -1928,6 +2003,7 @@ function answer(i){
     state.money = Math.max(0, state.money - penalty);
     // ранние этапы — строгий укор; поздние — мягкое разочарование (тёплая дуга)
     line = pickNoRepeat(stage.wrong, "bad"); emo = state.stage <= 1 ? "stern" : "sad";
+    state.wrongTotal = (state.wrongTotal||0) + 1;   // счётчик ошибок за игру
   }
   setQuizBoss(emo);
   $("quizBubbleText").textContent = line;
@@ -1935,7 +2011,11 @@ function answer(i){
   bossSay(line, emo);
   save();
 
-  setTimeout(()=>{ closeQuiz(); if(correct && state.trust >= stage.need) promote(); }, 1700);
+  setTimeout(()=>{
+    closeQuiz();
+    if(!correct && (state.wrongTotal||0) >= 3){ bankruptcy(); return; }   // 3 ошибки за игру → разорение
+    if(correct && state.trust >= stage.need) promote();
+  }, 1700);
 }
 function closeQuiz(){ $("quizOverlay").hidden = true; quizOpen=false; currentQuiz=null; }
 
@@ -1985,13 +2065,89 @@ function promote(){
   state.stage++; state.trust = 0;
   state.lifelines = { report:1, colleagues:1, mentor:1 };
   sfx.promote();
-  confetti(75);                                   // праздничное конфетти
-  flourish("Новый офис!\n" + STAGES[state.stage].title);
-  submitScore(); save();
-  setTimeout(renderAll, 280);                     // смена офиса на пике вспышки — эффект торжественного reveal
-  // персональное поздравление Даниэлы Васильевны (новое каждый раз)
-  setTimeout(()=>bossSay(nextCongrats(), "joy"), 1200);
+  submitScore(); save(); renderAll();             // офис уже сменился — Даниэла попросит «оглянись вокруг»
+  showPromoSequence(state.stage);                 // два окна: новый офис → новая должность (с флиртом)
 }
+
+// ----- Диалоги повышения (новый офис + новая должность) -----
+const OFFICE_DIALOG = [ null,
+  "Знаешь, как тяжело нам дался этот рывок? Бессонные ночи, пустая касса, страх всё потерять… Но мы выстояли — и переезжаем в офис получше! Оглянись: тут уже не та конура, с которой мы начинали. И поверь, дальше будет только лучше.",
+  "Мы выросли! Этот офис светлее и просторнее — мы заслужили его потом и нервами. Посмотри, как всё преобразилось вокруг. И это, дорогой, только начало нашего пути.",
+  "Помнишь, с чего мы начинали? А теперь — взгляни на этот офис! Было ужасно трудно, но рядом с тобой я снова поверила, что нам по плечу большее. Любуйся — мы это заработали вместе.",
+  "Глазам не верю, как далеко мы зашли. Премиальный офис, имя на рынке, команда мечты… Оглядись — всё это наш с тобой труд. А впереди — самая вершина."
+];
+const PROMO_DIALOG = [ null,
+  "А теперь — главное. Поздравляю с повышением! Отныне ты — {title}. Больше ответственности: держишь процессы и задаёшь темп всей команде. Справишься — я в тебя верю. И да… этот деловой вид тебе чертовски идёт.",
+  "Объявляю официально: ты теперь {title}! Будешь вести ключевые сделки и людей за собой. Я горжусь тобой… и, кажется, не только как руководитель.",
+  "Встречай новую должность — {title}. Теперь на тебе целые направления и моя личная стратегия. Знаешь, с тобой я перестала бояться рисковать. Опасный ты человек.",
+  "Ты — {title}. Моя правая рука и… что-то большее, чего я пока не решаюсь сказать вслух. Новые горизонты ждут — и я хочу пройти их именно с тобой."
+];
+let _promoStep=0, _promoStage=0;
+function showPromoSequence(st){
+  _promoStage = Math.min(st, OFFICE_DIALOG.length-1); _promoStep = 0;
+  confetti(80);
+  promoRender();
+  $("promoOverlay").hidden = false;
+}
+function promoRender(){
+  if(_promoStep===0){
+    $("promoTitle").textContent = "Новый офис 🏢";
+    $("promoText").textContent = OFFICE_DIALOG[_promoStage] || "Мы переехали в новый офис!";
+    $("promoFace").src = BOSS_FACES.sympathy;
+    $("promoNext").textContent = "А что с должностью? ▶";
+  } else {
+    $("promoTitle").textContent = "Повышение 🎉";
+    $("promoText").textContent = (PROMO_DIALOG[_promoStage] || "Поздравляю с повышением!").replace("{title}", STAGES[_promoStage].title);
+    $("promoFace").src = BOSS_FACES.joy;
+    $("promoNext").textContent = "Спасибо! 💞";
+  }
+}
+function promoNext(){
+  if(_promoStep===0){ _promoStep=1; promoRender(); }
+  else { $("promoOverlay").hidden = true; }
+}
+
+// ----- Разорение бизнеса (3 неверных ответа за игру) -----
+function bankruptcy(){
+  quizOpen=false; chatOpen=false; gameOpen=false;
+  $("quizOverlay").hidden=true; $("chatOverlay").hidden=true; $("gameOverlay").hidden=true;
+  $("bankFace").src = BOSS_FACES.sad;
+  $("bankText").textContent = "Всё рухнуло… Три ошибки — и компании конец. Я плачу, не стыжусь этого: столько труда, столько надежд — и снова с нуля. Но знаешь что? Я всё равно верю в тебя. Только с тобой у меня хватит сил начать сначала и однажды вырасти в бизнес мирового уровня. Без тебя мне не справиться. Давай попробуем ещё раз — вместе?";
+  $("bankOverlay").hidden=false;
+}
+function helpRestart(){
+  // перезапуск с пропуском онбординга
+  resetProgress(true);
+  $("bankOverlay").hidden=true;
+}
+function resetProgress(skipOnboard){
+  state = defaultState();
+  state.onboarded = !!skipOnboard;   // true = пропустить онбординг
+  save();
+  // закрыть все модалки
+  ["quizOverlay","chatOverlay","gameOverlay","offlineOverlay","finaleOverlay","dateOverlay","promoOverlay","bankOverlay"].forEach(id=>{ const e=$(id); if(e) e.hidden=true; });
+  quizOpen=chatOpen=gameOpen=false;
+  renderAll();
+  if(!state.onboarded) startOnboarding();
+}
+
+// ----- Онбординг при первом запуске -----
+const ONBOARD = [
+  {t:"Привет! Я Даниэла Васильевна, владелица этой — пока скромной — компании. Только что наняла тебя, и, честно, возлагаю на тебя большие надежды. Поможешь поднять мой бизнес?", reply:"Помогу вам!", target:null, face:"approve"},
+  {t:"Наша цель — вырасти из этой каморки в компанию мирового уровня. Шаг за шагом, вместе. Сейчас покажу, как тут всё устроено.", reply:"Слушаю внимательно!", target:null, face:"neutral"},
+  {t:"Вот твоя главная кнопка — «Работать». Жми по ней, чтобы зарабатывать деньги компании. Чем активнее жмёшь — тем быстрее растём!", reply:"Понял вас!", target:"clickBtn", face:"approve"},
+  {t:"На заработанное в разделе «Команда и процессы» нанимай сотрудников и технику — они приносят доход сами, без кликов. А «Квалификация» усиливает твой клик.", reply:"Спасибо, ясно!", target:"genList", face:"neutral"},
+  {t:"Видишь полосу «Доверие» наверху? Заполняй её, верно отвечая на мои бизнес-вопросы — за это повышение, новая должность и переезд в офис получше.", reply:"Запомнил!", target:"trustWrap", face:"serious"},
+  {t:"Но будь внимателен: три неверных ответа за игру — и бизнес разорится. Я этого не переживу… ну, почти. Так что думай головой.", reply:"Буду стараться!", target:null, face:"stern"},
+  {t:"А это кнопка «Поговорить» — тут мы просто общаемся. Учти: поначалу я колючая и холодная. Чем выше наши отношения — тем теплее и смелее я с тобой. Хочешь тепла — придётся постараться 😏", reply:"Принято!", target:"chatBtn", face:"sympathy"},
+  {t:"Ну всё, лекция окончена. Остальное освоишь по ходу. Я в тебя верю, слышишь? А теперь — за работу, нас ждут великие дела!", reply:"За работу! 💪", target:null, face:"joy"}
+];
+let _obStep=0;
+function startOnboarding(){ _obStep=0; obRender(); $("obBox").hidden=false; }
+function obRender(){ const s=ONBOARD[_obStep]; $("obText").textContent=s.t; $("obNext").textContent=s.reply; $("obFace").src=BOSS_FACES[s.face||"neutral"]; obHighlight(s.target); }
+function obNext(){ _obStep++; if(_obStep>=ONBOARD.length){ obFinish(); return; } obRender(); }
+function obFinish(){ $("obBox").hidden=true; obHighlight(null); state.onboarded=true; save(); }
+function obHighlight(id){ document.querySelectorAll(".ob-highlight").forEach(e=>e.classList.remove("ob-highlight")); if(id){ const e=$(id); if(e) e.classList.add("ob-highlight"); } }
 
 /* ---------------------------------------------------------------------------
    11) РЕНДЕР
@@ -2220,6 +2376,10 @@ function bindUI(){
   $("offlineClose").addEventListener("click", ()=>{ $("offlineOverlay").hidden=true; });
   $("finaleClose").addEventListener("click", ()=>{ $("finaleOverlay").hidden=true; });
   $("dateClose").addEventListener("click", ()=>{ $("dateOverlay").hidden=true; });
+  $("promoNext").addEventListener("click", promoNext);
+  $("bankHelp").addEventListener("click", helpRestart);
+  $("obNext").addEventListener("click", obNext);
+  $("resetBtn").addEventListener("click", ()=>{ $("menuPanel").hidden=true; resetProgress(false); });
   $("boostBtn").addEventListener("click", ()=>{
     if(Date.now() < (state.boostUntil||0)) return;          // уже активен
     state.boostUntil = Date.now() + 15*60000;               // ×2 на 15 минут
@@ -2248,6 +2408,7 @@ function bindUI(){
     startMusic();                                      // запуск фоновой музыки по жесту пользователя
     $("menuScreen").hidden = true;
     if(menuVid){ try{ menuVid.pause(); }catch(e){} }   // не крутим видео в фоне после старта
+    if(!state.onboarded) startOnboarding();             // онбординг при первом запуске
   });
   // регулятор громкости музыки
   const vs = $("volSlider");
