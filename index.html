@@ -2839,5 +2839,209 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   });
 })();
 </script>
+
+<!-- ============================================================
+     СВИДАНИЯ: кнопка (справа-внизу) → выбор мини-игры → игра.
+     Очки в игре дают очки близости (addCloseness). 3 игры:
+     Змейка, Три-в-ряд, Тетрис. Переиспользуется #gameOverlay.
+     Откат: удалить этот блок.
+============================================================ -->
+<script>
+(function(){
+  // --- стили ---
+  const css = document.createElement('style'); css.textContent = `
+  #datesBtn{position:fixed;right:14px;bottom:14px;z-index:26;border:0;cursor:pointer;
+    font-family:'Baloo 2',sans-serif;font-weight:800;color:#fff;font-size:15px;
+    padding:11px 16px;border-radius:999px;background:linear-gradient(135deg,#ff5d8f,#ff3d6e);
+    box-shadow:0 8px 20px rgba(255,61,110,.45);display:flex;align-items:center;gap:7px;
+    animation:datesPulse 2.4s ease-in-out infinite;}
+  #datesBtn:active{transform:scale(.96);}
+  @keyframes datesPulse{0%,100%{box-shadow:0 8px 20px rgba(255,61,110,.4);}50%{box-shadow:0 8px 30px rgba(255,61,110,.75);}}
+  .dates-card{background:linear-gradient(180deg,#2a1230,#1a0f22);border:1px solid #5a2f50;border-radius:18px;
+    padding:16px;max-width:440px;width:92vw;box-shadow:0 18px 50px rgba(0,0,0,.5);}
+  .dates-h{font-family:'Unbounded','Baloo 2',sans-serif;font-weight:800;color:#ffd9e6;font-size:20px;text-align:center;margin-bottom:4px;}
+  .dates-sub{color:#e8b8cf;text-align:center;font-size:13px;margin-bottom:12px;}
+  .dates-grid{display:flex;flex-direction:column;gap:10px;}
+  .date-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid #6a3a5e;
+    border-radius:14px;padding:10px 12px;cursor:pointer;transition:transform .12s,background .12s;}
+  .date-item:hover{background:rgba(255,255,255,.1);transform:translateY(-2px);}
+  .date-item.locked{opacity:.5;cursor:not-allowed;filter:grayscale(.6);}
+  .date-emoji{font-size:34px;width:46px;text-align:center;}
+  .date-info{flex:1;}
+  .date-name{font-family:'Baloo 2';font-weight:800;color:#fff;font-size:16px;}
+  .date-desc{color:#d9b8cc;font-size:12px;}
+  .date-go{background:linear-gradient(135deg,#ff5d8f,#ff3d6e);color:#fff;border:0;border-radius:10px;
+    font-family:'Baloo 2';font-weight:800;padding:8px 14px;cursor:pointer;font-size:14px;}
+  .dates-x{position:absolute;top:10px;right:14px;background:none;border:0;color:#ffd9e6;font-size:22px;cursor:pointer;}
+  .dg-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .dg-canvas{border-radius:12px;background:#10141f;box-shadow:0 10px 30px rgba(0,0,0,.5);touch-action:none;max-width:92vw;height:auto;}
+  .dg-ctrl{display:flex;gap:10px;}
+  .dg-ctrl button{width:54px;height:48px;border-radius:12px;border:1px solid #5a4632;background:#2a1e14;color:#ffe8c2;
+    font-size:22px;font-weight:800;cursor:pointer;touch-action:none;user-select:none;}
+  .dg-ctrl button:active{background:#3a2a1c;}
+  `; document.head.appendChild(css);
+
+  const GAMES=[
+    {key:'snake',  emoji:'🐍', name:'Прогулка вдвоём', desc:'Змейка · собирай сердечки', lvl:1},
+    {key:'match3', emoji:'💐', name:'Букет для Даниэлы', desc:'Три-в-ряд · 45 секунд', lvl:2},
+    {key:'tetris', emoji:'🧩', name:'Вечерние сборы', desc:'Тетрис · складывай линии', lvl:3},
+  ];
+
+  // --- кнопка + оверлей выбора ---
+  const btn=document.createElement('button'); btn.id='datesBtn'; btn.innerHTML='💞 Свидание';
+  const ov=document.createElement('div'); ov.id='datesOverlay'; ov.className='overlay'; ov.hidden=true;
+  ov.innerHTML='<div class="dates-card" style="position:relative">'+
+    '<button class="dates-x" id="datesX">✕</button>'+
+    '<div class="dates-h">💞 Свидания с Даниэлой</div>'+
+    '<div class="dates-sub">Победа и очки повышают близость 💗</div>'+
+    '<div class="dates-grid" id="datesGrid"></div></div>';
+  function mount(){ if(!btn.isConnected) document.body.appendChild(btn); if(!ov.isConnected) document.body.appendChild(ov); }
+  if(document.body) mount(); document.addEventListener('DOMContentLoaded',mount);
+
+  function renderGrid(){
+    const lvl=(state&&state.chatLevel)||1, g=ov.querySelector('#datesGrid'); g.innerHTML='';
+    GAMES.forEach(G=>{
+      const ok = lvl>=G.lvl;
+      const d=document.createElement('div'); d.className='date-item'+(ok?'':' locked');
+      d.innerHTML=`<div class="date-emoji">${ok?G.emoji:'🔒'}</div>`+
+        `<div class="date-info"><div class="date-name">${G.name}</div>`+
+        `<div class="date-desc">${ok?G.desc:('Откроется на уровне близости '+G.lvl)}</div></div>`+
+        (ok?`<button class="date-go">Играть</button>`:'');
+      if(ok) d.addEventListener('click',()=>{ ov.hidden=true; openDateGame(G.key); });
+      g.appendChild(d);
+    });
+  }
+  btn.addEventListener('click',()=>{
+    if(typeof dialogOpen==='function' && dialogOpen()) return;
+    if(chatOpen||quizOpen||gameOpen) return;
+    renderGrid(); ov.hidden=false;
+  });
+  ov.querySelector('#datesX').addEventListener('click',()=>ov.hidden=true);
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.hidden=true; });
+
+  // --- общие помощники ---
+  const closenessFor=(s,per)=>Math.max(1,Math.min(8,1+Math.floor(s/per)));
+  function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.fill(); }
+  function ctrlRow(acts){ return '<div class="dg-ctrl">'+acts.map(a=>`<button data-act="${a.act}">${a.label}</button>`).join('')+'</div>'; }
+  function bindCtrl(map){ document.getElementById('gameStage').querySelectorAll('.dg-ctrl button').forEach(b=>{ const fn=map[b.dataset.act]; if(fn) b.addEventListener('pointerdown',e=>{e.preventDefault(); fn();}); }); }
+  function dateCleanup(){ if(window.__dateCleanup){ try{window.__dateCleanup();}catch(e){} window.__dateCleanup=null; } }
+
+  function openDateGame(kind){
+    dateCleanup();
+    gameOpen=true; chatOpen=true; if(typeof ensureAudio==='function') ensureAudio();
+    const res=document.getElementById('gameResult'); res.hidden=true; res.innerHTML='';
+    document.getElementById('gameOverlay').hidden=false;
+    document.getElementById('gameClose').addEventListener('click', dateCleanup, {once:true});
+    if(kind==='snake') startSnake(); else if(kind==='match3') startMatch3(); else startTetris();
+  }
+  function finishDate(title, score, closeness){
+    const res=document.getElementById('gameResult'); if(!res.hidden) return;
+    if(gameRAF){ cancelAnimationFrame(gameRAF); gameRAF=null; }
+    dateCleanup();
+    const leveled = (typeof addCloseness==='function') ? addCloseness(closeness) : false;
+    res.hidden=false;
+    res.innerHTML=`<div class="gr-title">${title}</div>`+
+      `<div class="gr-rew">Счёт: ${score} · +${closeness} 💗 близости</div>`+
+      (leveled?`<div class="gr-line">💞 Новый уровень близости — ${ (state&&state.chatLevel)||'' }!</div>`:`<div class="gr-line">«Спасибо за чудесное свидание»</div>`)+
+      `<button id="gameDone" class="primary-btn">Готово</button>`;
+    if(sfx&&sfx.promote)sfx.promote(); if(typeof confetti==='function')confetti(36);
+    if(typeof bossSay==='function') bossSay(leveled?"Это было прекрасно… ты особенный 💗":"С тобой так легко и весело!", "joy");
+    if(typeof save==='function')save(); if(typeof renderHud==='function')renderHud(); if(typeof renderLooks==='function')renderLooks();
+    document.getElementById('gameDone').addEventListener('click', ()=>{ if(typeof closeGame==='function') closeGame(); });
+  }
+
+  // ===== ЗМЕЙКА =====
+  function startSnake(){
+    document.getElementById('gameTitle').textContent='🐍 Прогулка вдвоём';
+    document.getElementById('gameInfo').textContent='Собирай сердечки 💗. Стрелки/свайп/кнопки. Очки = близость.';
+    const N=15, CELL=22, W=N*CELL;
+    document.getElementById('gameStage').innerHTML=`<div class="dg-wrap"><canvas id="snkCv" width="${W}" height="${W}" class="dg-canvas"></canvas>`+
+      ctrlRow([{act:'l',label:'◀'},{act:'u',label:'▲'},{act:'d',label:'▼'},{act:'r',label:'▶'}])+`</div>`;
+    const cv=document.getElementById('snkCv'), ctx=cv.getContext('2d');
+    let snake=[{x:7,y:7},{x:6,y:7},{x:5,y:7}], dir={x:1,y:0}, nd={x:1,y:0}, food=spawn(), score=0, dead=false, acc=0, last=performance.now(), speed=7;
+    function spawn(){ let p; do{ p={x:Math.random()*N|0,y:Math.random()*N|0}; }while(snake&&snake.some(s=>s.x===p.x&&s.y===p.y)); return p; }
+    function setDir(x,y){ if(x===-dir.x&&y===-dir.y) return; nd={x,y}; }
+    const onKey=e=>{ const k=e.key; if(k==='ArrowUp'||k==='w')setDir(0,-1); else if(k==='ArrowDown'||k==='s')setDir(0,1); else if(k==='ArrowLeft'||k==='a')setDir(-1,0); else if(k==='ArrowRight'||k==='d')setDir(1,0); };
+    window.addEventListener('keydown',onKey); window.__dateCleanup=()=>window.removeEventListener('keydown',onKey);
+    bindCtrl({l:()=>setDir(-1,0),r:()=>setDir(1,0),u:()=>setDir(0,-1),d:()=>setDir(0,1)});
+    let sx,sy; cv.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;});
+    cv.addEventListener('pointerup',e=>{ const dx=e.clientX-sx,dy=e.clientY-sy; if(Math.abs(dx)<8&&Math.abs(dy)<8)return; if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0); else setDir(0,dy>0?1:-1); });
+    function tick(){ dir=nd; const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+      if(h.x<0||h.x>=N||h.y<0||h.y>=N||snake.some(s=>s.x===h.x&&s.y===h.y)){ dead=true; finishDate('🐍 Прогулка', score, closenessFor(score,30)); return; }
+      snake.unshift(h);
+      if(h.x===food.x&&h.y===food.y){ score+=10; if(sfx&&sfx.ok)sfx.ok(); food=spawn(); if(speed<15)speed+=0.25; } else snake.pop(); }
+    function draw(){ ctx.fillStyle='#10141f'; ctx.fillRect(0,0,W,W);
+      ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.beginPath(); for(let i=1;i<N;i++){ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,W);ctx.moveTo(0,i*CELL);ctx.lineTo(W,i*CELL);} ctx.stroke();
+      ctx.font=CELL+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('💗',food.x*CELL+CELL/2,food.y*CELL+CELL/2+1);
+      snake.forEach((s,i)=>{ const g=ctx.createLinearGradient(s.x*CELL,s.y*CELL,(s.x+1)*CELL,(s.y+1)*CELL); g.addColorStop(0,'#8ef07a'); g.addColorStop(1,'#2fae4e'); ctx.fillStyle=i===0?'#d7ffb0':g; rr(ctx,s.x*CELL+1.5,s.y*CELL+1.5,CELL-3,CELL-3,7); });
+      ctx.fillStyle='#fff'; ctx.font="bold 15px 'Baloo 2',sans-serif"; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText('Очки: '+score,8,19); }
+    function loop(now){ const dt=(now-last)/1000; last=now; acc+=dt; const step=1/speed; let guard=0; while(acc>=step&&!dead&&guard++<5){ tick(); acc-=step; } if(!dead){ draw(); gameRAF=requestAnimationFrame(loop); } }
+    draw(); gameRAF=requestAnimationFrame(loop);
+  }
+
+  // ===== ТРИ В РЯД =====
+  function startMatch3(){
+    document.getElementById('gameTitle').textContent='💐 Букет для Даниэлы';
+    document.getElementById('gameInfo').textContent='Меняй соседние, собирай 3+. 45 секунд. Очки = близость.';
+    const N=8, CELL=40, W=N*CELL, TYPES=6, COL=['#ff5d6c','#ffd23f','#5bd1ff','#7CFC68','#c77dff','#ff9f45'];
+    document.getElementById('gameStage').innerHTML=`<div class="dg-wrap"><canvas id="m3cv" width="${W}" height="${W}" class="dg-canvas"></canvas></div>`;
+    const cv=document.getElementById('m3cv'), ctx=cv.getContext('2d');
+    let grid=[], sel=null, score=0, endAt=performance.now()+45000, busy=false;
+    const rnd=()=>Math.random()*TYPES|0;
+    function matches(){ const m=new Set(); for(let r=0;r<N;r++)for(let c=0;c<N;c++){ const v=grid[r][c]; if(v<0)continue;
+      if(c+2<N&&grid[r][c+1]===v&&grid[r][c+2]===v){m.add(r+','+c);m.add(r+','+(c+1));m.add(r+','+(c+2));}
+      if(r+2<N&&grid[r+1][c]===v&&grid[r+2][c]===v){m.add(r+','+c);m.add((r+1)+','+c);m.add((r+2)+','+c);} } return m; }
+    function init(){ do{ grid=[]; for(let r=0;r<N;r++){grid[r]=[];for(let c=0;c<N;c++)grid[r][c]=rnd();} }while(matches().size); }
+    function resolve(){ const m=matches(); if(!m.size){ busy=false; return; } busy=true; score+=m.size*10; if(sfx&&sfx.ok)sfx.ok();
+      m.forEach(k=>{const a=k.split(',');grid[+a[0]][+a[1]]=-1;});
+      for(let c=0;c<N;c++){ const pile=[]; for(let r=N-1;r>=0;r--) if(grid[r][c]>=0) pile.push(grid[r][c]); for(let r=N-1;r>=0;r--) grid[r][c]= pile.length?pile.shift():rnd(); }
+      draw(); setTimeout(resolve,150); }
+    function swap(a,b){ const t=grid[a.r][a.c]; grid[a.r][a.c]=grid[b.r][b.c]; grid[b.r][b.c]=t; }
+    cv.addEventListener('pointerdown',e=>{ if(busy)return; const r=cv.getBoundingClientRect(); const c=(((e.clientX-r.left)/r.width*N)|0), rr2=(((e.clientY-r.top)/r.height*N)|0);
+      if(c<0||c>=N||rr2<0||rr2>=N)return; const cell={r:rr2,c};
+      if(!sel){ sel=cell; } else { if(Math.abs(sel.r-cell.r)+Math.abs(sel.c-cell.c)===1){ swap(sel,cell); if(matches().size){ draw(); setTimeout(resolve,120);} else swap(sel,cell); } sel=null; } draw(); });
+    function draw(){ ctx.fillStyle='#161a26'; ctx.fillRect(0,0,W,W);
+      for(let r=0;r<N;r++)for(let c=0;c<N;c++){ const v=grid[r][c]; if(v<0)continue; const x=c*CELL+CELL/2,y=r*CELL+CELL/2;
+        ctx.fillStyle=COL[v]; ctx.beginPath(); ctx.arc(x,y,CELL*0.37,0,7); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,.30)'; ctx.beginPath(); ctx.arc(x-CELL*0.12,y-CELL*0.13,CELL*0.10,0,7); ctx.fill(); }
+      if(sel){ ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.strokeRect(sel.c*CELL+3,sel.r*CELL+3,CELL-6,CELL-6); }
+      const left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
+      ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(0,W-22,W,22); ctx.fillStyle='#fff'; ctx.font="bold 15px 'Baloo 2'"; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText('⏱ '+left+'с    Очки: '+score,8,W-7); }
+    function loop(){ if(performance.now()>=endAt){ finishDate('💐 Букет', score, closenessFor(score,120)); return; } if(!busy)draw(); gameRAF=requestAnimationFrame(loop); }
+    window.__dateCleanup=()=>{};
+    init(); draw(); gameRAF=requestAnimationFrame(loop);
+  }
+
+  // ===== ТЕТРИС =====
+  function startTetris(){
+    document.getElementById('gameTitle').textContent='🧩 Вечерние сборы';
+    document.getElementById('gameInfo').textContent='Складывай линии. Стрелки/кнопки: ◀▶ двигать, ⟳ вращать, ▼ вниз.';
+    const COLS=10, ROWS=18, CELL=20, W=COLS*CELL, H=ROWS*CELL;
+    const SH=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
+    const COL=['#5bd1ff','#ffd23f','#c77dff','#4f7cff','#ff9f45','#7CFC68','#ff5d6c'];
+    document.getElementById('gameStage').innerHTML=`<div class="dg-wrap"><canvas id="tetCv" width="${W}" height="${H}" class="dg-canvas"></canvas>`+
+      ctrlRow([{act:'l',label:'◀'},{act:'rot',label:'⟳'},{act:'d',label:'▼'},{act:'r',label:'▶'}])+`</div>`;
+    const cv=document.getElementById('tetCv'), ctx=cv.getContext('2d');
+    let grid=Array.from({length:ROWS},()=>Array(COLS).fill(-1)), piece=null, score=0, lines=0, over=false, acc=0, last=performance.now(), drop=0.65;
+    function collide(r,c,sh){ for(let i=0;i<sh.length;i++)for(let j=0;j<sh[i].length;j++){ if(!sh[i][j])continue; const rr2=r+i,cc=c+j; if(cc<0||cc>=COLS||rr2>=ROWS)return true; if(rr2>=0&&grid[rr2][cc]>=0)return true; } return false; }
+    function newPiece(){ const t=Math.random()*SH.length|0; piece={shape:SH[t].map(r=>r.slice()),col:t,r:-1,c:(COLS>>1)-1}; if(collide(piece.r+1,piece.c,piece.shape)&&collide(piece.r,piece.c,piece.shape)){ over=true; finishDate('🧩 Тетрис', score, closenessFor(score,250)); } }
+    function merge(){ piece.shape.forEach((row,i)=>row.forEach((v,j)=>{ if(v){ const rr2=piece.r+i,cc=piece.c+j; if(rr2>=0)grid[rr2][cc]=piece.col; } })); }
+    function clearLines(){ let n=0; for(let r=ROWS-1;r>=0;r--){ if(grid[r].every(v=>v>=0)){ grid.splice(r,1); grid.unshift(Array(COLS).fill(-1)); n++; r++; } } if(n){ lines+=n; score+=[0,100,300,500,800][n]; if(sfx&&sfx.ok)sfx.ok(); if(drop>0.22)drop-=0.025; } }
+    function rotate(){ if(!piece)return; const s=piece.shape, ns=s[0].map((_,j)=>s.map(r=>r[j]).reverse()); if(!collide(piece.r,piece.c,ns))piece.shape=ns; }
+    function move(dc){ if(piece&&!collide(piece.r,piece.c+dc,piece.shape))piece.c+=dc; }
+    function softDrop(){ if(!piece)return; if(!collide(piece.r+1,piece.c,piece.shape))piece.r++; else { merge(); clearLines(); newPiece(); } }
+    const onKey=e=>{ if(over)return; const k=e.key; if(k==='ArrowLeft')move(-1); else if(k==='ArrowRight')move(1); else if(k==='ArrowDown')softDrop(); else if(k==='ArrowUp'||k===' '){e.preventDefault();rotate();} };
+    window.addEventListener('keydown',onKey); window.__dateCleanup=()=>window.removeEventListener('keydown',onKey);
+    bindCtrl({l:()=>move(-1),r:()=>move(1),d:softDrop,rot:rotate});
+    function draw(){ ctx.fillStyle='#10141f'; ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.beginPath(); for(let i=1;i<COLS;i++){ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,H);} for(let i=1;i<ROWS;i++){ctx.moveTo(0,i*CELL);ctx.lineTo(W,i*CELL);} ctx.stroke();
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ if(grid[r][c]>=0){ ctx.fillStyle=COL[grid[r][c]]; rr(ctx,c*CELL+1,r*CELL+1,CELL-2,CELL-2,4);} }
+      if(piece)piece.shape.forEach((row,i)=>row.forEach((v,j)=>{ if(v){ const rr2=piece.r+i; if(rr2<0)return; ctx.fillStyle=COL[piece.col]; rr(ctx,(piece.c+j)*CELL+1,rr2*CELL+1,CELL-2,CELL-2,4);} }));
+      ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(0,0,W,18); ctx.fillStyle='#fff'; ctx.font="bold 13px 'Baloo 2'"; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText('Линии: '+lines+'   Очки: '+score,6,14); }
+    function loop(now){ const dt=(now-last)/1000; last=now; acc+=dt; if(acc>=drop){ softDrop(); acc=0; } if(!over){ draw(); gameRAF=requestAnimationFrame(loop); } }
+    newPiece(); draw(); gameRAF=requestAnimationFrame(loop);
+  }
+})();
+</script>
 </body>
 </html>
