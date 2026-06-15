@@ -453,15 +453,15 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
 .gr-rew{font-family:"Baloo 2";font-weight:800;color:var(--green-deep);margin-top:4px;}
 .gr-line{font-style:italic;color:var(--ink-soft);font-weight:700;margin:8px 0;line-height:1.35;}
 /* шашки */
-.ck-board{display:grid;grid-template-columns:repeat(8,1fr);width:100%;max-width:380px;aspect-ratio:1;border-radius:10px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.28);}
-.ck-cell{position:relative;display:flex;align-items:center;justify-content:center;}
+.ck-board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;max-width:380px;aspect-ratio:1;border-radius:10px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.28);}
+.ck-cell{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;overflow:hidden;}
 .ck-cell.dark{background:#a9763f;} .ck-cell.light{background:#f4e2c2;}
 .ck-cell.sel{box-shadow:inset 0 0 0 3px #ffd24a;}
 .ck-cell.move::before{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:rgba(70,190,70,.75);}
 .ck-pc{width:74%;height:74%;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 .ck-pc.p{background:radial-gradient(circle at 35% 30%,#fff,#dcdcdc);border:2px solid #aeaeae;}
 .ck-pc.a{background:radial-gradient(circle at 35% 30%,#777,#222);border:2px solid #000;}
-.ck-pc.k::after{content:"♛";color:#ffd24a;font-size:17px;}
+.ck-pc.k::after{content:"♛";position:absolute;line-height:1;color:#ffd24a;font-size:60%;text-shadow:0 1px 1px rgba(0,0,0,.5);}
 /* морской бой */
 .bs-wrap{display:flex;flex-direction:column;gap:7px;width:100%;align-items:center;}
 .bs-label{font-family:"Baloo 2";font-weight:800;font-size:12px;color:var(--ink-soft);}
@@ -1918,8 +1918,30 @@ function startCheckers(){
   const cells=[];
   for(let r=0;r<8;r++){ cells[r]=[]; for(let c=0;c<8;c++){ const d=document.createElement("div"); d.className="ck-cell "+(((r+c)%2)?"dark":"light"); if((r+c)%2) d.addEventListener("click",()=>onClick(r,c)); host.appendChild(d); cells[r][c]=d; } }
   const sideOf=v=>v>0?1:(v<0?-1:0);
-  function caps(r,c){ const v=B[r][c]; if(!v) return []; const s=sideOf(v),o=[]; for(const [dr,dc] of [[1,1],[1,-1],[-1,1],[-1,-1]]){ const mr=r+dr,mc=c+dc,tr=r+2*dr,tc=c+2*dc; if(tr<0||tr>7||tc<0||tc>7) continue; if(B[mr][mc]!==0 && sideOf(B[mr][mc])===-s && B[tr][tc]===0) o.push({r:tr,c:tc,cr:mr,cc:mc}); } return o; }
-  function moves(r,c){ const v=B[r][c]; if(!v) return []; const ds=Math.abs(v)===2?[[1,1],[1,-1],[-1,1],[-1,-1]]:(v>0?[[-1,1],[-1,-1]]:[[1,1],[1,-1]]); const o=[]; for(const [dr,dc] of ds){ const tr=r+dr,tc=c+dc; if(tr>=0&&tr<8&&tc>=0&&tc<8&&B[tr][tc]===0) o.push({r:tr,c:tc}); } return o; }
+  const DIRS=[[1,1],[1,-1],[-1,1],[-1,-1]];
+  const king=v=>Math.abs(v)===2;
+  function caps(r,c){ const v=B[r][c]; if(!v) return []; const s=sideOf(v), o=[];
+    if(king(v)){                                              // дамка: бьёт на любой дистанции по диагонали
+      for(const [dr,dc] of DIRS){ let tr=r+dr,tc=c+dc;
+        while(tr>=0&&tr<8&&tc>=0&&tc<8&&B[tr][tc]===0){ tr+=dr; tc+=dc; }    // пропускаем пустые
+        if(tr<0||tr>7||tc<0||tc>7) continue;
+        if(sideOf(B[tr][tc])!==-s) continue;                 // первая встреченная шашка не вражеская → нет боя
+        const cr=tr,cc=tc; let lr=tr+dr,lc=tc+dc;
+        while(lr>=0&&lr<8&&lc>=0&&lc<8&&B[lr][lc]===0){ o.push({r:lr,c:lc,cr,cc}); lr+=dr; lc+=dc; }  // приземление за побитой
+      }
+    } else {                                                  // пешка: бьёт через соседнюю в любую сторону
+      for(const [dr,dc] of DIRS){ const mr=r+dr,mc=c+dc,tr=r+2*dr,tc=c+2*dc; if(tr<0||tr>7||tc<0||tc>7) continue;
+        if(B[mr][mc]!==0 && sideOf(B[mr][mc])===-s && B[tr][tc]===0) o.push({r:tr,c:tc,cr:mr,cc:mc}); }
+    }
+    return o; }
+  function moves(r,c){ const v=B[r][c]; if(!v) return []; const o=[];
+    if(king(v)){                                              // дамка: ход на любое число пустых клеток
+      for(const [dr,dc] of DIRS){ let tr=r+dr,tc=c+dc; while(tr>=0&&tr<8&&tc>=0&&tc<8&&B[tr][tc]===0){ o.push({r:tr,c:tc}); tr+=dr; tc+=dc; } }
+    } else {                                                  // пешка: на 1 вперёд
+      const ds=(v>0?[[-1,1],[-1,-1]]:[[1,1],[1,-1]]);
+      for(const [dr,dc] of ds){ const tr=r+dr,tc=c+dc; if(tr>=0&&tr<8&&tc>=0&&tc<8&&B[tr][tc]===0) o.push({r:tr,c:tc}); }
+    }
+    return o; }
   function sideCap(s){ for(let r=0;r<8;r++)for(let c=0;c<8;c++) if(sideOf(B[r][c])===s && caps(r,c).length) return true; return false; }
   function legal(r,c){ const s=sideOf(B[r][c]); if(!s) return []; return sideCap(s)?caps(r,c):moves(r,c); }
   function sideMoves(s){ const all=[]; for(let r=0;r<8;r++)for(let c=0;c<8;c++) if(sideOf(B[r][c])===s){ legal(r,c).forEach(m=>all.push({r,c,m})); } return all; }
