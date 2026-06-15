@@ -1775,13 +1775,13 @@ function startPong(){
   // калибровка стола в координатах канваса (трапеция синей столешницы)
   const NEAR={lx:74,rx:566,y:258}, FAR={lx:189,rx:451,y:126};
   function lane(z){ return { lx:NEAR.lx+(FAR.lx-NEAR.lx)*z, rx:NEAR.rx+(FAR.rx-NEAR.rx)*z, ey:NEAR.y+(FAR.y-NEAR.y)*z }; }
-  function scaleAt(z){ return 1+(0.45-1)*z; }                 // near 1.0 → far 0.45
+  function scaleAt(z){ return 1+(0.30-1)*z; }                 // near 1.0 → far 0.30 (заметная перспектива)
   function proj(x,z,h){ const L=lane(z); return { sx:L.lx+(x*0.5+0.5)*(L.rx-L.lx), sy:L.ey - h*scaleAt(z)*120, sc:scaleAt(z) }; }
 
-  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок, 1=ИИ), y=высота над столом
+  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок, 1=ИИ), y=высота над столом (низкий отскок)
   let px=0, ax=0, ps=0, as=0, over=false, ball, lastHitter=1;
-  const PADX=0.36, G=0.00060;                                // зона ракетки и гравитация
-  function serve(dir){ ball={x:0, y:0.16, z:dir>0?0.10:0.90, vx:0, vy:0.013, vz:dir*0.0150}; lastHitter=dir>0?-1:1; }
+  const PADX=0.34, G=0.0011;                                  // зона ракетки и гравитация (низкая дуга)
+  function serve(dir){ ball={x:0, y:0.05, z:dir>0?0.12:0.88, vx:0, vy:0.010, vz:dir*0.0125}; lastHitter=dir>0?-1:1; }
   serve(Math.random()<.5?1:-1);
 
   function moveTo(clientX){ const r=cv.getBoundingClientRect(); px=Math.max(-1,Math.min(1, ((clientX-r.left)/r.width)*2-1)); }
@@ -1798,18 +1798,19 @@ function startPong(){
     ax += (aiTarget-ax)*0.075; ax=Math.max(-1,Math.min(1,ax));
     // интеграция + гравитация
     ball.x+=ball.vx; ball.z+=ball.vz; ball.vy-=G; ball.y+=ball.vy;
-    // отскок от стола
-    if(ball.y<0 && ball.z>0.02 && ball.z<0.98){ ball.y=0; ball.vy=Math.abs(ball.vy)*0.62; }
-    // мягкие боковые края
-    if(ball.x<-1.04){ ball.x=-1.04; ball.vx=Math.abs(ball.vx); } if(ball.x>1.04){ ball.x=1.04; ball.vx=-Math.abs(ball.vx); }
+    // отскок от стола (низкий, мяч «катится»)
+    if(ball.y<0 && ball.z>0.02 && ball.z<0.98){ ball.y=0; ball.vy=Math.abs(ball.vy)*0.55; }
+    if(ball.y<0) ball.y=0;                                    // не уходим под стол
+    // боковые края стола — отражаем (мяч всегда на столе)
+    if(ball.x<-1){ ball.x=-1; ball.vx=Math.abs(ball.vx); } if(ball.x>1){ ball.x=1; ball.vx=-Math.abs(ball.vx); }
     // удар игрока (ближний край)
     if(ball.vz<0 && ball.z<=0.07){
-      if(Math.abs(ball.x-px)<PADX){ ball.z=0.07; ball.vz=Math.min(0.030, Math.abs(ball.vz)*1.06); ball.vx=(ball.x-px)*0.022; if(ball.vy<0.010) ball.vy=0.013; lastHitter=1; sfx&&sfx.ok&&sfx.ok(); }
+      if(Math.abs(ball.x-px)<PADX){ ball.z=0.07; ball.vz=Math.min(0.024, Math.abs(ball.vz)*1.05); ball.vx=(ball.x-px)*0.018; ball.vy=0.010; lastHitter=1; sfx&&sfx.ok&&sfx.ok(); }
       else if(ball.z<0){ point(false); return; }
     }
     // удар ИИ (дальний край)
     if(ball.vz>0 && ball.z>=0.93){
-      if(Math.abs(ball.x-ax)<PADX){ ball.z=0.93; ball.vz=-Math.min(0.030, Math.abs(ball.vz)*1.06); ball.vx=(ball.x-ax)*0.022; if(ball.vy<0.010) ball.vy=0.013; lastHitter=-1; }
+      if(Math.abs(ball.x-ax)<PADX){ ball.z=0.93; ball.vz=-Math.min(0.024, Math.abs(ball.vz)*1.05); ball.vx=(ball.x-ax)*0.018; ball.vy=0.010; lastHitter=-1; }
       else if(ball.z>1){ point(true); return; }
     }
     draw(); if(!over) gameRAF=requestAnimationFrame(step);
@@ -1824,10 +1825,10 @@ function startPong(){
     else { ctx.fillStyle="#1f6e3a"; ctx.fillRect(0,0,W,H); }
     drawPaddle(imgPf, ax, 0.965, 140);                       // дальняя (ИИ)
     const sc=scaleAt(ball.z);
-    const g=proj(ball.x,ball.z,0);                            // тень на столе
-    ctx.save(); ctx.globalAlpha=0.30; ctx.fillStyle="#000";
-    ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 17*sc, 6*sc, 0,0,7); ctx.fill(); ctx.restore();
-    const b=proj(ball.x,ball.z,ball.y), bs=48*sc;             // мяч
+    const g=proj(ball.x,ball.z,0);                            // тень на столе (под мячом)
+    ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";
+    ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 12*sc, 4.5*sc, 0,0,7); ctx.fill(); ctx.restore();
+    const b=proj(ball.x,ball.z,ball.y), bs=32*sc;             // мяч (мельче + чёткая перспектива)
     if(imgBall.complete && imgBall.naturalWidth) ctx.drawImage(imgBall, b.sx-bs/2, b.sy-bs/2, bs, bs);
     else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(b.sx,b.sy,bs/2,0,7); ctx.fill(); }
     { const L=lane(0), sx=L.lx+(px*0.5+0.5)*(L.rx-L.lx), h=185,           // ближняя (игрок) — у нижнего края
