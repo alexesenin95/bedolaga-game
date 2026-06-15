@@ -1779,20 +1779,25 @@ function startPong(){
   function scaleAt(z){ return 1+(0.30-1)*z; }                 // near 1.0 → far 0.30 (заметная перспектива)
   function proj(x,z,h){ const L=lane(z); return { sx:L.lx+(x*0.5+0.5)*(L.rx-L.lx), sy:L.ey - h*scaleAt(z)*120, sc:scaleAt(z) }; }
 
-  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок,1=ИИ). Полёт — ДУГА над сеткой.
-  let px=0, py=0.5, ax=0, ps=0, as=0, over=false, ball, spd=0.016;
+  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок,1=ИИ). Мяч ЦЕЛИТСЯ в точку на столе.
+  let px=0, py=0.5, ax=0, ps=0, as=0, over=false, ball={x:0,z:0,dir:1,startX:0,targetX:0,curve:0,hop:120}, spd=0.018;
   let server=(Math.random()<.5?1:-1), servesLeft=2, awaitingServe=true, aiServeAt=0;  // по 2 подачи по очереди
   let pvx=0, pvy=0, lastMoveT=0, canHit=false, lastHitter=1, outAt=0;   // свайп + кто бил последним + флеш «АУТ»
-  const PADX=0.34, HITX=0.44, ZWIN=0.24, SWTH=0.060, SPDCAP=0.038;  // зоны ИИ/игрока, окно и порог свайпа
+  const PADX=0.30, HITX=0.50, ZWIN=0.26, SWTH=0.055, SPDCAP=0.040, AISPEED=0.026; // зоны/окно/порог/скорость ИИ
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
-  function arcLift(z){ return (ball.hop||120)*4*z*(1-z)*scaleAt(z); }   // дуга над сеткой (высота зависит от удара)
+  function arcLift(z){ return (ball.hop||120)*4*z*(1-z)*scaleAt(z); }   // дуга над сеткой (высота зависит от типа удара)
   function swipe(){ return Math.hypot(pvx,pvy); }
+  function prog(){ return ball.dir>0 ? ball.z : 1-ball.z; }             // 0 у бьющего → 1 у принимающего
+  function updateX(){ const p=clamp(prog(),0,1); ball.x = ball.startX + (ball.targetX-ball.startX)*p + ball.curve*Math.sin(p*Math.PI); }
+  // удар: задаём точку приземления (targetX), силу, дугу (hop), кручёный изгиб (curve)
+  function launch(dir, sx, tx, power, hop, curve){ ball.dir=dir; ball.z = dir>0?0.05:0.95;
+    ball.startX=clamp(sx,-1,1); ball.targetX=tx; ball.curve=curve||0; ball.hop=hop; spd=power; canHit=(dir<0); updateX(); }
 
-  function prepareServe(){ awaitingServe=true; canHit=false; spd=0.016; aiServeAt=performance.now()+800;
-    ball={ x: server>0?px:ax, z: server>0?0:1, dir: server>0?1:-1, vx:0, hop:120 }; }
+  function prepareServe(){ awaitingServe=true; canHit=false; spd=0.018; aiServeAt=performance.now()+800;
+    ball.dir=server>0?1:-1; ball.z=server>0?0.02:0.98; ball.x=server>0?px:ax; ball.startX=ball.x; ball.targetX=ball.x; ball.curve=0; ball.hop=120; }
   function doServe(power){ if(!awaitingServe) return; awaitingServe=false; lastHitter=server;
-    if(server>0){ ball.dir=1; ball.z=0.04; ball.x=clamp(px,-0.85,0.85); ball.hop=120; spd=clamp(0.018+power*0.05, 0.018, SPDCAP); ball.vx=clamp(pvx*0.35,-0.018,0.018); if(window.sfx&&sfx.ok)sfx.ok(); }
-    else { ball.dir=-1; ball.z=0.96; ball.x=ax; ball.hop=120; spd=0.020; ball.vx=(Math.random()*0.016-0.008); canHit=true; } }
+    if(server>0){ launch(1, px, clamp(px+pvx*1.6,-0.92,0.92), clamp(0.020+power*0.05,0.020,SPDCAP), 120, clamp(pvx*0.10,-0.10,0.10)); if(window.sfx&&sfx.ok)sfx.ok(); }
+    else { launch(-1, ax, clamp((Math.random()*1.5-0.75),-0.8,0.8), 0.022, 120, (Math.random()*0.14-0.07)); } }
   prepareServe();
 
   function moveTo(cx,cy){ const r=cv.getBoundingClientRect();
@@ -1805,41 +1810,43 @@ function startPong(){
 
   function win(){ if((ps>=11||as>=11)&&Math.abs(ps-as)>=2){ over=true; endGame(ps>as,"Партия твоя! 🏓","Партия за Даниэлой"); return true; } return false; }
   function point(toPlayer){ if(toPlayer) ps++; else as++; if(win()) return;
-    const deuce = ps>=10 && as>=10;                            // при 10:10 — по одной подаче
+    const deuce = ps>=10 && as>=10;
     servesLeft--;
     if(deuce){ server=-server; servesLeft=1; }
     else if(servesLeft<=0){ server=-server; servesLeft=2; }
     prepareServe(); }
 
+  function playerReturn(){                                     // отбивание игрока — тип/сила/точка из свайпа
+    const sp=swipe();
+    let power=clamp(0.020 + sp*0.05, 0.020, SPDCAP), hop=120;
+    if(pvy<-0.05){ power=clamp(power*1.18,0.020,SPDCAP); hop=85; }     // ВВЕРХ — топспин (быстрее, низкая дуга)
+    else if(pvy>0.05){ power*=0.78; hop=160; }                        // ВНИЗ — подрезка (медленнее, высокая дуга)
+    const tx=clamp(px + pvx*2.2, -1.10, 1.10);                        // прицел из горизонтали свайпа (риск аута при резком)
+    launch(1, ball.x, tx, power, hop, clamp(pvx*0.12,-0.12,0.12)); lastHitter=1;
+    if(window.sfx&&sfx.ok)sfx.ok(); }
+  function aiReturn(){                                         // ИИ кладёт в противоположную от игрока сторону, тип случаен
+    const tx=clamp((px<=0?1:-1)*(0.45+Math.random()*0.4), -0.92, 0.92);
+    const r=Math.random(), hop = r<0.3?160 : (r<0.55?85:120), power=clamp(0.019+Math.random()*0.013,0.019,SPDCAP);
+    launch(-1, ball.x, tx, power, hop, (Math.random()*0.18-0.09)); lastHitter=-1; }
+
   function step(){
     if(over) return;
     try{
-      pvx *= 0.84; pvy *= 0.84;                                // затухание скорости свайпа
+      pvx *= 0.84; pvy *= 0.84;
       if(awaitingServe){
-        if(server>0){ ball.x=px; ball.z=0.02; if(swipe()>SWTH) doServe(swipe()); }   // подача игрока — свайпом
-        else { ax += (0-ax)*0.06; ball.x=ax; ball.z=0.98; if(performance.now()>=aiServeAt) doServe(0); }
+        if(server>0){ ball.x=px; ball.startX=px; ball.targetX=px; ball.z=0.02; if(swipe()>SWTH) doServe(swipe()); }
+        else { ax += (0-ax)*0.06; ball.x=ax; ball.startX=ax; ball.targetX=ax; ball.z=0.98; if(performance.now()>=aiServeAt) doServe(0); }
       } else {
-        const aiTarget = ball.dir>0 ? ball.x*0.92 : 0;         // ИИ догоняет, когда мяч к нему
-        ax += (aiTarget-ax)*0.08; ax=clamp(ax,-1,1);
-        ball.z += ball.dir*spd; ball.x += ball.vx;
-        if(Math.abs(ball.x)>1.02){ outAt=performance.now()+650; point(lastHitter<0); }   // мимо стола вбок = АУТ → очко сопернику
+        // ИИ: догоняет мяч с ограниченной скоростью (широкий/быстрый мяч можно не достать)
+        if(ball.dir>0) ax += clamp(ball.x-ax, -AISPEED, AISPEED); else ax += (0-ax)*0.04;
+        ax=clamp(ax,-1,1);
+        ball.z += ball.dir*spd; updateX();
+        if(Math.abs(ball.x)>1.02){ outAt=performance.now()+650; point(lastHitter<0); }   // мимо стола вбок = АУТ
         if(!awaitingServe){
-          if(ball.dir>0){                                      // мяч к ИИ
-            if(ball.z>=1){
-              if(Math.abs(ball.x-ax)<PADX){ ball.z=1; ball.dir=-1; lastHitter=-1; canHit=true; ball.hop=120; spd=clamp(spd*1.02,0.014,SPDCAP); ball.vx=clamp(ball.vx*0.4+(ball.x-ax)*0.015,-0.020,0.020); }
-              else point(true);                                // не достал = аут вдаль → очко игроку
-            }
-          } else {                                             // мяч к игроку — отбиваем СВАЙПОМ (тайминг)
-            const sp=swipe();
-            if(canHit && ball.z<=ZWIN && sp>SWTH && Math.abs(ball.x-px)<HITX){
-              ball.dir=1; ball.z=0.05; canHit=false; lastHitter=1;
-              let power=clamp(0.018 + sp*0.05, 0.018, SPDCAP), hop=120;
-              if(pvy<-0.05){ power=clamp(power*1.16,0.018,SPDCAP); hop=85; }   // свайп ВВЕРХ — топспин (быстрее, ниже)
-              else if(pvy>0.05){ power*=0.80; hop=155; }                       // ВНИЗ — подрезка (медленнее, выше)
-              spd=power; ball.hop=hop;
-              ball.vx=clamp(pvx*0.40 + (ball.x-px)*0.01, -0.022, 0.022);       // горизонталь свайпа — прицел (умеренно, чтоб не в аут)
-              if(window.sfx&&sfx.ok)sfx.ok();
-            } else if(ball.z<=0 && canHit){ point(false); canHit=false; }     // не успел свайпнуть — очко ИИ
+          if(ball.dir>0){ if(ball.z>=1){ if(Math.abs(ball.x-ax)<PADX) aiReturn(); else point(true); } }   // ИИ достал/нет
+          else {
+            if(canHit && ball.z<=ZWIN && swipe()>SWTH && Math.abs(ball.x-px)<HITX){ canHit=false; playerReturn(); }
+            else if(ball.z<=0 && canHit){ point(false); canHit=false; }
           }
         }
       }
