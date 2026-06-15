@@ -2735,14 +2735,16 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   window.BOSS_OUTFITS = window.BOSS_OUTFITS || {};
   window.BOSS_OUTFITS['Костюм (бордо)'] = BOSS_POSES;
   // доп. наряды (5 поз + остальные эмоции подменены ближайшими)
-  function look(dir){ return {
+  const EMOKEYS=['neutral','approve','sympathy','stern','joy','surprised','sad','calm','serious','shrug'];
+  function fullLook(dir){ const o={}; EMOKEYS.forEach(e=>o[e]=dir+"/boss_"+e+".webp"); return o; }   // все 10 поз есть
+  function look(dir){ return {                                            // только 5 поз + подмена остальных
     neutral:dir+"/boss_neutral.webp", joy:dir+"/boss_joy.webp", sad:dir+"/boss_sad.webp",
     stern:dir+"/boss_stern.webp", shrug:dir+"/boss_shrug.webp",
     approve:dir+"/boss_neutral.webp", sympathy:dir+"/boss_neutral.webp",
     surprised:dir+"/boss_shrug.webp", calm:dir+"/boss_neutral.webp", serious:dir+"/boss_stern.webp"
   }; }
-  window.BOSS_OUTFITS['Купальник'] = look('assets/look_swim');
-  window.BOSS_OUTFITS['Школьница'] = look('assets/look_school');
+  window.BOSS_OUTFITS['Купальник'] = fullLook('assets/look_swim');   // полный набор 10 эмоций
+  window.BOSS_OUTFITS['Школьница'] = look('assets/look_school');     // пока 5 поз + подмена
 
   const EMOS = ['neutral','approve','sympathy','stern','joy','surprised','sad','calm','serious','shrug'];
   function refreshFigure(){ if (typeof setBossFigure==='function') setBossFigure('neutral'); }
