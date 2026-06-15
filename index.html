@@ -2536,7 +2536,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   const SRC = 'assets/boss_joy.mp4';
   const W = 540, H = 810;          // размер одной «половины» стопки
   const COOLDOWN = 9000;           // не чаще раза в 9 c
-  let lastPlay = 0, playing = false, ready = false;
+  let lastPlay = 0, playing = false, hideTimer = 0;
 
   // видимый canvas-«поп»
   const canvas = document.createElement('canvas');
@@ -2545,56 +2545,55 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   const off = document.createElement('canvas'); off.width = W; off.height = H * 2;
   const octx = off.getContext('2d', { willReadFrequently: true });
 
+  // видео ОБЯЗАТЕЛЬНО в DOM (иначе часть браузеров не предзагружает)
   const video = document.createElement('video');
-  video.src = SRC; video.muted = true; video.playsInline = true;
-  video.preload = 'auto'; video.setAttribute('playsinline', ''); video.crossOrigin = 'anonymous';
-  video.addEventListener('canplay', () => { ready = true; }, { once: true });
-  video.addEventListener('error', () => { ready = false; });
+  video.src = SRC; video.muted = true; video.defaultMuted = true; video.playsInline = true;
+  video.preload = 'auto'; video.setAttribute('playsinline', ''); video.setAttribute('muted', '');
+  video.style.cssText = 'position:absolute;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
 
-  document.addEventListener('DOMContentLoaded', () => { document.body.appendChild(canvas); });
+  function mount() {
+    if (!canvas.isConnected) document.body.appendChild(canvas);
+    if (!video.isConnected) { document.body.appendChild(video); try { video.load(); } catch (e) {} }
+  }
+  if (document.body) mount();
+  document.addEventListener('DOMContentLoaded', mount);
 
   function drawFrame() {
     if (video.paused || video.ended) return;
-    octx.drawImage(video, 0, 0, W, H * 2);
-    let img;
-    try { img = octx.getImageData(0, 0, W, H * 2); }
-    catch (e) { stop(); return; }
-    const d = img.data, rowBytes = W * 4, matteOff = H * rowBytes;
-    const out = vctx.createImageData(W, H), o = out.data;
-    for (let p = 0; p < H * rowBytes; p += 4) {
-      const a = d[matteOff + p];           // яркость маски = альфа
-      if (a < 6) { o[p + 3] = 0; continue; }
-      const f = 255 / a;                    // un-premultiply (верх лежит на чёрном)
-      o[p]     = Math.min(255, d[p] * f);
-      o[p + 1] = Math.min(255, d[p + 1] * f);
-      o[p + 2] = Math.min(255, d[p + 2] * f);
-      o[p + 3] = a;
-    }
-    vctx.putImageData(out, 0, 0);
+    try {
+      octx.drawImage(video, 0, 0, W, H * 2);
+      const img = octx.getImageData(0, 0, W, H * 2);
+      const d = img.data, rowBytes = W * 4, matteOff = H * rowBytes;
+      const out = vctx.createImageData(W, H), o = out.data;
+      for (let p = 0; p < H * rowBytes; p += 4) {
+        const a = d[matteOff + p];          // яркость маски = альфа
+        if (a < 6) { o[p + 3] = 0; continue; }
+        const f = 255 / a;                  // un-premultiply (верх лежит на чёрном)
+        o[p]     = Math.min(255, d[p] * f);
+        o[p + 1] = Math.min(255, d[p + 1] * f);
+        o[p + 2] = Math.min(255, d[p + 2] * f);
+        o[p + 3] = a;
+      }
+      vctx.putImageData(out, 0, 0);
+    } catch (e) { /* кадр ещё не готов — пропускаем */ }
     requestAnimationFrame(drawFrame);
   }
 
-  function stop() {
-    playing = false;
-    canvas.classList.remove('show');
-    try { video.pause(); } catch (e) {}
-  }
-  video.addEventListener('ended', () => {
-    canvas.classList.remove('show');
-    setTimeout(() => { playing = false; }, 400);
-  });
+  function hide() { canvas.classList.remove('show'); playing = false; try { video.pause(); } catch (e) {} }
+  video.addEventListener('ended', () => { clearTimeout(hideTimer); setTimeout(hide, 350); });
 
   window.playJoyFx = function () {
     const now = Date.now();
-    if (!ready || playing || now - lastPlay < COOLDOWN || document.hidden) return;
+    if (playing || now - lastPlay < COOLDOWN || document.hidden) return;
+    mount();
     lastPlay = now; playing = true;
-    try {
-      video.currentTime = 0;
-      const pr = video.play();
-      if (pr && pr.catch) pr.catch(() => { playing = false; });
-      canvas.classList.add('show');
-      requestAnimationFrame(drawFrame);
-    } catch (e) { playing = false; }
+    try { video.currentTime = 0; } catch (e) {}
+    const pr = video.play();
+    canvas.classList.add('show');
+    requestAnimationFrame(drawFrame);
+    if (pr && pr.catch) pr.catch(() => { hide(); });
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hide, 7000); // страховка, если 'ended' не пришёл
   };
 
   // привязка к реакциям радости: оборачиваем bossSay
