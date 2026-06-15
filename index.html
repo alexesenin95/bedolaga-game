@@ -1767,13 +1767,14 @@ function startPong(){
   $("gameStage").innerHTML=`<canvas id="pongCv" width="${W}" height="${H}" class="game-canvas"></canvas>`;
   const cv=$("pongCv"), ctx=cv.getContext("2d");
 
-  // ассеты
-  const imgBg=new Image(), imgBall=new Image(), imgPn=new Image(), imgPf=new Image();
-  imgBg.src="assets/pong/bg.webp"; imgBall.src="assets/pong/ball.webp";
-  imgPn.src="assets/pong/paddle_near.webp"; imgPf.src="assets/pong/paddle_far.webp";
+  // ассеты (слои)
+  const imgRoom=new Image(), imgTable=new Image(), imgNet=new Image(), imgBall=new Image(), imgPn=new Image(), imgPf=new Image();
+  imgRoom.src="assets/pong/room.webp"; imgTable.src="assets/pong/table.webp"; imgNet.src="assets/pong/net.webp";
+  imgBall.src="assets/pong/ball.webp"; imgPn.src="assets/pong/paddle_near.webp"; imgPf.src="assets/pong/paddle_far.webp";
+  const TABLE={x:20,y:18,w:600,h:330};                        // позиция стола на канвасе
 
-  // калибровка стола в координатах канваса (трапеция синей столешницы)
-  const NEAR={lx:74,rx:566,y:258}, FAR={lx:189,rx:451,y:126};
+  // калибровка столешницы (трапеция синей поверхности)
+  const NEAR={lx:21,rx:618,y:213}, FAR={lx:161,rx:474,y:30};
   function lane(z){ return { lx:NEAR.lx+(FAR.lx-NEAR.lx)*z, rx:NEAR.rx+(FAR.rx-NEAR.rx)*z, ey:NEAR.y+(FAR.y-NEAR.y)*z }; }
   function scaleAt(z){ return 1+(0.30-1)*z; }                 // near 1.0 → far 0.30 (заметная перспектива)
   function proj(x,z,h){ const L=lane(z); return { sx:L.lx+(x*0.5+0.5)*(L.rx-L.lx), sy:L.ey - h*scaleAt(z)*120, sc:scaleAt(z) }; }
@@ -1819,19 +1820,26 @@ function startPong(){
   function drawPaddle(img,x,z,baseH){ const p=proj(x,z,0), sc=scaleAt(z), h=baseH*sc;
     const w = (img.naturalWidth ? h*img.naturalWidth/img.naturalHeight : h*0.62);
     if(img.complete && img.naturalWidth) ctx.drawImage(img, p.sx-w/2, p.sy-h*0.80, w, h); }
-
-  function draw(){
-    if(imgBg.complete && imgBg.naturalWidth) ctx.drawImage(imgBg,0,0,W,H);
-    else { ctx.fillStyle="#1f6e3a"; ctx.fillRect(0,0,W,H); }
-    drawPaddle(imgPf, ax, 0.965, 140);                       // дальняя (ИИ)
-    const sc=scaleAt(ball.z);
-    const g=proj(ball.x,ball.z,0);                            // тень на столе (под мячом)
+  function drawBall(){ const sc=scaleAt(ball.z);
+    const g=proj(ball.x,ball.z,0);                            // тень
     ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";
     ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 12*sc, 4.5*sc, 0,0,7); ctx.fill(); ctx.restore();
-    const b=proj(ball.x,ball.z,ball.y), bs=32*sc;             // мяч (мельче + чёткая перспектива)
+    const b=proj(ball.x,ball.z,ball.y), bs=32*sc;
     if(imgBall.complete && imgBall.naturalWidth) ctx.drawImage(imgBall, b.sx-bs/2, b.sy-bs/2, bs, bs);
-    else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(b.sx,b.sy,bs/2,0,7); ctx.fill(); }
-    { const L=lane(0), sx=L.lx+(px*0.5+0.5)*(L.rx-L.lx), h=185,           // ближняя (игрок) — у нижнего края
+    else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(b.sx,b.sy,bs/2,0,7); ctx.fill(); } }
+  function drawNet(){ if(!(imgNet.complete && imgNet.naturalWidth)) return;
+    const L=lane(0.5), cx=(L.lx+L.rx)/2, w=(L.rx-L.lx)*1.10, h=w*imgNet.naturalHeight/imgNet.naturalWidth;
+    ctx.drawImage(imgNet, cx-w/2, L.ey-h*0.84, w, h); }
+
+  function draw(){
+    if(imgRoom.complete && imgRoom.naturalWidth) ctx.drawImage(imgRoom,0,0,W,H);
+    else { ctx.fillStyle="#1f6e3a"; ctx.fillRect(0,0,W,H); }
+    if(imgTable.complete && imgTable.naturalWidth) ctx.drawImage(imgTable,TABLE.x,TABLE.y,TABLE.w,TABLE.h);
+    drawPaddle(imgPf, ax, 0.95, 120);                        // дальняя (ИИ) — за сеткой
+    if(ball.z>0.5) drawBall();                                // мяч на дальней половине — за сеткой
+    drawNet();
+    if(ball.z<=0.5) drawBall();                               // мяч на ближней половине — перед сеткой
+    { const L=lane(0), sx=L.lx+(px*0.5+0.5)*(L.rx-L.lx), h=185,           // ближняя (игрок)
         w=(imgPn.naturalWidth?h*imgPn.naturalWidth/imgPn.naturalHeight:h*0.62);
       if(imgPn.complete && imgPn.naturalWidth) ctx.drawImage(imgPn, sx-w/2, H-h*0.56, w, h); }
     ctx.font="bold 28px 'Baloo 2',sans-serif"; ctx.textAlign="center";
@@ -1839,7 +1847,8 @@ function startPong(){
     ctx.strokeText(ps+" : "+as, W/2, 42); ctx.fillText(ps+" : "+as, W/2, 42);
   }
 
-  imgBg.onload = draw; draw(); gameRAF=requestAnimationFrame(step);
+  imgRoom.onload = draw; imgTable.onload = draw; imgNet.onload = draw;
+  draw(); gameRAF=requestAnimationFrame(step);
 }
 
 /* --- Шашки (упрощённые русские) --- */
