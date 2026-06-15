@@ -2623,15 +2623,15 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   // реестр нарядов (комплект поз по эмоциям). Добавишь купальник — появится в списке.
   window.BOSS_OUTFITS = window.BOSS_OUTFITS || {};
   window.BOSS_OUTFITS['Костюм (бордо)'] = BOSS_POSES;
-  /* когда пришлёшь файлы купальника (assets/look2/boss2_*.png), раскомментируй:
-  window.BOSS_OUTFITS['Купальник'] = {
-    neutral:"assets/look2/boss2_neutral.png", joy:"assets/look2/boss2_joy.png",
-    shrug:"assets/look2/boss2_shrug.png", stern:"assets/look2/boss2_stern.png",
-    sad:"assets/look2/boss2_sad.png",
-    approve:"assets/look2/boss2_neutral.png", sympathy:"assets/look2/boss2_neutral.png",
-    surprised:"assets/look2/boss2_shrug.png", calm:"assets/look2/boss2_neutral.png",
-    serious:"assets/look2/boss2_stern.png"
-  }; */
+  // доп. наряды (5 поз + остальные эмоции подменены ближайшими)
+  function look(dir){ return {
+    neutral:dir+"/boss_neutral.webp", joy:dir+"/boss_joy.webp", sad:dir+"/boss_sad.webp",
+    stern:dir+"/boss_stern.webp", shrug:dir+"/boss_shrug.webp",
+    approve:dir+"/boss_neutral.webp", sympathy:dir+"/boss_neutral.webp",
+    surprised:dir+"/boss_shrug.webp", calm:dir+"/boss_neutral.webp", serious:dir+"/boss_stern.webp"
+  }; }
+  window.BOSS_OUTFITS['Купальник'] = look('assets/look_swim');
+  window.BOSS_OUTFITS['Школьница'] = look('assets/look_school');
 
   const EMOS = ['neutral','approve','sympathy','stern','joy','surprised','sad','calm','serious','shrug'];
   function refreshFigure(){ if (typeof setBossFigure==='function') setBossFigure('neutral'); }
