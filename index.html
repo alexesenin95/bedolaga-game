@@ -2307,7 +2307,10 @@ function setFigure(elId, src, fallbackEmoji){
   el.innerHTML = src ? `<img src="${src}" alt="">` : fallbackEmoji;
 }
 function setBossFigure(emo){
-  const src = ASSETS.boss[state.stage] && ASSETS.boss[state.stage][emo];
+  // тест: если выбран наряд в тест-панели — берём его комплект поз
+  const ov = window.__testOutfit;
+  const outfit = (ov && window.BOSS_OUTFITS && window.BOSS_OUTFITS[ov]) || (ASSETS.boss[state.stage]);
+  const src = outfit && outfit[emo];
   setFigure("bossFace", src, EMO[emo]);
 }
 function setQuizBoss(emo){
@@ -2336,7 +2339,7 @@ function renderLooks(){
   const lvl = state.chatLevel || 1;
   grid.innerHTML = "";
   for(let i=0;i<10;i++){
-    const unlocked = i < lvl;                 // ур.1..lvl открыты
+    const unlocked = window.__TESTALL || (i < lvl);   // ур.1..lvl открыты (в тест-режиме — все)
     const cell = document.createElement("div");
     cell.className = "look " + (unlocked ? "unlocked" : "locked");
     const img = LOOK_IMAGES[i];
@@ -2604,6 +2607,97 @@ window.addEventListener("DOMContentLoaded", async ()=>{
       if (emo === 'joy') window.playJoyFx();
     };
   }
+})();
+</script>
+
+<!-- ============================================================
+     ТЕСТ-ПАНЕЛЬ (временная). Открыть все образы, прыгать по этапам/
+     уровням, переключать наряды, превью эмоций-поз, запуск ролика радости.
+     Показывается всегда; выключить: localStorage.setItem('test','off') +
+     reload, либо удалить этот блок. Перед релизом — убрать.
+============================================================ -->
+<script>
+(function () {
+  if (localStorage.getItem('test') === 'off') return;
+
+  // реестр нарядов (комплект поз по эмоциям). Добавишь купальник — появится в списке.
+  window.BOSS_OUTFITS = window.BOSS_OUTFITS || {};
+  window.BOSS_OUTFITS['Костюм (бордо)'] = BOSS_POSES;
+  /* когда пришлёшь файлы купальника (assets/look2/boss2_*.png), раскомментируй:
+  window.BOSS_OUTFITS['Купальник'] = {
+    neutral:"assets/look2/boss2_neutral.png", joy:"assets/look2/boss2_joy.png",
+    shrug:"assets/look2/boss2_shrug.png", stern:"assets/look2/boss2_stern.png",
+    sad:"assets/look2/boss2_sad.png",
+    approve:"assets/look2/boss2_neutral.png", sympathy:"assets/look2/boss2_neutral.png",
+    surprised:"assets/look2/boss2_shrug.png", calm:"assets/look2/boss2_neutral.png",
+    serious:"assets/look2/boss2_stern.png"
+  }; */
+
+  const EMOS = ['neutral','approve','sympathy','stern','joy','surprised','sad','calm','serious','shrug'];
+  function refreshFigure(){ if (typeof setBossFigure==='function') setBossFigure('neutral'); }
+
+  const panel = document.createElement('div');
+  panel.id = 'testPanel';
+  panel.style.cssText = 'position:fixed;top:8px;left:8px;z-index:8000;background:rgba(20,14,10,.92);' +
+    'color:#ffe8c2;font:12px/1.3 system-ui,sans-serif;padding:8px 10px;border-radius:10px;' +
+    'max-width:240px;box-shadow:0 6px 20px rgba(0,0,0,.4);border:1px solid #5a4632;user-select:none;';
+
+  function row(label, html){ return '<div style="margin:4px 0;display:flex;align-items:center;gap:6px;">' +
+    '<span style="opacity:.8;min-width:58px;">'+label+'</span>'+html+'</div>'; }
+  const btn = 'style="cursor:pointer;background:#3a2a1c;border:1px solid #6a5238;color:#ffe8c2;border-radius:6px;padding:2px 7px;"';
+
+  const outfitOpts = Object.keys(window.BOSS_OUTFITS).map(k=>`<option value="${k}">${k}</option>`).join('');
+  panel.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:4px;">'+
+      '<span>🧪 ТЕСТ</span><span id="tpHide" '+btn+'>—</span></div>'+
+    '<div id="tpBody">'+
+    row('Этап', '<span id="tpStageDn" '+btn+'>◀</span><b id="tpStage">1</b><span id="tpStageUp" '+btn+'>▶</span> <span style="opacity:.6">/5</span>')+
+    row('Близость', '<span id="tpLvlDn" '+btn+'>◀</span><b id="tpLvl">1</b><span id="tpLvlUp" '+btn+'>▶</span> <span style="opacity:.6">/10</span>')+
+    row('Наряд', '<select id="tpOutfit" style="background:#2a1e14;color:#ffe8c2;border:1px solid #6a5238;border-radius:6px;padding:2px;"><option value="">по этапу</option>'+outfitOpts+'</select>')+
+    row('Образы', '<span id="tpUnlock" '+btn+'>Открыть все</span>')+
+    '<div style="margin-top:6px;opacity:.8;">Эмоции:</div>'+
+    '<div id="tpEmos" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">'+
+      EMOS.map(e=>'<span class="tpEmo" data-e="'+e+'" style="cursor:pointer;background:#3a2a1c;border:1px solid #6a5238;color:#ffe8c2;border-radius:6px;padding:2px 7px;font-size:11px;">'+e+'</span>').join('')+
+    '</div>'+
+    '<div style="margin-top:6px;"><span id="tpJoy" '+btn+'>▶ ролик радости</span></div>'+
+    '</div>';
+
+  function mount(){ if(!panel.isConnected) document.body.appendChild(panel); }
+  if (document.body) mount(); document.addEventListener('DOMContentLoaded', mount);
+
+  function S(id){ return panel.querySelector('#'+id); }
+  function clampStage(n){ return Math.max(0, Math.min(4, n)); }
+  function clampLvl(n){ return Math.max(1, Math.min(10, n)); }
+  function syncLabels(){ S('tpStage').textContent = (state.stage||0)+1; S('tpLvl').textContent = state.chatLevel||1; }
+
+  panel.addEventListener('click', (ev) => {
+    const t = ev.target, id = t.id;
+    if (id === 'tpHide'){ const b=S('tpBody'); const h=b.style.display==='none'; b.style.display=h?'':'none'; t.textContent=h?'—':'+'; return; }
+    if (id === 'tpStageDn' || id === 'tpStageUp'){
+      state.stage = clampStage((state.stage||0) + (id==='tpStageUp'?1:-1));
+      if (typeof renderAll==='function') renderAll(); syncLabels(); return;
+    }
+    if (id === 'tpLvlDn' || id === 'tpLvlUp'){
+      state.chatLevel = clampLvl((state.chatLevel||1) + (id==='tpLvlUp'?1:-1));
+      if (typeof renderHud==='function') renderHud();
+      if (typeof renderLooks==='function') renderLooks(); syncLabels(); return;
+    }
+    if (id === 'tpUnlock'){
+      window.__TESTALL = !window.__TESTALL;
+      t.textContent = window.__TESTALL ? 'Скрыть лишние' : 'Открыть все';
+      if (typeof renderLooks==='function') renderLooks(); return;
+    }
+    if (id === 'tpJoy'){ if (window.playJoyFx) window.playJoyFx(); return; }
+    if (t.classList.contains('tpEmo')){ if (typeof setBossFigure==='function') setBossFigure(t.dataset.e); return; }
+  });
+  S('tpOutfit').addEventListener('change', (e) => { window.__testOutfit = e.target.value || null; refreshFigure(); });
+
+  setTimeout(syncLabels, 400); // дождёмся инициализации игры
+  // горячая клавиша T — спрятать/показать панель
+  window.addEventListener('keydown', (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if ((e.key==='t' || e.key==='Т' || e.key==='е') && !/INPUT|TEXTAREA|SELECT/.test(tag)) panel.style.display = panel.style.display==='none'?'':'none';
+  });
 })();
 </script>
 </body>
