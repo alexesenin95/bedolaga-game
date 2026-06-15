@@ -364,6 +364,13 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   display:flex;align-items:flex-end;justify-content:center;font-size:140px;
   filter:drop-shadow(0 14px 16px rgba(0,0,0,.4));}
 .boss-hero img{height:99%;width:auto;max-width:46vw;object-fit:contain;object-position:bottom;}
+/* праздничный «поп» Даниэлы при радости (прозрачный ролик через canvas-матовку) */
+#joyFx{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(14%) scale(.96);
+  height:64vh;width:auto;z-index:9000;pointer-events:none;opacity:0;
+  filter:drop-shadow(0 12px 22px rgba(0,0,0,.35));
+  transition:opacity .35s ease, transform .45s cubic-bezier(.2,1.4,.4,1);}
+#joyFx.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
+@media (max-width:820px), (max-aspect-ratio:9/10){ #joyFx{height:52vh;} }
 .scene .click-btn{position:absolute;left:3.5%;bottom:5%;z-index:5;}
 #bossBubble{left:4%;right:auto;top:8%;max-width:50%;}
 #bossBubble .cb-tail{left:auto;right:-13px;top:34%;border-left:0;border-bottom:0;
@@ -2515,6 +2522,90 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   document.addEventListener("visibilitychange", ()=>{ if(document.hidden) save(); });
   window.addEventListener("beforeunload", save);
 });
+</script>
+
+<!-- ============================================================
+     ПРАЗДНИЧНЫЙ РОЛИК ДАНИЭЛЫ при радости (emo==='joy').
+     Прозрачность: stacked-MP4 (верх=картинка, низ=маска) собирается
+     на canvas с un-premultiply — белый фон убран, без ореола.
+     Кулдаун, чтобы не спамил. Откат: удалить этот блок + CSS #joyFx +
+     assets/boss_joy.mp4. Любая ошибка — просто не показывается.
+============================================================ -->
+<script>
+(function () {
+  const SRC = 'assets/boss_joy.mp4';
+  const W = 540, H = 810;          // размер одной «половины» стопки
+  const COOLDOWN = 9000;           // не чаще раза в 9 c
+  let lastPlay = 0, playing = false, ready = false;
+
+  // видимый canvas-«поп»
+  const canvas = document.createElement('canvas');
+  canvas.id = 'joyFx'; canvas.width = W; canvas.height = H;
+  const vctx = canvas.getContext('2d');
+  const off = document.createElement('canvas'); off.width = W; off.height = H * 2;
+  const octx = off.getContext('2d', { willReadFrequently: true });
+
+  const video = document.createElement('video');
+  video.src = SRC; video.muted = true; video.playsInline = true;
+  video.preload = 'auto'; video.setAttribute('playsinline', ''); video.crossOrigin = 'anonymous';
+  video.addEventListener('canplay', () => { ready = true; }, { once: true });
+  video.addEventListener('error', () => { ready = false; });
+
+  document.addEventListener('DOMContentLoaded', () => { document.body.appendChild(canvas); });
+
+  function drawFrame() {
+    if (video.paused || video.ended) return;
+    octx.drawImage(video, 0, 0, W, H * 2);
+    let img;
+    try { img = octx.getImageData(0, 0, W, H * 2); }
+    catch (e) { stop(); return; }
+    const d = img.data, rowBytes = W * 4, matteOff = H * rowBytes;
+    const out = vctx.createImageData(W, H), o = out.data;
+    for (let p = 0; p < H * rowBytes; p += 4) {
+      const a = d[matteOff + p];           // яркость маски = альфа
+      if (a < 6) { o[p + 3] = 0; continue; }
+      const f = 255 / a;                    // un-premultiply (верх лежит на чёрном)
+      o[p]     = Math.min(255, d[p] * f);
+      o[p + 1] = Math.min(255, d[p + 1] * f);
+      o[p + 2] = Math.min(255, d[p + 2] * f);
+      o[p + 3] = a;
+    }
+    vctx.putImageData(out, 0, 0);
+    requestAnimationFrame(drawFrame);
+  }
+
+  function stop() {
+    playing = false;
+    canvas.classList.remove('show');
+    try { video.pause(); } catch (e) {}
+  }
+  video.addEventListener('ended', () => {
+    canvas.classList.remove('show');
+    setTimeout(() => { playing = false; }, 400);
+  });
+
+  window.playJoyFx = function () {
+    const now = Date.now();
+    if (!ready || playing || now - lastPlay < COOLDOWN || document.hidden) return;
+    lastPlay = now; playing = true;
+    try {
+      video.currentTime = 0;
+      const pr = video.play();
+      if (pr && pr.catch) pr.catch(() => { playing = false; });
+      canvas.classList.add('show');
+      requestAnimationFrame(drawFrame);
+    } catch (e) { playing = false; }
+  };
+
+  // привязка к реакциям радости: оборачиваем bossSay
+  const _bossSay = window.bossSay;
+  if (typeof _bossSay === 'function') {
+    window.bossSay = function (text, emo) {
+      _bossSay(text, emo);
+      if (emo === 'joy') window.playJoyFx();
+    };
+  }
+})();
 </script>
 </body>
 </html>
