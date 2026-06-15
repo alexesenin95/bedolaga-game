@@ -1759,41 +1759,86 @@ function endGame(win, titleWin, titleLose){
   $("gameDone").addEventListener("click", closeGame);
 }
 
-/* --- Настольный теннис (Pong), 1 сет до 11, разница в 2 --- */
+/* --- Настольный теннис (перспектива), 1 сет до 11, разница в 2 --- */
 function startPong(){
   $("gameTitle").textContent="🏓 Настольный теннис — до 11";
-  $("gameInfo").textContent="Веди ракетку мышью или пальцем. Партия до 11 очков (с разницей в 2).";
-  const W=480,H=300,PH=64,PW=11;
+  $("gameInfo").textContent="Веди ракетку влево-вправо мышью или пальцем. Партия до 11 очков (с разницей в 2).";
+  const W=640,H=360;
   $("gameStage").innerHTML=`<canvas id="pongCv" width="${W}" height="${H}" class="game-canvas"></canvas>`;
   const cv=$("pongCv"), ctx=cv.getContext("2d");
-  let pY=H/2-PH/2, aY=H/2-PH/2, ps=0, as=0, over=false, ball;
-  function serve(dir){ ball={x:W/2,y:H/2,vx:dir*4.2,vy:(Math.random()*3-1.5),sp:4.2}; }
+
+  // ассеты
+  const imgBg=new Image(), imgBall=new Image(), imgPn=new Image(), imgPf=new Image();
+  imgBg.src="assets/pong/bg.webp"; imgBall.src="assets/pong/ball.webp";
+  imgPn.src="assets/pong/paddle_near.webp"; imgPf.src="assets/pong/paddle_far.webp";
+
+  // калибровка стола в координатах канваса (трапеция синей столешницы)
+  const NEAR={lx:74,rx:566,y:258}, FAR={lx:189,rx:451,y:126};
+  function lane(z){ return { lx:NEAR.lx+(FAR.lx-NEAR.lx)*z, rx:NEAR.rx+(FAR.rx-NEAR.rx)*z, ey:NEAR.y+(FAR.y-NEAR.y)*z }; }
+  function scaleAt(z){ return 1+(0.45-1)*z; }                 // near 1.0 → far 0.45
+  function proj(x,z,h){ const L=lane(z); return { sx:L.lx+(x*0.5+0.5)*(L.rx-L.lx), sy:L.ey - h*scaleAt(z)*120, sc:scaleAt(z) }; }
+
+  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок, 1=ИИ), y=высота над столом
+  let px=0, ax=0, ps=0, as=0, over=false, ball, lastHitter=1;
+  const PADX=0.36, G=0.00060;                                // зона ракетки и гравитация
+  function serve(dir){ ball={x:0, y:0.16, z:dir>0?0.10:0.90, vx:0, vy:0.013, vz:dir*0.0150}; lastHitter=dir>0?-1:1; }
   serve(Math.random()<.5?1:-1);
-  function moveTo(clientY){ const r=cv.getBoundingClientRect(); const y=(clientY-r.top)*(H/r.height); pY=Math.max(0,Math.min(H-PH,y-PH/2)); }
-  cv.addEventListener("pointermove",e=>moveTo(e.clientY));
-  cv.addEventListener("touchmove",e=>{ if(e.touches[0]){ moveTo(e.touches[0].clientY); e.preventDefault(); } },{passive:false});
-  function hit(py){ const rel=(ball.y-(py+PH/2))/(PH/2); ball.sp=Math.min(14, ball.sp*1.1); ball.vy=rel*4.2; ball.vx=(ball.vx>0?1:-1)*ball.sp; }   // +10% скорости за каждое отбивание
+
+  function moveTo(clientX){ const r=cv.getBoundingClientRect(); px=Math.max(-1,Math.min(1, ((clientX-r.left)/r.width)*2-1)); }
+  cv.addEventListener("pointermove",e=>moveTo(e.clientX));
+  cv.addEventListener("touchmove",e=>{ if(e.touches[0]){ moveTo(e.touches[0].clientX); e.preventDefault(); } },{passive:false});
+
   function win(){ if((ps>=11||as>=11)&&Math.abs(ps-as)>=2){ over=true; endGame(ps>as,"Партия твоя! 🏓","Партия за Даниэлой"); return true; } return false; }
+  function point(toPlayer){ if(toPlayer) ps++; else as++; if(!win()) serve(Math.random()<.5?1:-1); }
+
   function step(){
     if(over) return;
-    aY += Math.max(-4.4,Math.min(4.4,(ball.y-PH/2-aY)*0.11)); aY=Math.max(0,Math.min(H-PH,aY));
-    ball.x+=ball.vx; ball.y+=ball.vy;
-    if(ball.y<7){ball.y=7;ball.vy=Math.abs(ball.vy);} if(ball.y>H-7){ball.y=H-7;ball.vy=-Math.abs(ball.vy);}
-    if(ball.vx<0 && ball.x-7<20+PW && ball.x-7>16 && ball.y>pY && ball.y<pY+PH){ ball.vx=Math.abs(ball.vx); hit(pY); }
-    if(ball.vx>0 && ball.x+7>W-20-PW && ball.x+7<W-16 && ball.y>aY && ball.y<aY+PH){ ball.vx=-Math.abs(ball.vx); hit(aY); }
-    if(ball.x<-4){ as++; if(!win()) serve(1); }
-    else if(ball.x>W+4){ ps++; if(!win()) serve(-1); }
+    // ИИ ведёт ракетку к мячу, когда он летит к нему (с задержкой = сложность)
+    const aiTarget = ball.vz>0 ? ball.x : ax*0.6;
+    ax += (aiTarget-ax)*0.075; ax=Math.max(-1,Math.min(1,ax));
+    // интеграция + гравитация
+    ball.x+=ball.vx; ball.z+=ball.vz; ball.vy-=G; ball.y+=ball.vy;
+    // отскок от стола
+    if(ball.y<0 && ball.z>0.02 && ball.z<0.98){ ball.y=0; ball.vy=Math.abs(ball.vy)*0.62; }
+    // мягкие боковые края
+    if(ball.x<-1.04){ ball.x=-1.04; ball.vx=Math.abs(ball.vx); } if(ball.x>1.04){ ball.x=1.04; ball.vx=-Math.abs(ball.vx); }
+    // удар игрока (ближний край)
+    if(ball.vz<0 && ball.z<=0.07){
+      if(Math.abs(ball.x-px)<PADX){ ball.z=0.07; ball.vz=Math.min(0.030, Math.abs(ball.vz)*1.06); ball.vx=(ball.x-px)*0.022; if(ball.vy<0.010) ball.vy=0.013; lastHitter=1; sfx&&sfx.ok&&sfx.ok(); }
+      else if(ball.z<0){ point(false); return; }
+    }
+    // удар ИИ (дальний край)
+    if(ball.vz>0 && ball.z>=0.93){
+      if(Math.abs(ball.x-ax)<PADX){ ball.z=0.93; ball.vz=-Math.min(0.030, Math.abs(ball.vz)*1.06); ball.vx=(ball.x-ax)*0.022; if(ball.vy<0.010) ball.vy=0.013; lastHitter=-1; }
+      else if(ball.z>1){ point(true); return; }
+    }
     draw(); if(!over) gameRAF=requestAnimationFrame(step);
   }
+
+  function drawPaddle(img,x,z,baseH){ const p=proj(x,z,0), sc=scaleAt(z), h=baseH*sc;
+    const w = (img.naturalWidth ? h*img.naturalWidth/img.naturalHeight : h*0.62);
+    if(img.complete && img.naturalWidth) ctx.drawImage(img, p.sx-w/2, p.sy-h*0.80, w, h); }
+
   function draw(){
-    ctx.fillStyle="#1f6e3a"; ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle="rgba(255,255,255,.45)"; ctx.setLineDash([7,9]); ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle="#fff"; ctx.fillRect(20,pY,PW,PH);
-    ctx.fillStyle="#ffd27a"; ctx.fillRect(W-20-PW,aY,PW,PH);
-    ctx.beginPath(); ctx.arc(ball.x,ball.y,7,0,7); ctx.fill();
-    ctx.font="bold 24px 'Baloo 2',sans-serif"; ctx.textAlign="center"; ctx.fillStyle="#fff"; ctx.fillText(ps+" : "+as,W/2,32);
+    if(imgBg.complete && imgBg.naturalWidth) ctx.drawImage(imgBg,0,0,W,H);
+    else { ctx.fillStyle="#1f6e3a"; ctx.fillRect(0,0,W,H); }
+    drawPaddle(imgPf, ax, 0.965, 140);                       // дальняя (ИИ)
+    const sc=scaleAt(ball.z);
+    const g=proj(ball.x,ball.z,0);                            // тень на столе
+    ctx.save(); ctx.globalAlpha=0.30; ctx.fillStyle="#000";
+    ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 17*sc, 6*sc, 0,0,7); ctx.fill(); ctx.restore();
+    const b=proj(ball.x,ball.z,ball.y), bs=48*sc;             // мяч
+    if(imgBall.complete && imgBall.naturalWidth) ctx.drawImage(imgBall, b.sx-bs/2, b.sy-bs/2, bs, bs);
+    else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(b.sx,b.sy,bs/2,0,7); ctx.fill(); }
+    { const L=lane(0), sx=L.lx+(px*0.5+0.5)*(L.rx-L.lx), h=185,           // ближняя (игрок) — у нижнего края
+        w=(imgPn.naturalWidth?h*imgPn.naturalWidth/imgPn.naturalHeight:h*0.62);
+      if(imgPn.complete && imgPn.naturalWidth) ctx.drawImage(imgPn, sx-w/2, H-h*0.56, w, h); }
+    ctx.font="bold 28px 'Baloo 2',sans-serif"; ctx.textAlign="center";
+    ctx.lineWidth=5; ctx.strokeStyle="rgba(0,0,0,.55)"; ctx.fillStyle="#fff";
+    ctx.strokeText(ps+" : "+as, W/2, 42); ctx.fillText(ps+" : "+as, W/2, 42);
   }
-  draw(); gameRAF=requestAnimationFrame(step);
+
+  imgBg.onload = draw; draw(); gameRAF=requestAnimationFrame(step);
 }
 
 /* --- Шашки (упрощённые русские) --- */
