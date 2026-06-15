@@ -2705,6 +2705,12 @@ window.addEventListener("DOMContentLoaded", async ()=>{
       EMOS.map(e=>'<span class="tpEmo" data-e="'+e+'" style="cursor:pointer;background:#3a2a1c;border:1px solid #6a5238;color:#ffe8c2;border-radius:6px;padding:2px 7px;font-size:11px;">'+e+'</span>').join('')+
     '</div>'+
     '<div style="margin-top:6px;"><span id="tpJoy" '+btn+'>▶ ролик радости</span></div>'+
+    '<div style="margin-top:6px;opacity:.8;">Запустить игру:</div>'+
+    '<div id="tpGames" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">'+
+      '<span class="tpGame" data-g="pong" '+btn+'>🏓 Теннис</span>'+
+      '<span class="tpGame" data-g="checkers" '+btn+'>🔵 Шашки</span>'+
+      '<span class="tpGame" data-g="battleship" '+btn+'>🚢 Морской бой</span>'+
+    '</div>'+
     '</div>';
 
   function mount(){ if(!panel.isConnected) document.body.appendChild(panel); }
@@ -2733,6 +2739,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
       if (typeof renderLooks==='function') renderLooks(); return;
     }
     if (id === 'tpJoy'){ if (window.playJoyFx) window.playJoyFx(); return; }
+    if (t.classList.contains('tpGame')){ if (typeof startGame==='function') startGame(t.dataset.g); return; }
     if (t.classList.contains('tpEmo')){ if (typeof setBossFigure==='function') setBossFigure(t.dataset.e); return; }
   });
   S('tpOutfit').addEventListener('change', (e) => { window.__testOutfit = e.target.value || null; refreshFigure(); });
