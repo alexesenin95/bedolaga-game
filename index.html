@@ -1779,10 +1779,12 @@ function startPong(){
   function scaleAt(z){ return 1+(0.30-1)*z; }                 // near 1.0 → far 0.30 (заметная перспектива)
   function proj(x,z,h){ const L=lane(z); return { sx:L.lx+(x*0.5+0.5)*(L.rx-L.lx), sy:L.ey - h*scaleAt(z)*120, sc:scaleAt(z) }; }
 
-  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок, 1=ИИ), y=высота над столом (низкий отскок)
-  let px=0, ax=0, ps=0, as=0, over=false, ball, lastHitter=1;
-  const PADX=0.34, G=0.0011;                                  // зона ракетки и гравитация (низкая дуга)
-  function serve(dir){ ball={x:0, y:0.05, z:dir>0?0.12:0.88, vx:0, vy:0.010, vz:dir*0.0125}; lastHitter=dir>0?-1:1; }
+  // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок,1=ИИ). Полёт — ДУГА над сеткой.
+  let px=0, ax=0, ps=0, as=0, over=false, ball, spd=0.016;
+  const PADX=0.34, HOP=120, SPDCAP=0.028;
+  const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+  function arcLift(z){ return HOP*4*z*(1-z)*scaleAt(z); }     // парабола: 0 у краёв, пик в центре (над сеткой)
+  function serve(dir){ spd=0.016; ball={x:0, z:dir>0?0.04:0.96, dir:dir, vx:0}; }
   serve(Math.random()<.5?1:-1);
 
   function moveTo(clientX){ const r=cv.getBoundingClientRect(); px=Math.max(-1,Math.min(1, ((clientX-r.left)/r.width)*2-1)); }
@@ -1794,42 +1796,38 @@ function startPong(){
 
   function step(){
     if(over) return;
-    // ИИ ведёт ракетку к мячу, когда он летит к нему (с задержкой = сложность)
-    const aiTarget = ball.vz>0 ? ball.x : ax*0.6;
-    ax += (aiTarget-ax)*0.075; ax=Math.max(-1,Math.min(1,ax));
-    // интеграция + гравитация
-    ball.x+=ball.vx; ball.z+=ball.vz; ball.vy-=G; ball.y+=ball.vy;
-    // отскок от стола (низкий, мяч «катится»)
-    if(ball.y<0 && ball.z>0.02 && ball.z<0.98){ ball.y=0; ball.vy=Math.abs(ball.vy)*0.55; }
-    if(ball.y<0) ball.y=0;                                    // не уходим под стол
-    // боковые края стола — отражаем (мяч всегда на столе)
-    if(ball.x<-1){ ball.x=-1; ball.vx=Math.abs(ball.vx); } if(ball.x>1){ ball.x=1; ball.vx=-Math.abs(ball.vx); }
-    // удар игрока (ближний край)
-    if(ball.vz<0 && ball.z<=0.07){
-      if(Math.abs(ball.x-px)<PADX){ ball.z=0.07; ball.vz=Math.min(0.024, Math.abs(ball.vz)*1.05); ball.vx=(ball.x-px)*0.018; ball.vy=0.010; lastHitter=1; sfx&&sfx.ok&&sfx.ok(); }
-      else if(ball.z<0){ point(false); return; }
-    }
-    // удар ИИ (дальний край)
-    if(ball.vz>0 && ball.z>=0.93){
-      if(Math.abs(ball.x-ax)<PADX){ ball.z=0.93; ball.vz=-Math.min(0.024, Math.abs(ball.vz)*1.05); ball.vx=(ball.x-ax)*0.018; ball.vy=0.010; lastHitter=-1; }
-      else if(ball.z>1){ point(true); return; }
-    }
-    draw(); if(!over) gameRAF=requestAnimationFrame(step);
+    try{
+      // ИИ ведёт ракетку к мячу, когда тот летит к нему (с задержкой = сложность)
+      const aiTarget = ball.dir>0 ? ball.x*0.92 : 0;
+      ax += (aiTarget-ax)*0.08; ax=clamp(ax,-1,1);
+      // движение по глубине + вбок (мяч всегда на столе по x)
+      ball.z += ball.dir*spd; ball.x += ball.vx;
+      if(ball.x<-1){ ball.x=-1; ball.vx=Math.abs(ball.vx); }
+      if(ball.x>1){ ball.x=1; ball.vx=-Math.abs(ball.vx); }
+      if(ball.z>=1){                                           // долетел до ИИ
+        if(Math.abs(ball.x-ax)<PADX){ ball.z=1; ball.dir=-1; spd=Math.min(SPDCAP,spd*1.04); ball.vx=clamp(ball.vx+(ball.x-ax)*0.02,-0.03,0.03); }
+        else point(true);
+      } else if(ball.z<=0){                                    // долетел до игрока
+        if(Math.abs(ball.x-px)<PADX){ ball.z=0; ball.dir=1; spd=Math.min(SPDCAP,spd*1.04); ball.vx=clamp(ball.vx+(ball.x-px)*0.02,-0.03,0.03); if(window.sfx&&sfx.ok)sfx.ok(); }
+        else point(false);
+      }
+      draw();
+    }catch(e){ console.warn('pong step', e); }
+    if(!over) gameRAF=requestAnimationFrame(step);             // ВСЕГДА планируем след. кадр (фикс зависания)
   }
 
   function drawPaddle(img,x,z,baseH){ const p=proj(x,z,0), sc=scaleAt(z), h=baseH*sc;
     const w = (img.naturalWidth ? h*img.naturalWidth/img.naturalHeight : h*0.62);
     if(img.complete && img.naturalWidth) ctx.drawImage(img, p.sx-w/2, p.sy-h*0.80, w, h); }
-  function drawBall(){ const sc=scaleAt(ball.z);
-    const g=proj(ball.x,ball.z,0);                            // тень
-    ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";
+  function drawBall(){ const sc=scaleAt(ball.z), g=proj(ball.x,ball.z,0);
+    ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";   // тень на столе (без подъёма)
     ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 12*sc, 4.5*sc, 0,0,7); ctx.fill(); ctx.restore();
-    const b=proj(ball.x,ball.z,ball.y), bs=32*sc;
-    if(imgBall.complete && imgBall.naturalWidth) ctx.drawImage(imgBall, b.sx-bs/2, b.sy-bs/2, bs, bs);
-    else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(b.sx,b.sy,bs/2,0,7); ctx.fill(); } }
+    const bs=32*sc, by=g.sy - arcLift(ball.z);                 // мяч приподнят по дуге
+    if(imgBall.complete && imgBall.naturalWidth) ctx.drawImage(imgBall, g.sx-bs/2, by-bs/2, bs, bs);
+    else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(g.sx,by,bs/2,0,7); ctx.fill(); } }
   function drawNet(){ if(!(imgNet.complete && imgNet.naturalWidth)) return;
-    const L=lane(0.5), cx=(L.lx+L.rx)/2, w=(L.rx-L.lx)*1.10, h=w*imgNet.naturalHeight/imgNet.naturalWidth;
-    ctx.drawImage(imgNet, cx-w/2, L.ey-h*0.84, w, h); }
+    const L=lane(0.5), cx=(L.lx+L.rx)/2, w=(L.rx-L.lx)*1.02, h=w*imgNet.naturalHeight/imgNet.naturalWidth*0.60; // ниже сетка
+    ctx.drawImage(imgNet, cx-w/2, L.ey-h, w, h); }
 
   function draw(){
     if(imgRoom.complete && imgRoom.naturalWidth) ctx.drawImage(imgRoom,0,0,W,H);
