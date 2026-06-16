@@ -2541,7 +2541,8 @@ const RETURN_LINES = [
 /* ---------------------------------------------------------------------------
    13) ИГРОВОЙ ЦИКЛ (rAF + дельта-время)
 --------------------------------------------------------------------------- */
-let last = 0;
+let last = 0, hudAcc = 0;
+const HUD_FPS = 10, HUD_STEP = 1/HUD_FPS;   // HUD достаточно обновлять ~10 раз/с (счётчик и так выглядит плавно)
 function loop(now){
   if(!last) last = now;
   let dt = (now - last)/1000; last = now;
@@ -2551,7 +2552,9 @@ function loop(now){
       const inc = incomePerSec()*dt;
       if(inc>0){ state.money += inc; state.totalEarned += inc; state.barProgress += inc; checkStageBar(); }
     }
-    renderHud();
+    // рендер HUD дросселируем: тяжёлые записи в DOM/reflow раз в ~100 мс вместо каждого кадра
+    hudAcc += dt;
+    if(hudAcc >= HUD_STEP){ hudAcc = 0; renderHud(); }
   }
   requestAnimationFrame(loop);
 }
