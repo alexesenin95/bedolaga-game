@@ -1728,22 +1728,23 @@ function startPong(){
   function proj(x,z,h){ const L=lane(z); return { sx:L.lx+(x*0.5+0.5)*(L.rx-L.lx), sy:L.ey - h*scaleAt(z)*120, sc:scaleAt(z) }; }
 
   // мир: x∈[-1,1] поперёк, z∈[0,1] глубина (0=игрок,1=ИИ). Мяч ЦЕЛИТСЯ в точку на столе.
-  let px=0, py=0.5, ax=0, ps=0, as=0, over=false, ball={x:0,z:0,dir:1,startX:0,targetX:0,curve:0,hop:120}, spd=0.018;
+  let px=0, py=0.5, pz=0, ax=0, ps=0, as=0, over=false, ball={x:0,z:0,z0:0,zEnd:1,dir:1,startX:0,targetX:0,curve:0,hop:120}, spd=0.018;
   let server=(Math.random()<.5?1:-1), servesLeft=2, awaitingServe=true, aiServeAt=0;  // по 2 подачи по очереди
   let pvx=0, pvy=0, lastMoveT=0, canHit=false, lastHitter=1, outAt=0, readyAt=0;   // свайп + кто бил + флеш АУТ + пауза перед подачей
-  const PADX=0.30, HITX=0.50, ZWIN=0.26, SWTH=0.055, SPDCAP=0.024, AISPEED=0.017; // зоны/окно/порог/скорость ИИ (медленнее)
+  const PADX=0.30, HITX=0.50, ZWIN=0.26, SWTH=0.055, SPDCAP=0.024, AISPEED=0.017, PZMAX=0.46; // зоны/окно/порог/скорость ИИ + макс. глубина ракетки (до сетки)
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
   function arcLift(z){ return (ball.hop||120)*4*z*(1-z)*scaleAt(z); }   // дуга над сеткой (высота зависит от типа удара)
   function swipe(){ return Math.hypot(pvx,pvy); }
-  function prog(){ return ball.dir>0 ? ball.z : 1-ball.z; }             // 0 у бьющего → 1 у принимающего
-  function updateX(){ const p=clamp(prog(),0,1); ball.x = ball.startX + (ball.targetX-ball.startX)*p + ball.curve*Math.sin(p*Math.PI); }
-  // удар: задаём точку приземления (targetX), силу, дугу (hop), кручёный изгиб (curve)
-  function launch(dir, sx, tx, power, hop, curve){ ball.dir=dir; ball.z = dir>0?0.05:0.95;
+  function prog(){ const span=(ball.zEnd-ball.z0)||1; return clamp((ball.z-ball.z0)/span,0,1); }   // 0 у точки удара → 1 у принимающего
+  function updateX(){ const p=prog(); ball.x = ball.startX + (ball.targetX-ball.startX)*p + ball.curve*Math.sin(p*Math.PI); }
+  // удар: точка приземления (targetX), сила, дуга (hop), кручёный изгиб (curve), стартовая глубина (startZ)
+  function launch(dir, sx, tx, power, hop, curve, startZ){ ball.dir=dir;
+    ball.z = (startZ!=null?startZ:(dir>0?0.05:0.95)); ball.z0=ball.z; ball.zEnd=dir>0?1:0;
     ball.startX=clamp(sx,-1,1); ball.targetX=tx; ball.curve=curve||0; ball.hop=hop; spd=power; canHit=(dir<0); updateX(); }
 
   function prepareServe(){ awaitingServe=true; canHit=false; spd=0.011; const now=performance.now();
     readyAt=now+900; aiServeAt=now+1700;                       // пауза «приготовься» перед подачей
-    ball.dir=server>0?1:-1; ball.z=server>0?0.02:0.98; ball.x=server>0?px:ax; ball.startX=ball.x; ball.targetX=ball.x; ball.curve=0; ball.hop=120; }
+    ball.dir=server>0?1:-1; ball.z=server>0?0.02:0.98; ball.z0=ball.z; ball.zEnd=server>0?1:0; ball.x=server>0?px:ax; ball.startX=ball.x; ball.targetX=ball.x; ball.curve=0; ball.hop=120; }
   function doServe(power){ if(!awaitingServe || performance.now()<readyAt) return; awaitingServe=false; lastHitter=server;
     if(server>0){ launch(1, px, clamp(px+pvx*1.6,-0.92,0.92), clamp(0.011+power*0.03,0.011,SPDCAP), 120, clamp(pvx*0.10,-0.10,0.10)); if(window.sfx&&sfx.ok)sfx.ok(); }
     else { launch(-1, ax, clamp((Math.random()*1.5-0.75),-0.8,0.8), 0.012, 120, (Math.random()*0.14-0.07)); } }
@@ -1752,7 +1753,8 @@ function startPong(){
   function moveTo(cx,cy){ const r=cv.getBoundingClientRect();
     const nx=clamp(((cx-r.left)/r.width)*2-1,-1,1), ny=clamp((cy-r.top)/r.height,0,1);
     const now=performance.now(), dt=Math.max(8, now-lastMoveT);
-    pvx = pvx*0.5 + ((nx-px)/dt*16)*0.5; pvy = pvy*0.5 + ((ny-py)/dt*16)*0.5; lastMoveT=now; px=nx; py=ny; }
+    pvx = pvx*0.5 + ((nx-px)/dt*16)*0.5; pvy = pvy*0.5 + ((ny-py)/dt*16)*0.5; lastMoveT=now; px=nx; py=ny;
+    pz = clamp((1-ny)*0.7, 0, PZMAX); }    // выше курсор → ракетка дальше вперёд (но не за сетку)
   cv.addEventListener("pointermove",e=>moveTo(e.clientX,e.clientY));
   cv.addEventListener("touchmove",e=>{ if(e.touches[0]){ moveTo(e.touches[0].clientX,e.touches[0].clientY); e.preventDefault(); } },{passive:false});
   cv.addEventListener("pointerdown",e=>{ moveTo(e.clientX,e.clientY); if(awaitingServe && server>0) doServe(swipe()); });
@@ -1765,14 +1767,16 @@ function startPong(){
     else if(servesLeft<=0){ server=-server; servesLeft=2; }
     prepareServe(); }
 
-  function playerReturn(){                                     // отбивание игрока — тип/сила/точка из свайпа
+  function playerReturn(){                                     // отбивание игрока — тип/сила/точка/глубина
     const sp=swipe();
     let power=clamp(0.012 + sp*0.03, 0.012, SPDCAP), hop=120;
     if(pvy<-0.05){ power=clamp(power*1.15,0.012,SPDCAP); hop=85; }     // ВВЕРХ — топспин (быстрее, низкая дуга)
     else if(pvy>0.05){ power*=0.80; hop=160; }                        // ВНИЗ — подрезка (медленнее, высокая дуга)
+    power = clamp(power * (1 + pz*0.9), 0.012, SPDCAP*1.4);           // чем ближе к сетке (волей) — тем сильнее и быстрее
+    if(pz>0.28) hop = Math.min(hop, 95);                             // удар у сетки — более плоский/острый
     const tx=clamp(px + pvx*2.2, -1.10, 1.10);                        // прицел из горизонтали свайпа (риск аута при резком)
-    launch(1, ball.x, tx, power, hop, clamp(pvx*0.12,-0.12,0.12)); lastHitter=1;
-    if(window.sfx&&sfx.ok)sfx.ok(); }
+    launch(1, ball.x, tx, power, hop, clamp(pvx*0.12,-0.12,0.12), ball.z);  // старт от точки удара по глубине
+    lastHitter=1; if(window.sfx&&sfx.ok)sfx.ok(); }
   function aiReturn(){                                         // ИИ кладёт в противоположную от игрока сторону, тип случаен
     const tx=clamp((px<=0?1:-1)*(0.45+Math.random()*0.4), -0.92, 0.92);
     const r=Math.random(), hop = r<0.3?160 : (r<0.55?85:120), power=clamp(0.012+Math.random()*0.008,0.012,SPDCAP);
@@ -1794,7 +1798,7 @@ function startPong(){
         if(!awaitingServe){
           if(ball.dir>0){ if(ball.z>=1){ if(Math.abs(ball.x-ax)<PADX) aiReturn(); else point(true); } }   // ИИ достал/нет
           else {
-            if(canHit && ball.z<=ZWIN && swipe()>SWTH && Math.abs(ball.x-px)<HITX){ canHit=false; playerReturn(); }
+            if(canHit && ball.z<=pz+0.07 && swipe()>SWTH && Math.abs(ball.x-px)<HITX){ canHit=false; playerReturn(); }   // удар на глубине ракетки
             else if(ball.z<=0 && canHit){ point(false); canHit=false; }
           }
         }
@@ -1825,9 +1829,7 @@ function startPong(){
     if(ball.z>0.5) drawBall();
     drawNet();
     if(ball.z<=0.5) drawBall();
-    { const L=lane(0), sx=L.lx+(px*0.5+0.5)*(L.rx-L.lx), h=185,
-        w=(imgPn.naturalWidth?h*imgPn.naturalWidth/imgPn.naturalHeight:h*0.62);
-      if(imgPn.complete && imgPn.naturalWidth) ctx.drawImage(imgPn, sx-w/2, H-h*0.56, w, h); }
+    drawPaddle(imgPn, px, pz, 175);                            // ближняя ракетка — двигается и вперёд (по глубине pz)
     // счёт + индикатор подачи
     ctx.textAlign="center"; ctx.lineWidth=5; ctx.strokeStyle="rgba(0,0,0,.6)";
     ctx.font="bold 28px 'Baloo 2',sans-serif"; ctx.fillStyle="#fff";
@@ -1841,7 +1843,7 @@ function startPong(){
       ctx.save(); ctx.globalAlpha=pulse; ctx.font="bold 19px 'Baloo 2',sans-serif"; ctx.fillStyle="#ffe600";
       const msg = performance.now()<readyAt ? "Приготовься…" : (server>0 ? "ТВОЯ ПОДАЧА — свайпни ракеткой" : "Подаёт Даниэла…");
       ctx.strokeText(msg, W/2, H-14); ctx.fillText(msg, W/2, H-14); ctx.restore();
-    } else if(ball.dir<0 && canHit && ball.z<=ZWIN){           // мяч у тебя — пора свайпнуть
+    } else if(ball.dir<0 && canHit && ball.z<=pz+0.12){        // мяч дошёл до ракетки — пора свайпнуть
       ctx.save(); ctx.globalAlpha=pulse; ctx.font="bold 22px 'Baloo 2',sans-serif"; ctx.fillStyle="#7CFC00";
       ctx.strokeText("СВАЙП!", W/2, H-14); ctx.fillText("СВАЙП!", W/2, H-14); ctx.restore();
     }
@@ -1851,7 +1853,7 @@ function startPong(){
     }
   }
 
-  $("gameInfo").textContent="Двигай ракетку и СВАЙПНИ, чтобы отбить. Резче свайп — сильнее; вверх — топспин, вниз — подрезка. По 2 подачи. До 11.";
+  $("gameInfo").textContent="Веди ракетку: вбок и ВПЕРЁД (до сетки). Ближе к сетке — удар сильнее. СВАЙПНИ, чтобы отбить. По 2 подачи. До 11.";
   imgRoom.onload = draw; imgTable.onload = draw; imgNet.onload = draw;
   draw(); gameRAF=requestAnimationFrame(step);
 }
