@@ -590,6 +590,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
         <div class="mp-row">🔊 Громкость
           <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
         </div>
+        <button id="journalBtn" class="mp-reset" style="background:linear-gradient(135deg,#b06bff,#7a4dff);color:#fff;">📖 Журнал образов</button>
         <button id="resetBtn" class="mp-reset">🔄 Начать заново</button>
       </div>
     </div>
@@ -3090,6 +3091,116 @@ window.addEventListener("DOMContentLoaded", async ()=>{
     function loop(now){ const dt=(now-last)/1000; last=now; acc+=dt; if(acc>=drop){ softDrop(); acc=0; } if(!over){ draw(); gameRAF=requestAnimationFrame(loop); } }
     newPiece(); draw(); gameRAF=requestAnimationFrame(loop);
   }
+})();
+</script>
+
+<!-- ============================================================
+     ЖУРНАЛ ОБРАЗОВ: листаемая галерея всех нарядов Даниэлы на фонах.
+     Открытие — кнопка «📖 Журнал образов» в верхнем меню.
+     Фоны: JOURNAL_BG[outfitKey] → assets/bg/*.jpg (пока пусто → градиент).
+     Откат: удалить этот блок + кнопку journalBtn.
+============================================================ -->
+<script>
+(function(){
+  const css=document.createElement('style'); css.textContent=`
+  #journalOv{position:fixed;inset:0;z-index:9500;background:rgba(10,6,16,.93);
+    display:flex;align-items:center;justify-content:center;}
+  #journalOv[hidden]{display:none;}
+  .j-card{position:relative;height:92vh;aspect-ratio:9/16;max-width:96vw;border-radius:22px;overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.65);background:#1a1024;user-select:none;touch-action:pan-y;}
+  .j-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity .2s;}
+  .j-bg.nobg{background:radial-gradient(circle at 50% 28%,#46295f,#1a0f24 72%);}
+  .j-vig{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 22%,transparent 52%,rgba(0,0,0,.6));}
+  .j-fig{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:97%;width:auto;object-fit:contain;
+    filter:drop-shadow(0 0 6px rgba(255,250,235,.95)) drop-shadow(0 0 20px rgba(255,214,180,.6));
+    transition:opacity .18s ease;}
+  .j-name{position:absolute;top:16px;left:0;right:0;text-align:center;color:#fff;
+    font-family:'Unbounded','Baloo 2',sans-serif;font-weight:800;font-size:23px;letter-spacing:.02em;
+    text-shadow:0 2px 12px rgba(0,0,0,.75);}
+  .j-sub{position:absolute;top:46px;left:0;right:0;text-align:center;color:#ffd9a8;
+    font-family:'Baloo 2';font-weight:700;font-size:13px;text-shadow:0 1px 6px #000;}
+  .j-pose{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;
+    font-family:'Baloo 2';font-weight:800;font-size:15px;text-shadow:0 1px 6px #000;}
+  .j-nav{position:absolute;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;border:0;
+    cursor:pointer;background:rgba(255,255,255,.2);color:#fff;font-size:28px;font-weight:800;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;}
+  .j-nav:active{background:rgba(255,255,255,.35);}
+  .j-prev{left:12px;} .j-next{right:12px;}
+  .j-x{position:absolute;top:12px;right:14px;z-index:6;background:rgba(0,0,0,.45);border:0;color:#fff;
+    font-size:22px;border-radius:50%;width:40px;height:40px;cursor:pointer;}
+  .j-dots{position:absolute;bottom:42px;left:0;right:0;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;padding:0 30px;}
+  .j-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);}
+  .j-dot.on{background:#ffd24a;box-shadow:0 0 6px #ffd24a;}
+  @media (max-width:560px){ .j-name{font-size:19px;} .j-nav{width:46px;height:46px;font-size:23px;} }
+  `; document.head.appendChild(css);
+
+  // порядок поз для просмотра (сначала «выигрышные»)
+  const POSE_ORDER=['neutral','joy','sympathy','approve','surprised','shrug','calm','serious','stern','sad'];
+  // ФОНЫ под образы — заполним, когда пришлёшь PNG (ключ образа → путь). Пока пусто = градиент.
+  const JOURNAL_BG={
+    // 'Купальник':'assets/bg/swim.jpg', 'Полицейская':'assets/bg/police.jpg', ...
+  };
+
+  const ov=document.createElement('div'); ov.id='journalOv'; ov.hidden=true;
+  ov.innerHTML=`<div class="j-card" id="jCard">
+      <div class="j-bg" id="jBg"></div>
+      <div class="j-vig"></div>
+      <img class="j-fig" id="jFig" alt="">
+      <div class="j-name" id="jName"></div>
+      <div class="j-sub" id="jSub"></div>
+      <div class="j-dots" id="jDots"></div>
+      <div class="j-pose" id="jPose"></div>
+      <button class="j-nav j-prev" id="jPrev">‹</button>
+      <button class="j-nav j-next" id="jNext">›</button>
+      <button class="j-x" id="jX">✕</button>
+    </div>`;
+  function mount(){ if(!ov.isConnected) document.body.appendChild(ov); }
+  if(document.body) mount(); document.addEventListener('DOMContentLoaded',mount);
+
+  let pages=[], idx=0, outfitKeys=[];
+  function build(){
+    pages=[]; outfitKeys=[];
+    const cat = (typeof OUTFITS!=='undefined') ? OUTFITS : [];
+    const reg = window.BOSS_OUTFITS||{};
+    cat.forEach(o=>{ const set=reg[o.key]; if(!set) return; outfitKeys.push(o.key);
+      POSE_ORDER.forEach(e=>{ if(set[e]) pages.push({key:o.key,name:o.name,emo:e,img:set[e]}); }); });
+  }
+  const EMO_RU={neutral:'приветливо',joy:'радость',sympathy:'кокетка',approve:'одобрение',surprised:'удивление',
+    shrug:'недоумение',calm:'спокойствие',serious:'серьёзно',stern:'строго',sad:'грусть'};
+  function render(){
+    const p=pages[idx]; if(!p) return;
+    const jBg=document.getElementById('jBg'), jFig=document.getElementById('jFig');
+    const bg=JOURNAL_BG[p.key];
+    jBg.classList.toggle('nobg',!bg);
+    jBg.style.backgroundImage = bg?`url("${bg}")`:'';
+    jFig.style.opacity=0; const im=new Image(); im.onload=()=>{jFig.src=p.img;jFig.style.opacity=1;}; im.src=p.img; if(im.complete){jFig.src=p.img;jFig.style.opacity=1;}
+    document.getElementById('jName').textContent=p.name;
+    document.getElementById('jSub').textContent=EMO_RU[p.emo]||p.emo;
+    const same=pages.filter(x=>x.key===p.key); const pi=same.indexOf(p)+1;
+    document.getElementById('jPose').textContent=`${pi} / ${same.length}  ·  образ ${outfitKeys.indexOf(p.key)+1}/${outfitKeys.length}`;
+    const dots=document.getElementById('jDots'); dots.innerHTML=outfitKeys.map(k=>`<span class="j-dot${k===p.key?' on':''}"></span>`).join('');
+  }
+  function go(d){ if(!pages.length)return; idx=(idx+d+pages.length)%pages.length; render(); }
+  function open(){ build(); if(!pages.length)return; idx=0; mount(); render(); ov.hidden=false; }
+  function close(){ ov.hidden=true; }
+
+  ov.querySelector('#jPrev').addEventListener('click',()=>go(-1));
+  ov.querySelector('#jNext').addEventListener('click',()=>go(1));
+  ov.querySelector('#jX').addEventListener('click',close);
+  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  // свайп
+  let sx=0,sy=0,sw=false;
+  const card=ov.querySelector('#jCard');
+  card.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;sw=true;});
+  card.addEventListener('pointerup',e=>{ if(!sw)return; sw=false; const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)) go(dx<0?1:-1); });
+  window.addEventListener('keydown',e=>{ if(ov.hidden)return; if(e.key==='ArrowRight')go(1); else if(e.key==='ArrowLeft')go(-1); else if(e.key==='Escape')close(); });
+
+  function bindBtn(){ const b=document.getElementById('journalBtn'); if(b&&!b._jb){ b._jb=1;
+    b.addEventListener('click',()=>{ const mp=document.getElementById('menuPanel'); if(mp)mp.hidden=true; open(); }); } }
+  if(document.body) bindBtn(); document.addEventListener('DOMContentLoaded',bindBtn);
+  window.__openJournal=open;
 })();
 </script>
 </body>
