@@ -3121,5 +3121,68 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   window.__openJournal=open;
 })();
 </script>
+
+<!-- ============================================================
+     КАРЬЕРНАЯ ЛЕСТНИЦА: клик по карточке должности → список всех званий.
+     Откат: удалить этот блок.
+============================================================ -->
+<script>
+(function(){
+  const css=document.createElement('style'); css.textContent=`
+  .career{cursor:pointer;}
+  #ranksOv{position:fixed;inset:0;z-index:9400;background:rgba(20,12,30,.85);
+    display:flex;align-items:center;justify-content:center;padding:16px;}
+  #ranksOv[hidden]{display:none;}
+  .rk-card{background:linear-gradient(180deg,#2a1f12,#1c140b);border:1px solid #6a5238;border-radius:18px;
+    padding:16px 16px 18px;max-width:440px;width:94vw;max-height:88vh;overflow:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);position:relative;}
+  .rk-h{font-family:'Unbounded','Baloo 2',sans-serif;font-weight:800;color:#ffd9a8;text-align:center;font-size:20px;margin-bottom:2px;}
+  .rk-sub{text-align:center;color:#caa97a;font-size:12px;margin-bottom:12px;}
+  .rk{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;margin-bottom:7px;background:rgba(255,255,255,.05);}
+  .rk.done{background:rgba(110,200,120,.12);}
+  .rk.cur{background:linear-gradient(90deg,rgba(255,210,74,.28),rgba(255,210,74,.06));box-shadow:inset 0 0 0 2px #ffd24a;}
+  .rk.lock{opacity:.5;}
+  .rk-n{width:26px;height:26px;border-radius:50%;background:#3a2a1c;color:#ffe8c2;font-weight:800;
+    display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto;}
+  .rk.cur .rk-n{background:#ffd24a;color:#5a3a00;}
+  .rk-t{flex:1;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px;}
+  .rk-m{color:#7fe0a0;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:13px;}
+  .rk-s{width:22px;text-align:center;font-size:14px;}
+  .rk-x{position:absolute;top:10px;right:12px;background:none;border:0;color:#ffd9a8;font-size:22px;cursor:pointer;}
+  .rk-fin{margin-top:4px;}
+  .rk-fin .rk-t{color:#ffd24a;}
+  `; document.head.appendChild(css);
+
+  const ov=document.createElement('div'); ov.id='ranksOv'; ov.hidden=true;
+  ov.innerHTML=`<div class="rk-card">
+    <button class="rk-x" id="rkX">✕</button>
+    <div class="rk-h">🏆 Карьерная лестница</div>
+    <div class="rk-sub">От бедолаги-стажёра до партнёра Даниэлы</div>
+    <div id="ranksList"></div></div>`;
+  function mount(){ if(!ov.isConnected) document.body.appendChild(ov); }
+  if(document.body) mount(); document.addEventListener('DOMContentLoaded',mount);
+
+  function render(){
+    if(typeof STAGES==='undefined') return;
+    const cur=state.stage||0, partner=!!state.partner;
+    let html=STAGES.map((s,i)=>{
+      const done = partner || i<cur, isCur = !partner && i===cur;
+      const cls = isCur?'cur':(done?'done':'lock');
+      const st  = isCur?'📍':(done?'✓':'🔒');
+      return `<div class="rk ${cls}"><span class="rk-n">${i+1}</span><span class="rk-t">${s.title}</span><span class="rk-m">×${s.mult}</span><span class="rk-s">${st}</span></div>`;
+    }).join('');
+    html+=`<div class="rk ${partner?'cur':'lock'} rk-fin"><span class="rk-n">🥂</span><span class="rk-t">Партнёр (совладелец)</span><span class="rk-m">∞</span><span class="rk-s">${partner?'📍':'🔒'}</span></div>`;
+    document.getElementById('ranksList').innerHTML=html;
+  }
+  function open(){ mount(); render(); ov.hidden=false; }
+  function close(){ ov.hidden=true; }
+  ov.querySelector('#rkX').addEventListener('click',close);
+  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  window.addEventListener('keydown',e=>{ if(!ov.hidden&&e.key==='Escape') close(); });
+
+  function bind(){ const c=document.querySelector('.career'); if(c&&!c._rk){ c._rk=1; c.title='Карьерная лестница'; c.addEventListener('click',open); } }
+  if(document.body) bind(); document.addEventListener('DOMContentLoaded',bind);
+})();
+</script>
 </body>
 </html>
