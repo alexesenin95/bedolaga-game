@@ -2750,7 +2750,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
     '<div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:4px;">'+
       '<span>🧪 ТЕСТ</span><span id="tpHide" '+btn+'>—</span></div>'+
     '<div id="tpBody">'+
-    row('Этап', '<span id="tpStageDn" '+btn+'>◀</span><b id="tpStage">1</b><span id="tpStageUp" '+btn+'>▶</span> <span style="opacity:.6">/5</span>')+
+    row('Этап', '<span id="tpStageDn" '+btn+'>◀</span><b id="tpStage">1</b><span id="tpStageUp" '+btn+'>▶</span> <span style="opacity:.6">/10</span>')+
     row('Близость', '<span id="tpLvlDn" '+btn+'>◀</span><b id="tpLvl">1</b><span id="tpLvlUp" '+btn+'>▶</span> <span style="opacity:.6">/10</span>')+
     row('Наряд', '<select id="tpOutfit" style="background:#2a1e14;color:#ffe8c2;border:1px solid #6a5238;border-radius:6px;padding:2px;"><option value="">по этапу</option>'+outfitOpts+'</select>')+
     row('Образы', '<span id="tpUnlock" '+btn+'>Открыть все</span>')+
@@ -2771,7 +2771,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   if (document.body) mount(); document.addEventListener('DOMContentLoaded', mount);
 
   function S(id){ return panel.querySelector('#'+id); }
-  function clampStage(n){ return Math.max(0, Math.min(4, n)); }
+  function clampStage(n){ const max=(typeof STAGES!=='undefined'?STAGES.length:10)-1; return Math.max(0, Math.min(max, n)); }
   function clampLvl(n){ return Math.max(1, Math.min(10, n)); }
   function syncLabels(){ S('tpStage').textContent = (state.stage||0)+1; S('tpLvl').textContent = state.chatLevel||1; }
 
