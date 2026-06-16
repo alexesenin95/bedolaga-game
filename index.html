@@ -872,6 +872,7 @@ const _EMOKEYS=['neutral','approve','sympathy','stern','joy','surprised','sad','
 function _outfitFrom(dir){ const o={}; _EMOKEYS.forEach(e=>o[e]=dir+'/boss_'+e+'.webp'); return o; }
 window.BOSS_OUTFITS = {
   'Костюм (бордо)': BOSS_POSES,
+  'Базовый':       _outfitFrom('assets/look_basic'),
   'Купальник':     _outfitFrom('assets/look_swim'),
   'Полицейская':   _outfitFrom('assets/look_police'),
   'Нуар':          _outfitFrom('assets/look_noir'),
@@ -885,6 +886,7 @@ window.BOSS_OUTFITS = {
 /* Каталог образов для панели (превью = нейтральная поза). key=null → базовый бордо. */
 const OUTFITS = [
   { name:'Бордо-костюм', key:'Костюм (бордо)', thumb:'assets/boss_neutral.webp' },
+  { name:'Базовый',      key:'Базовый',        thumb:'assets/look_basic/boss_neutral.webp' },
   { name:'Купальник',    key:'Купальник',      thumb:'assets/look_swim/boss_neutral.webp' },
   { name:'Полицейская',  key:'Полицейская',    thumb:'assets/look_police/boss_neutral.webp' },
   { name:'Нуар',         key:'Нуар',           thumb:'assets/look_noir/boss_neutral.webp' },
@@ -2739,6 +2741,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   // доп. наряды (5 поз + остальные эмоции подменены ближайшими)
   const EMOKEYS=['neutral','approve','sympathy','stern','joy','surprised','sad','calm','serious','shrug'];
   function fullLook(dir){ const o={}; EMOKEYS.forEach(e=>o[e]=dir+"/boss_"+e+".webp"); return o; }   // все 10 поз есть
+  window.BOSS_OUTFITS['Базовый'] = fullLook('assets/look_basic');
   window.BOSS_OUTFITS['Купальник'] = fullLook('assets/look_swim');
   window.BOSS_OUTFITS['Полицейская'] = fullLook('assets/look_police');
   window.BOSS_OUTFITS['Нуар'] = fullLook('assets/look_noir');
