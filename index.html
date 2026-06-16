@@ -2741,6 +2741,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   // доп. наряды (5 поз + остальные эмоции подменены ближайшими)
   const EMOKEYS=['neutral','approve','sympathy','stern','joy','surprised','sad','calm','serious','shrug'];
   function fullLook(dir){ const o={}; EMOKEYS.forEach(e=>o[e]=dir+"/boss_"+e+".webp"); return o; }   // все 10 поз есть
+  window.BOSS_OUTFITS['Базовый'] = fullLook('assets/look_basic');
   window.BOSS_OUTFITS['Купальник'] = fullLook('assets/look_swim');
   window.BOSS_OUTFITS['Полицейская'] = fullLook('assets/look_police');
   window.BOSS_OUTFITS['Нуар'] = fullLook('assets/look_noir');
