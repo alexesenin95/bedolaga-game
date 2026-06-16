@@ -1716,9 +1716,11 @@ function startPong(){
   const cv=$("pongCv"), ctx=cv.getContext("2d");
 
   // ассеты (слои)
-  const imgRoom=new Image(), imgTable=new Image(), imgNet=new Image(), imgBall=new Image(), imgPn=new Image(), imgPf=new Image();
+  const imgRoom=new Image(), imgTable=new Image(), imgNet=new Image(), imgBall=new Image(), imgPf=new Image();
   imgRoom.src="assets/pong/room.webp"; imgTable.src="assets/pong/table.webp"; imgNet.src="assets/pong/net.webp";
-  imgBall.src="assets/pong/ball.webp"; imgPn.src="assets/pong/paddle_near.webp"; imgPf.src="assets/pong/paddle_far.webp";
+  imgBall.src="assets/pong/ball.webp"; imgPf.src="assets/pong/paddle_far.webp";
+  const imgPnF=[]; for(let i=1;i<=5;i++){ const im=new Image(); im.src="assets/pong/paddle_"+i+".webp"; imgPnF.push(im); } // кадры наклона ближней ракетки
+  let padFrame=2;                                            // текущий кадр наклона (0..4), 2 = прямо
   const TABLE={x:20,y:18,w:600,h:330};                        // позиция стола на канвасе
 
   // калибровка столешницы (трапеция синей поверхности)
@@ -1776,6 +1778,7 @@ function startPong(){
     if(pz>0.28) hop = Math.min(hop, 95);                             // удар у сетки — более плоский/острый
     const tx=clamp(px + pvx*2.2, -1.10, 1.10);                        // прицел из горизонтали свайпа (риск аута при резком)
     launch(1, ball.x, tx, power, hop, clamp(pvx*0.12,-0.12,0.12), ball.z);  // старт от точки удара по глубине
+    padFrame = clamp(2 + pvx*30, 0, 4);                       // «щелчок» ракеткой в сторону удара
     lastHitter=1; if(window.sfx&&sfx.ok)sfx.ok(); }
   function aiReturn(){                                         // ИИ кладёт в противоположную от игрока сторону, тип случаен
     const tx=clamp((px<=0?1:-1)*(0.45+Math.random()*0.4), -0.92, 0.92);
@@ -1786,6 +1789,7 @@ function startPong(){
     if(over) return;
     try{
       pvx *= 0.84; pvy *= 0.84;
+      padFrame += (clamp(2 + pvx*12, 0, 4) - padFrame)*0.4;    // ракетка наклоняется по направлению свайпа
       if(awaitingServe){
         if(server>0){ ball.x=px; ball.startX=px; ball.targetX=px; ball.z=0.02; if(swipe()>SWTH) doServe(swipe()); }
         else { ax += (0-ax)*0.06; ball.x=ax; ball.startX=ax; ball.targetX=ax; ball.z=0.98; if(performance.now()>=aiServeAt) doServe(0); }
@@ -1811,6 +1815,10 @@ function startPong(){
   function drawPaddle(img,x,z,baseH){ const p=proj(x,z,0), sc=scaleAt(z), h=baseH*sc;
     const w = (img.naturalWidth ? h*img.naturalWidth/img.naturalHeight : h*0.62);
     if(img.complete && img.naturalWidth) ctx.drawImage(img, p.sx-w/2, p.sy-h*0.80, w, h); }
+  function drawNear(){ const fi=Math.max(0,Math.min(4,Math.round(padFrame))), img=imgPnF[fi];
+    if(!(img && img.complete && img.naturalWidth)) return;
+    const p=proj(px,pz,0), sc=scaleAt(pz), h=185*sc, w=h*img.naturalWidth/img.naturalHeight;
+    ctx.drawImage(img, p.sx-w/2, p.sy-h*0.78, w, h); }
   function drawBall(){ const sc=scaleAt(ball.z), g=proj(ball.x,ball.z,0);
     ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";
     ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 12*sc, 4.5*sc, 0,0,7); ctx.fill(); ctx.restore();
@@ -1829,7 +1837,7 @@ function startPong(){
     if(ball.z>0.5) drawBall();
     drawNet();
     if(ball.z<=0.5) drawBall();
-    drawPaddle(imgPn, px, pz, 175);                            // ближняя ракетка — двигается и вперёд (по глубине pz)
+    drawNear();                                                // ближняя ракетка — кадр наклона по свайпу, глубина pz
     // счёт + индикатор подачи
     ctx.textAlign="center"; ctx.lineWidth=5; ctx.strokeStyle="rgba(0,0,0,.6)";
     ctx.font="bold 28px 'Baloo 2',sans-serif"; ctx.fillStyle="#fff";
