@@ -377,8 +377,10 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   transform:translateX(-50%);border-radius:50%;filter:blur(4px);
   background:radial-gradient(ellipse at center,rgba(0,0,0,.5),transparent 70%);}
 .boss-hero img{height:99%;width:auto;max-width:46vw;object-fit:contain;object-position:bottom;
-  transform-origin:50% 100%;will-change:transform;animation:bossFloat 4.6s ease-in-out infinite;}
-@keyframes bossFloat{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-1.1%) scale(1.012);}}
+  transform-origin:50% 100%;will-change:transform;animation:bossFloat 5s ease-in-out infinite;
+  /* светлое свечение по краям силуэта (rim-light) — повышает привлекательность */
+  filter:drop-shadow(0 0 5px rgba(255,246,228,.95)) drop-shadow(0 0 14px rgba(255,216,184,.6));}
+@keyframes bossFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
 @keyframes bossAura{0%,100%{opacity:.5;transform:translateX(-50%) scale(.97);}50%{opacity:.92;transform:translateX(-50%) scale(1.05);}}
 /* праздничный «поп» Даниэлы при радости (прозрачный ролик через canvas-матовку) */
 #joyFx{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(14%) scale(.96);
