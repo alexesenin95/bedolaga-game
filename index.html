@@ -3116,7 +3116,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   .j-bg.nobg{background:radial-gradient(circle at 50% 28%,#46295f,#1a0f24 72%);}
   .j-vig{position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 22%,transparent 52%,rgba(0,0,0,.6));}
-  .j-fig{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:97%;width:auto;object-fit:contain;
+  .j-fig{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);
+    max-height:94%;max-width:90%;height:auto;width:auto;       /* единый стандарт: вписываем целиком, без обрезки */
     filter:drop-shadow(0 0 6px rgba(255,250,235,.95)) drop-shadow(0 0 20px rgba(255,214,180,.6));
     transition:opacity .18s ease;}
   .j-name{position:absolute;top:16px;left:0;right:0;text-align:center;color:#fff;
