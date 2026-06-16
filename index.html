@@ -67,6 +67,10 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
 .brand::before{content:"♛";position:absolute;left:50%;top:-15px;transform:translateX(-50%);
   -webkit-text-fill-color:#e2a01a;color:#e2a01a;font-size:15px;filter:none;}
 /* карточка карьеры с аватаром начальницы */
+.top-journal{margin-left:8px;display:flex;align-items:center;gap:6px;border:0;cursor:pointer;
+  font-family:"Baloo 2",sans-serif;font-weight:800;font-size:15px;color:#fff;padding:11px 18px;border-radius:15px;
+  background:linear-gradient(135deg,#b06bff,#7a4dff);box-shadow:0 6px 16px rgba(122,77,255,.42);}
+.top-journal:active{transform:translateY(2px);box-shadow:0 3px 8px rgba(122,77,255,.42);}
 .career{margin-left:auto;display:flex;flex-direction:row;align-items:center;gap:11px;background:#fff;border:none;border-radius:18px;
   padding:7px 16px 7px 8px;box-shadow:0 6px 18px rgba(120,90,40,.16);min-width:300px;}
 .career-av{width:44px;height:44px;flex:0 0 auto;border-radius:50%;overflow:hidden;
@@ -573,6 +577,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   <div class="topbar">
     <div class="coins"><span class="coin-ic"></span><span id="money">0</span><span id="rate">+0/с</span></div>
     <div class="brand">БЕДОЛАГА</div>
+    <button id="journalBtn" class="top-journal">📖 Журнал</button>
     <div class="career">
       <div class="career-av" id="careerAv"><img src="assets/boss_neutral_face.webp" alt=""></div>
       <div class="career-info">
@@ -590,7 +595,6 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
         <div class="mp-row">🔊 Громкость
           <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
         </div>
-        <button id="journalBtn" class="mp-reset" style="background:linear-gradient(135deg,#b06bff,#7a4dff);color:#fff;">📖 Журнал образов</button>
         <button id="resetBtn" class="mp-reset">🔄 Начать заново</button>
       </div>
     </div>
