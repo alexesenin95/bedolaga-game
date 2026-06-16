@@ -1735,7 +1735,9 @@ function startPong(){
   let pvx=0, pvy=0, lastMoveT=0, canHit=false, lastHitter=1, outAt=0, readyAt=0;   // свайп + кто бил + флеш АУТ + пауза перед подачей
   const PADX=0.30, HITX=0.58, ZWIN=0.26, SWTH=0.055, SPDCAP=0.024, AISPEED=0.017, PZMAX=0.46; // зоны/окно/порог/скорость ИИ + макс. глубина ракетки (до сетки); HITX шире для надёжной ловли
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
-  function arcLift(z){ return (ball.hop||120)*4*z*(1-z)*scaleAt(z); }   // дуга над сеткой (высота зависит от типа удара)
+  function arcLift(){ const p=prog(), A=ball.hop||120;          // дуга с отскоком: через сетку → касание стола (~0.78) → отскок
+    let h = (p<0.78) ? A*Math.sin(Math.PI*p/0.78) : A*0.42*Math.sin(Math.PI*(p-0.78)/0.22);
+    return h*scaleAt(ball.z); }
   function swipe(){ return Math.hypot(pvx,pvy); }
   function prog(){ const span=(ball.zEnd-ball.z0)||1; return clamp((ball.z-ball.z0)/span,0,1); }   // 0 у точки удара → 1 у принимающего
   function updateX(){ const p=prog(); ball.x = ball.startX + (ball.targetX-ball.startX)*p + ball.curve*Math.sin(p*Math.PI); }
@@ -1822,7 +1824,7 @@ function startPong(){
   function drawBall(){ const sc=scaleAt(ball.z), g=proj(ball.x,ball.z,0);
     ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";
     ctx.beginPath(); ctx.ellipse(g.sx, g.sy, 12*sc, 4.5*sc, 0,0,7); ctx.fill(); ctx.restore();
-    const bs=32*sc, by=g.sy - arcLift(ball.z);
+    const bs=32*sc, by=g.sy - arcLift();
     if(imgBall.complete && imgBall.naturalWidth) ctx.drawImage(imgBall, g.sx-bs/2, by-bs/2, bs, bs);
     else { ctx.fillStyle="#ffd83a"; ctx.beginPath(); ctx.arc(g.sx,by,bs/2,0,7); ctx.fill(); } }
   function drawNet(){ if(!(imgNet.complete && imgNet.naturalWidth)) return;
