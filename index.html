@@ -454,6 +454,18 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   box-shadow:0 4px 10px rgba(30,15,4,.45),inset 0 1px 0 rgba(255,210,140,.25);text-shadow:none;}
 .boost-btn:active{transform:translateY(2px);box-shadow:0 2px 6px rgba(30,15,4,.45);}
 .boost-btn:disabled{filter:none;opacity:1;box-shadow:0 4px 10px rgba(30,15,4,.45);}
+/* ПРЕМИУМ РАБОТАЕТ: яркое золотое сияние + пульс — «всё включено» */
+.boost-btn.active{background:linear-gradient(180deg,#ffe07a,#f0a81c);color:#5a3600;border-color:#fff2cc;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);opacity:1;cursor:default;
+  animation:premiumGlow 1.1s ease-in-out infinite alternate;}
+.boost-btn.active:disabled{filter:none;}
+@keyframes premiumGlow{
+  0%{box-shadow:0 0 0 2px rgba(255,225,130,.45),0 0 12px 2px rgba(255,190,60,.6),inset 0 1px 0 rgba(255,255,255,.55);}
+  100%{box-shadow:0 0 0 2px rgba(255,240,170,.75),0 0 26px 7px rgba(255,200,80,.95),inset 0 1px 0 rgba(255,255,255,.65);}}
+/* ПЕРЕЗАРЯДКА: приглушённая «остывшая» кнопка с часами — нажать нельзя */
+.boost-btn.cooldown{background:linear-gradient(180deg,#4b4640,#2c2925);color:#bcb4a6;border-color:#6b6358;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);text-shadow:none;opacity:1;cursor:not-allowed;filter:saturate(.5);}
+.boost-btn.cooldown:disabled{filter:saturate(.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 8px rgba(0,0,0,.3);}
 .chat-fill{background:linear-gradient(180deg,#f59ac6,var(--plum));}
 .chat-btn{flex:0 0 auto;font-family:"Baloo 2";font-weight:800;font-size:13px;color:#fff;
   background:linear-gradient(180deg,#f79ac8 0%,#e2659e 50%,#b23c76 100%);border-radius:14px;padding:10px 18px;
@@ -2035,7 +2047,15 @@ const sfx = {
 --------------------------------------------------------------------------- */
 function mult(){ return STAGES[state.stage].mult; }
 function affectionMult(){ return 1 + ((state.chatLevel||1)-1)*0.08; } // близость с Даниэлой даёт +8% дохода за уровень
+const BOOST_DUR = 10*60000;   // ×2 длится 10 минут
+const BOOST_CD  = 10*60000;   // после окончания — 10 минут перезарядки до следующей активации
 function boostMult(){ return (Date.now() < (state.boostUntil||0)) ? 2 : 1; } // премиум ×2 (по таймеру)
+function boostState(){
+  const now=Date.now(), bu=state.boostUntil||0;
+  if(now < bu) return {phase:'active',   left:bu-now};            // премиум работает
+  if(now < bu+BOOST_CD) return {phase:'cooldown', left:bu+BOOST_CD-now}; // перезарядка
+  return {phase:'ready', left:0};                                 // можно активировать
+}
 function baseProduction(){ let s=0; for(let i=0;i<GENERATORS.length;i++) s += GENERATORS[i].income * (state.gens[i]||0); return s; }
 function incomePerSec(){ return baseProduction() * mult() * affectionMult() * boostMult(); }
 function clickValue(){ return (Math.max(CLICK_BASE, Math.ceil(0.01 * baseProduction())) + (state.qual||0)) * mult() * affectionMult() * boostMult(); }
@@ -2434,10 +2454,19 @@ function renderHud(){
   $("trustLabel").textContent = state.partner ? "Доверие · максимум ★" : ("Доверие · ещё "+Math.max(0, stage.need - state.trust));
   $("stageFill").style.width = Math.min(100, (state.barProgress/currentGoal())*100)+"%";
   $("stagePct").textContent = Math.min(100, Math.round((state.barProgress/currentGoal())*100))+"%";
-  const bLeft = (state.boostUntil||0) - Date.now();
   const bn = $("boostBtn");
-  if(bLeft > 0){ bn.disabled = true; bn.textContent = "×2  "+fmtTime(bLeft); }
-  else { bn.disabled = chatOpen || quizOpen; bn.textContent = "👑 ПРЕМИУМ ×2"; }
+  const bs = boostState();
+  bn.classList.remove("active","cooldown");
+  if(bs.phase==='active'){          // премиум работает — золотое сияние + таймер до конца
+    bn.disabled = true; bn.classList.add("active");
+    bn.innerHTML = "⚡ ×2 · "+fmtTime(bs.left);
+  } else if(bs.phase==='cooldown'){ // перезарядка — приглушённая кнопка + таймер до готовности
+    bn.disabled = true; bn.classList.add("cooldown");
+    bn.innerHTML = "⏳ "+fmtTime(bs.left);
+  } else {                          // готова к активации
+    bn.disabled = chatOpen || quizOpen;
+    bn.innerHTML = "👑 ПРЕМИУМ ×2";
+  }
   const bonus = Math.round((affectionMult()-1)*100);
   $("chatLvl").textContent = "ур. "+(state.chatLevel||1)+"/10" + (bonus>0 ? " · +"+bonus+"% ₽" : "");
   $("chatTitle").textContent = CHAT_TITLES[(state.chatLevel||1)-1];
@@ -2649,9 +2678,9 @@ function bindUI(){
   $("obNext").addEventListener("click", obNext);
   $("resetBtn").addEventListener("click", ()=>{ $("menuPanel").hidden=true; resetProgress(false); });
   $("boostBtn").addEventListener("click", ()=>{
-    if(Date.now() < (state.boostUntil||0)) return;          // уже активен
-    state.boostUntil = Date.now() + 15*60000;               // ×2 на 15 минут
-    sfx.promote(); flourish("Бонус ×2!\nна 15 минут"); confetti(30); save(); renderHud();
+    if(boostState().phase!=='ready') return;                // активен или на перезарядке
+    state.boostUntil = Date.now() + BOOST_DUR;              // ×2 на 10 минут (для кнопки «Работать» и всего дохода)
+    sfx.promote(); flourish("Премиум ×2!\nна 10 минут"); confetti(30); save(); renderHud();
   });
   $("menuBtn").addEventListener("click", (e)=>{ e.stopPropagation(); $("menuPanel").hidden = !$("menuPanel").hidden; });
   document.addEventListener("click", (e)=>{
