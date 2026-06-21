@@ -1144,9 +1144,30 @@ const Storage = {
     this.mem[k]=v;
     try{ if(sdkStorage) sdkStorage.setItem(k,v); }catch(e){}
     try{ localStorage.setItem(k,v); }catch(e){}
-    try{ if(player && player.setData) player.setData({ [k]: v }); }catch(e){}
+    // Облако игрока (player.setData) пишем НЕ здесь, а отдельным дросселем — см. cloudSave():
+    // у API лимит 100 запросов / 5 минут и каждый вызов перезаписывает весь документ.
   },
 };
+
+/* ---- Облачные сейвы игрока (player.getData/setData) ----
+   Лимит API: ≤100 запросов / 5 мин, документ целиком (≤200 КБ). Поэтому:
+   • локально (localStorage) пишем мгновенно при каждом save();
+   • в облако — дросселем (раз в ~12 c, если есть изменения) + принудительно при сворачивании/выходе. */
+let cloudDirty=false, lastCloudWrite=0;
+const CLOUD_MIN_INTERVAL=12000;
+async function cloudLoad(){
+  try{ if(player && player.getData){ const d=await player.getData([SAVE_KEY]); if(d && d[SAVE_KEY]) return d[SAVE_KEY]; } }catch(e){}
+  return null;
+}
+function cloudSave(flush){
+  if(!player || !player.setData) return;
+  try{ player.setData({ [SAVE_KEY]: Storage.get(SAVE_KEY) }, !!flush); lastCloudWrite=Date.now(); cloudDirty=false; }catch(e){}
+}
+// Если в облаке прогресс новее локального — применяем его (синхронизация между устройствами).
+async function mergeCloudSave(){
+  const raw=await cloudLoad(); if(!raw) return;
+  try{ const cloud=JSON.parse(raw); if((cloud.lastSave||0) >= (state.lastSave||0)) applySave(raw); }catch(e){}
+}
 
 /* ---------------------------------------------------------------------------
    7) ЯНДЕКС SDK (под защитой; без SDK — автономный режим)
@@ -1165,7 +1186,7 @@ async function initSDK(){
     if(typeof YaGames==="undefined"){ await loadScript("https://yandex.ru/games/sdk/v2"); }
     ysdk = await YaGames.init();
     try{ sdkStorage = await ysdk.getStorage(); }catch(e){}
-    try{ player = await ysdk.getPlayer(); }catch(e){}
+    try{ player = await ysdk.getPlayer({ scopes:false }); }catch(e){}  // scopes:false — сейвы работают без запроса личных данных
     try{ if(ysdk.on){ ysdk.on("game_api_pause", onPause); ysdk.on("game_api_resume", onResume); } }catch(e){}
     sdkReady = true;
   }catch(e){ sdkReady = false; }
@@ -2688,9 +2709,9 @@ function loop(now){
 /* ---------------------------------------------------------------------------
    14) СОХРАНЕНИЕ / ЗАГРУЗКА
 --------------------------------------------------------------------------- */
-function save(){ state.lastSave = Date.now(); try{ Storage.set(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
-function loadState(){
-  const raw = Storage.get(SAVE_KEY); if(!raw) return;
+function save(){ state.lastSave = Date.now(); try{ Storage.set(SAVE_KEY, JSON.stringify(state)); }catch(e){} cloudDirty = true; }
+// Применить сейв из JSON-строки (с валидацией) — общий путь для локали и облака.
+function applySave(raw){
   try{
     const s = JSON.parse(raw);
     state = Object.assign(defaultState(), s);
@@ -2700,8 +2721,10 @@ function loadState(){
     // выбранный образ мог стать «закрытым» (новая механика разблокировки) — откатываем к базовому
     const oi = OUTFITS.findIndex(o=>o.key===state.outfit);
     if(oi<0 || !outfitUnlocked(oi)) state.outfit = 'Базовый';
-  }catch(e){ state = defaultState(); }
+    return true;
+  }catch(e){ return false; }
 }
+function loadState(){ const raw = Storage.get(SAVE_KEY); if(raw) applySave(raw); }
 
 /* ---------------------------------------------------------------------------
    ИНИЦИАЛИЗАЦИЯ
@@ -2768,7 +2791,8 @@ function bindUI(){
 window.addEventListener("DOMContentLoaded", async ()=>{
   bindUI();
   await initSDK();
-  loadState();
+  loadState();                 // локальный сейв
+  await mergeCloudSave();      // если в облаке прогресс новее — берём его
   computeOffline();
   $("muteBtn").textContent = state.muted ? "🔇" : "🔊";
   $("volSlider").value = Math.round(musicVol()*100); applyMusic();   // синхронизация громкости из сейва
@@ -2776,12 +2800,14 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   if(sdkReady) readyForPlayer();
   requestAnimationFrame(loop);
   setInterval(save, 10000);
+  // дроссель облачных сейвов: пишем не чаще раза в ~12 c и только при изменениях (лимит API 100/5мин)
+  setInterval(()=>{ if(cloudDirty && Date.now()-lastCloudWrite >= CLOUD_MIN_INTERVAL) cloudSave(false); }, 5000);
   setInterval(()=>{ if(Math.random()<0.34) idleTick(); }, 9000);
   document.addEventListener("visibilitychange", ()=>{
-    if(document.hidden){ save(); paused=true; muteAudio(true); }      // свернули/ушли — тишина и пауза
-    else if(!adShowing){ paused=false; muteAudio(false); }            // вернулись (но не во время рекламы)
+    if(document.hidden){ save(); cloudSave(true); paused=true; muteAudio(true); }   // свернули/ушли — сразу в облако, тишина и пауза
+    else if(!adShowing){ paused=false; muteAudio(false); }                          // вернулись (но не во время рекламы)
   });
-  window.addEventListener("beforeunload", save);
+  window.addEventListener("beforeunload", ()=>{ save(); cloudSave(true); });
 });
 </script>
 
