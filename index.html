@@ -1836,8 +1836,8 @@ function endGame(win, titleWin, titleLose){
 
 /* --- Настольный теннис (перспектива), 1 сет до 11, разница в 2 --- */
 function startPong(){
-  $("gameTitle").textContent="🏓 Настольный теннис — до 11";
-  $("gameInfo").textContent="Веди ракетку влево-вправо мышью или пальцем. Партия до 11 очков (с разницей в 2).";
+  $("gameTitle").textContent=L("🏓 Настольный теннис — до 11");
+  $("gameInfo").textContent=L("Веди ракетку влево-вправо мышью или пальцем. Партия до 11 очков (с разницей в 2).");
   const W=640,H=360;
   $("gameStage").innerHTML=`<canvas id="pongCv" width="${W}" height="${H}" class="game-canvas"></canvas>`;
   const cv=$("pongCv"), ctx=cv.getContext("2d");
@@ -1990,15 +1990,15 @@ function startPong(){
     }
   }
 
-  $("gameInfo").textContent="Подведи ракетку к мячу — вбок и вперёд/назад: отобьёт сама. Резче движение — сильнее удар, ближе к сетке — острее. По 2 подачи. До 11.";
+  $("gameInfo").textContent=L("Подведи ракетку к мячу — вбок и вперёд/назад: отобьёт сама. Резче движение — сильнее удар, ближе к сетке — острее. По 2 подачи. До 11.");
   imgRoom.onload = draw; imgTable.onload = draw; imgNet.onload = draw;
   draw(); gameRAF=requestAnimationFrame(step);
 }
 
 /* --- Шашки (упрощённые русские) --- */
 function startCheckers(){
-  $("gameTitle").textContent="🔵 Шашки";
-  $("gameInfo").textContent="Ты — светлые (снизу). Если можешь бить — бьёшь. Срежь все шашки Даниэлы.";
+  $("gameTitle").textContent=L("🔵 Шашки");
+  $("gameInfo").textContent=L("Ты — светлые (снизу). Если можешь бить — бьёшь. Срежь все шашки Даниэлы.");
   const B=[]; for(let r=0;r<8;r++){B[r]=[];for(let c=0;c<8;c++){ let v=0; if((r+c)%2===1){ if(r<3)v=-1; else if(r>4)v=1; } B[r][c]=v; }}
   let sel=null, chain=false;
   const host=document.createElement("div"); host.className="ck-board"; $("gameStage").appendChild(host);
@@ -2069,8 +2069,8 @@ function startCheckers(){
 
 /* --- Морской бой --- */
 function startBattleship(){
-  $("gameTitle").textContent="🚢 Морской бой";
-  $("gameInfo").textContent="Стреляй по полю Даниэлы (сверху). Потопи весь её флот раньше, чем она — твой.";
+  $("gameTitle").textContent=L("🚢 Морской бой");
+  $("gameInfo").textContent=L("Стреляй по полю Даниэлы (сверху). Потопи весь её флот раньше, чем она — твой.");
   const N=8, SHIPS=[3,2,2,1,1];
   function emptyGrid(){ const g=[]; for(let i=0;i<N;i++){g[i]=new Array(N).fill(0);} return g; }
   function place(){ const g=emptyGrid(), ships=[]; for(const len of SHIPS){ let ok=false,tries=0; while(!ok&&tries++<200){ const hor=Math.random()<.5; const r=Math.floor(Math.random()*(hor?N:N-len+1)); const c=Math.floor(Math.random()*(hor?N-len+1:N)); let free=true; for(let i=-1;i<=len;i++)for(let j=-1;j<=1;j++){ const rr=r+(hor?j:i), cc=c+(hor?i:j); if(rr>=0&&rr<N&&cc>=0&&cc<N&&g[rr][cc]===1){free=false;} } if(!free) continue; const cells=[]; for(let i=0;i<len;i++){ const rr=hor?r:r+i, cc=hor?c+i:c; g[rr][cc]=1; cells.push([rr,cc]); } ships.push(cells); ok=true; } } return {g, ships}; }
@@ -2628,18 +2628,18 @@ function renderLooks(){
       const sel = (o.key===cur);
       cell.className = "look " + (unlocked?"unlocked":"locked") + (sel?" sel":"");
       if(unlocked){
-        cell.innerHTML = `<div class="look-thumb"><img src="${o.thumb}" alt=""></div><span class="look-name">${o.name}</span>`;
-        cell.title = o.name;
+        cell.innerHTML = `<div class="look-thumb"><img src="${o.thumb}" alt=""></div><span class="look-name">${L(o.name)}</span>`;
+        cell.title = L(o.name);
         cell.addEventListener("click", ()=>selectOutfit(o.key));
       } else {
-        cell.innerHTML = `<div class="look-thumb"><img src="${o.thumb}" alt=""></div><span class="look-lock">🔒</span><span class="look-name">ур. ${i+1}</span>`;
-        cell.title = "Откроется на уровне близости "+(i+1);
-        cell.addEventListener("click", ()=>{ if(typeof bossSay==='function') bossSay("Этот образ откроется, когда мы станем ближе — уровень "+(i+1)+" 💗","sympathy"); });
+        cell.innerHTML = `<div class="look-thumb"><img src="${o.thumb}" alt=""></div><span class="look-lock">🔒</span><span class="look-name">${tt("ур. ","lv. ")}${i+1}</span>`;
+        cell.title = tt("Откроется на уровне близости ","Unlocks at closeness level ")+(i+1);
+        cell.addEventListener("click", ()=>{ if(typeof bossSay==='function') bossSay(tt("Этот образ откроется, когда мы станем ближе — уровень ","This look unlocks as we grow closer — level ")+(i+1)+" 💗","sympathy"); });
       }
     } else {
       cell.className = "look empty";
       cell.innerHTML = `<span class="look-lock">＋</span>`;
-      cell.title = "Скоро новый образ";
+      cell.title = tt("Скоро новый образ","New look coming soon");
     }
     grid.appendChild(cell);
   }
@@ -3084,12 +3084,12 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   ];
 
   // --- кнопка + оверлей выбора ---
-  const btn=document.createElement('button'); btn.id='datesBtn'; btn.innerHTML='💞 Свидание';
+  const btn=document.createElement('button'); btn.id='datesBtn'; btn.innerHTML=L('💞 Свидание');
   const ov=document.createElement('div'); ov.id='datesOverlay'; ov.className='overlay'; ov.hidden=true;
   ov.innerHTML='<div class="dates-card" style="position:relative">'+
     '<button class="dates-x" id="datesX">✕</button>'+
-    '<div class="dates-h">💞 Свидания с Даниэлой</div>'+
-    '<div class="dates-sub">Победа и очки повышают близость 💗</div>'+
+    '<div class="dates-h">'+L('💞 Свидания с Даниэлой')+'</div>'+
+    '<div class="dates-sub">'+L('Победа и очки повышают близость 💗')+'</div>'+
     '<div class="dates-grid" id="datesGrid"></div></div>';
   function mount(){ if(!btn.isConnected) document.body.appendChild(btn); if(!ov.isConnected) document.body.appendChild(ov); }
   if(document.body) mount(); document.addEventListener('DOMContentLoaded',mount);
@@ -3100,9 +3100,9 @@ window.addEventListener("DOMContentLoaded", async ()=>{
       const ok = lvl>=G.lvl;
       const d=document.createElement('div'); d.className='date-item'+(ok?'':' locked');
       d.innerHTML=`<div class="date-emoji">${ok?G.emoji:'🔒'}</div>`+
-        `<div class="date-info"><div class="date-name">${G.name}</div>`+
-        `<div class="date-desc">${ok?G.desc:('Откроется на уровне близости '+G.lvl)}</div></div>`+
-        (ok?`<button class="date-go">Играть</button>`:'');
+        `<div class="date-info"><div class="date-name">${L(G.name)}</div>`+
+        `<div class="date-desc">${ok?L(G.desc):(tt('Откроется на уровне близости ','Unlocks at closeness level ')+G.lvl)}</div></div>`+
+        (ok?`<button class="date-go">${L('Играть')}</button>`:'');
       if(ok) d.addEventListener('click',()=>{ ov.hidden=true; openDateGame(G.key); });
       g.appendChild(d);
     });
@@ -3148,8 +3148,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
 
   // ===== ЗМЕЙКА =====
   function startSnake(){
-    document.getElementById('gameTitle').textContent='🐍 Прогулка вдвоём';
-    document.getElementById('gameInfo').textContent='Собирай сердечки 💗. Стрелки/свайп/кнопки. Очки = близость.';
+    document.getElementById('gameTitle').textContent=L('🐍 Прогулка вдвоём');
+    document.getElementById('gameInfo').textContent=L('Собирай сердечки 💗. Стрелки/свайп/кнопки. Очки = близость.');
     const N=20, CELL=18, W=N*CELL;          // поле больше (20×20)
     document.getElementById('gameStage').innerHTML=`<div class="dg-wrap"><canvas id="snkCv" width="${W}" height="${W}" class="dg-canvas"></canvas>`+
       ctrlRow([{act:'l',label:'◀'},{act:'u',label:'▲'},{act:'d',label:'▼'},{act:'r',label:'▶'}])+`</div>`;
@@ -3177,8 +3177,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
 
   // ===== ТРИ В РЯД =====
   function startMatch3(){
-    document.getElementById('gameTitle').textContent='💐 Букет для Даниэлы';
-    document.getElementById('gameInfo').textContent='Меняй соседние, собирай 3+. 45 секунд. Очки = близость.';
+    document.getElementById('gameTitle').textContent=L('💐 Букет для Даниэлы');
+    document.getElementById('gameInfo').textContent=L('Меняй соседние, собирай 3+. 45 секунд. Очки = близость.');
     const N=8, CELL=40, W=N*CELL, TYPES=6, COL=['#ff5d6c','#ffd23f','#5bd1ff','#7CFC68','#c77dff','#ff9f45'];
     document.getElementById('gameStage').innerHTML=`<div class="dg-wrap"><canvas id="m3cv" width="${W}" height="${W}" class="dg-canvas"></canvas></div>`;
     const cv=document.getElementById('m3cv'), ctx=cv.getContext('2d');
@@ -3210,8 +3210,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
 
   // ===== ТЕТРИС =====
   function startTetris(){
-    document.getElementById('gameTitle').textContent='🧩 Вечерние сборы';
-    document.getElementById('gameInfo').textContent='Складывай линии. Стрелки/кнопки: ◀▶ двигать, ⟳ вращать, ▼ вниз.';
+    document.getElementById('gameTitle').textContent=L('🧩 Вечерние сборы');
+    document.getElementById('gameInfo').textContent=L('Складывай линии. Стрелки/кнопки: ◀▶ двигать, ⟳ вращать, ▼ вниз.');
     const COLS=10, ROWS=18, CELL=20, W=COLS*CELL, H=ROWS*CELL;
     const SH=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
     const COL=['#5bd1ff','#ffd23f','#c77dff','#4f7cff','#ff9f45','#7CFC68','#ff5d6c'];
@@ -3322,10 +3322,10 @@ window.addEventListener("DOMContentLoaded", async ()=>{
     jBg.classList.toggle('nobg',!bg);
     jBg.style.backgroundImage = bg?`url("${bg}")`:'';
     jFig.style.opacity=0; const im=new Image(); im.onload=()=>{jFig.src=p.img;jFig.style.opacity=1;}; im.src=p.img; if(im.complete){jFig.src=p.img;jFig.style.opacity=1;}
-    document.getElementById('jName').textContent=p.name;
-    document.getElementById('jSub').textContent=EMO_RU[p.emo]||p.emo;
+    document.getElementById('jName').textContent=L(p.name);
+    document.getElementById('jSub').textContent=L(EMO_RU[p.emo]||p.emo);
     const same=pages.filter(x=>x.key===p.key); const pi=same.indexOf(p)+1;
-    document.getElementById('jPose').textContent=`${pi} / ${same.length}  ·  образ ${outfitKeys.indexOf(p.key)+1}/${outfitKeys.length}`;
+    document.getElementById('jPose').textContent=`${pi} / ${same.length}  ·  ${tt('образ','look')} ${outfitKeys.indexOf(p.key)+1}/${outfitKeys.length}`;
     const dots=document.getElementById('jDots'); dots.innerHTML=outfitKeys.map(k=>`<span class="j-dot${k===p.key?' on':''}"></span>`).join('');
   }
   function go(d){ if(!pages.length)return; idx=(idx+d+pages.length)%pages.length; render(); }
@@ -3385,8 +3385,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   const ov=document.createElement('div'); ov.id='ranksOv'; ov.hidden=true;
   ov.innerHTML=`<div class="rk-card">
     <button class="rk-x" id="rkX">✕</button>
-    <div class="rk-h">🏆 Карьерная лестница</div>
-    <div class="rk-sub">От бедолаги-стажёра до партнёра Даниэлы</div>
+    <div class="rk-h">${L("🏆 Карьерная лестница")}</div>
+    <div class="rk-sub">${L("От бедолаги-стажёра до партнёра Даниэлы")}</div>
     <div id="ranksList"></div></div>`;
   function mount(){ if(!ov.isConnected) document.body.appendChild(ov); }
   if(document.body) mount(); document.addEventListener('DOMContentLoaded',mount);
@@ -3398,9 +3398,9 @@ window.addEventListener("DOMContentLoaded", async ()=>{
       const done = partner || i<cur, isCur = !partner && i===cur;
       const cls = isCur?'cur':(done?'done':'lock');
       const st  = isCur?'📍':(done?'✓':'🔒');
-      return `<div class="rk ${cls}"><span class="rk-n">${i+1}</span><span class="rk-t">${s.title}</span><span class="rk-m">×${s.mult}</span><span class="rk-s">${st}</span></div>`;
+      return `<div class="rk ${cls}"><span class="rk-n">${i+1}</span><span class="rk-t">${L(s.title)}</span><span class="rk-m">×${s.mult}</span><span class="rk-s">${st}</span></div>`;
     }).join('');
-    html+=`<div class="rk ${partner?'cur':'lock'} rk-fin"><span class="rk-n">🥂</span><span class="rk-t">Партнёр (совладелец)</span><span class="rk-m">∞</span><span class="rk-s">${partner?'📍':'🔒'}</span></div>`;
+    html+=`<div class="rk ${partner?'cur':'lock'} rk-fin"><span class="rk-n">🥂</span><span class="rk-t">${L("Партнёр (совладелец)")}</span><span class="rk-m">∞</span><span class="rk-s">${partner?'📍':'🔒'}</span></div>`;
     document.getElementById('ranksList').innerHTML=html;
   }
   function open(){ mount(); render(); ov.hidden=false; }
@@ -3409,7 +3409,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
   window.addEventListener('keydown',e=>{ if(!ov.hidden&&e.key==='Escape') close(); });
 
-  function bind(){ const c=document.querySelector('.career'); if(c&&!c._rk){ c._rk=1; c.title='Карьерная лестница'; c.addEventListener('click',open); } }
+  function bind(){ const c=document.querySelector('.career'); if(c&&!c._rk){ c._rk=1; c.title=L('Карьерная лестница'); c.addEventListener('click',open); } }
   if(document.body) bind(); document.addEventListener('DOMContentLoaded',bind);
 })();
 </script>
