@@ -1893,7 +1893,10 @@ function startPong(){
   let px=0, py=0.5, pz=0, ax=0, ps=0, as=0, over=false, ball={x:0,z:0,z0:0,zEnd:1,dir:1,startX:0,targetX:0,curve:0,hop:120}, spd=0.018;
   let server=(Math.random()<.5?1:-1), servesLeft=2, awaitingServe=true, aiServeAt=0;  // по 2 подачи по очереди
   let pvx=0, pvy=0, lastMoveT=0, canHit=false, lastHitter=1, outAt=0, readyAt=0;   // свайп + кто бил + флеш АУТ + пауза перед подачей
-  const PADX=0.30, HITX=0.58, ZWIN=0.26, SWTH=0.055, SPDCAP=0.024, AISPEED=0.017, PZMAX=0.46; // зоны/окно/порог/скорость ИИ + макс. глубина ракетки (до сетки); HITX шире для надёжной ловли
+  const PADX=0.30, HITX=0.58, ZWIN=0.26, SWTH=0.055, SPDCAP=0.024, AISPEED=0.0155, PZMAX=0.46; // зоны/окно/порог/скорость ИИ + макс. глубина ракетки (до сетки); HITX шире для надёжной ловли
+  // СЛОЖНОСТЬ ИИ: AISPEED — скорость ракетки (ниже → хуже достаёт широкие мячи);
+  // AI_MISS — шанс редкой «невынужденной» ошибки даже по достижимому мячу (0 = идеально, выше → проще обыграть).
+  const AI_MISS = 0.16;
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
   function arcLift(){ const p=prog(), A=ball.hop||120;          // дуга с отскоком: через сетку → касание стола (~0.78) → отскок
     let h = (p<0.78) ? A*Math.sin(Math.PI*p/0.78) : A*0.42*Math.sin(Math.PI*(p-0.78)/0.22);
@@ -1962,7 +1965,7 @@ function startPong(){
         ball.z += ball.dir*spd; updateX();
         if(Math.abs(ball.x)>1.02){ outAt=performance.now()+650; point(lastHitter<0); }   // мимо стола вбок = АУТ
         if(!awaitingServe){
-          if(ball.dir>0){ if(ball.z>=1){ if(Math.abs(ball.x-ax)<PADX) aiReturn(); else point(true); } }   // ИИ достал/нет
+          if(ball.dir>0){ if(ball.z>=1){ if(Math.abs(ball.x-ax)<PADX && Math.random()>=AI_MISS) aiReturn(); else point(true); } }   // ИИ достал и не смазал — отбил; иначе очко игроку
           else {
             if(canHit && ball.z<=pz+0.12 && Math.abs(ball.x-px)<HITX){ canHit=false; playerReturn(); }   // ракетка ловит мяч на своей глубине (вбок+вперёд), без обязательного свайпа
             else if(ball.z<=0 && canHit){ point(false); canHit=false; }
