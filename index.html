@@ -1163,6 +1163,17 @@ function cloudSave(flush){
   if(!player || !player.setData) return;
   try{ player.setData({ [SAVE_KEY]: Storage.get(SAVE_KEY) }, !!flush); lastCloudWrite=Date.now(); cloudDirty=false; }catch(e){}
 }
+// Числовая статистика игрока (player.setStats) — отдельно от сейва: капитал, звание,
+// уровень близости, статус партнёра. Снимок абсолютных значений (≤10 КБ, тот же лимит запросов).
+function pushStats(){
+  if(!player || !player.setStats) return;
+  try{ player.setStats({
+    capital:   Math.floor(state.totalEarned||0),
+    stage:     (state.stage||0)+1,
+    closeness: state.chatLevel||1,
+    partner:   state.partner?1:0
+  }); }catch(e){}
+}
 // Если в облаке прогресс новее локального — применяем его (синхронизация между устройствами).
 async function mergeCloudSave(){
   const raw=await cloudLoad(); if(!raw) return;
@@ -2801,13 +2812,13 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   requestAnimationFrame(loop);
   setInterval(save, 10000);
   // дроссель облачных сейвов: пишем не чаще раза в ~12 c и только при изменениях (лимит API 100/5мин)
-  setInterval(()=>{ if(cloudDirty && Date.now()-lastCloudWrite >= CLOUD_MIN_INTERVAL) cloudSave(false); }, 5000);
+  setInterval(()=>{ if(cloudDirty && Date.now()-lastCloudWrite >= CLOUD_MIN_INTERVAL){ cloudSave(false); pushStats(); } }, 5000);
   setInterval(()=>{ if(Math.random()<0.34) idleTick(); }, 9000);
   document.addEventListener("visibilitychange", ()=>{
-    if(document.hidden){ save(); cloudSave(true); paused=true; muteAudio(true); }   // свернули/ушли — сразу в облако, тишина и пауза
+    if(document.hidden){ save(); cloudSave(true); pushStats(); paused=true; muteAudio(true); }   // свернули/ушли — сразу в облако, тишина и пауза
     else if(!adShowing){ paused=false; muteAudio(false); }                          // вернулись (но не во время рекламы)
   });
-  window.addEventListener("beforeunload", ()=>{ save(); cloudSave(true); });
+  window.addEventListener("beforeunload", ()=>{ save(); cloudSave(true); pushStats(); });
 });
 </script>
 
