@@ -6,6 +6,7 @@
 <title>БЕДОЛАГА</title>
 <!-- Шрифты захостены локально (требование Яндекс.Игр: без загрузки ресурсов со сторонних доменов) -->
 <link rel="stylesheet" href="fonts.css">
+<script src="i18n.js"></script>
 <style>
 /* ============================================================
    БЕДОЛАГА — горизонтальная версия (десктоп), стиль Playrix
@@ -612,7 +613,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   <div class="topbar">
     <div class="coins"><span class="coin-ic"></span><span id="money">0</span><span id="rate">+0/с</span></div>
     <div class="brand">БЕДОЛАГА</div>
-    <button id="journalBtn" class="top-journal">📖 Журнал</button>
+    <button id="journalBtn" class="top-journal" data-loc>📖 Журнал</button>
     <div class="career">
       <div class="career-av" id="careerAv"><img src="assets/boss_neutral_face.webp" alt=""></div>
       <div class="career-info">
@@ -627,10 +628,11 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
       <button id="muteBtn" class="icon-btn" aria-label="Звук вкл/выкл">🔊</button>
       <button id="menuBtn" class="icon-btn" aria-label="Меню">☰</button>
       <div id="menuPanel" class="menu-panel" hidden>
-        <div class="mp-row">🔊 Громкость
+        <div class="mp-row"><span data-loc>🔊 Громкость</span>
           <input id="volSlider" class="vol-slider" type="range" min="0" max="100" value="50" aria-label="Громкость музыки">
         </div>
-        <button id="resetBtn" class="mp-reset">🔄 Начать заново</button>
+        <button id="langBtn" class="mp-reset">🌐 Язык: EN</button>
+        <button id="resetBtn" class="mp-reset" data-loc>🔄 Начать заново</button>
       </div>
     </div>
   </div>
@@ -702,7 +704,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
 
         <!-- комикс-облачко начальницы -->
         <div class="comic-bubble" id="bossBubble" hidden>
-          <span class="cb-name">Даниэла Васильевна</span>
+          <span class="cb-name" data-loc>Даниэла Васильевна</span>
           <span class="cb-text" id="bossBubbleText"></span>
           <span class="cb-tail"></span>
         </div>
@@ -713,14 +715,14 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
         <!-- кнопка действия -->
         <button id="clickBtn" class="click-btn">
           <span class="monitor" id="monitor">🖥️</span>
-          <span class="click-text">Работать</span>
+          <span class="click-text" data-loc>Работать</span>
           <span class="click-sub" id="clickSub">+1 ₽</span>
         </button>
 
       </div>
 
       <div class="stage-bar">
-        <span class="lbl">До задания начальницы</span>
+        <span class="lbl" data-loc>До задания начальницы</span>
         <div class="bar-track"><div id="stageFill" class="bar-fill stage-fill"></div></div>
         <span id="stagePct">0%</span>
       </div>
@@ -735,11 +737,11 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
 
     <!-- правая колонка: команда / генераторы -->
     <div class="side-col">
-      <div class="panel-head">Команда и процессы</div>
+      <div class="panel-head" data-loc>Команда и процессы</div>
       <div id="genList" class="gen-list"></div>
       <!-- образы Даниэлы: превью + переключение наряда -->
       <div class="looks-panel" id="looksPanel">
-        <div class="looks-title">👗 Образы Даниэлы</div>
+        <div class="looks-title" data-loc>👗 Образы Даниэлы</div>
         <div class="looks-grid" id="looksGrid"></div>
       </div>
     </div>
@@ -751,7 +753,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
       <div class="quiz-top">
         <div class="quiz-figure" id="quizBossFace">😐</div>
         <div class="comic-bubble quiz-bubble">
-          <span class="cb-name">Даниэла Васильевна</span>
+          <span class="cb-name" data-loc>Даниэла Васильевна</span>
           <span class="cb-text" id="quizBubbleText"></span>
           <span class="cb-tail"></span>
         </div>
@@ -759,9 +761,9 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
       <div id="quizQuestion" class="question"></div>
       <div id="quizAnswers" class="answers"></div>
       <div class="lifelines">
-        <button class="life" data-life="report"><span class="ic">📊</span><span class="lbl">Отчёт</span><small id="lifeReport">1</small></button>
-        <button class="life" data-life="colleagues"><span class="ic">🤝</span><span class="lbl">Коллеги</span><small id="lifeColleagues">1</small></button>
-        <button class="life" data-life="mentor"><span class="ic">📞</span><span class="lbl">Ментор</span><small id="lifeMentor">1</small></button>
+        <button class="life" data-life="report"><span class="ic">📊</span><span class="lbl" data-loc>Отчёт</span><small id="lifeReport">1</small></button>
+        <button class="life" data-life="colleagues"><span class="ic">🤝</span><span class="lbl" data-loc>Коллеги</span><small id="lifeColleagues">1</small></button>
+        <button class="life" data-life="mentor"><span class="ic">📞</span><span class="lbl" data-loc>Ментор</span><small id="lifeMentor">1</small></button>
       </div>
     </div>
   </div>
@@ -769,11 +771,11 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   <!-- БОЛТАЛКА -->
   <div id="chatOverlay" class="overlay" hidden>
     <div class="card chat-card">
-      <div class="chat-head">💬 Разговор с Даниэлой Васильевной</div>
+      <div class="chat-head" data-loc>💬 Разговор с Даниэлой Васильевной</div>
       <div class="quiz-top">
         <div class="quiz-figure" id="chatBossFace">😐</div>
         <div class="comic-bubble quiz-bubble">
-          <span class="cb-name">Даниэла Васильевна</span>
+          <span class="cb-name" data-loc>Даниэла Васильевна</span>
           <span class="cb-text" id="chatBubbleText"></span>
           <span class="cb-tail"></span>
         </div>
@@ -785,20 +787,20 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
   <!-- ОФЛАЙН-ДОХОД -->
   <div id="offlineOverlay" class="overlay" hidden>
     <div class="card offline">
-      <div class="offline-title">Даниэла скучала 💌</div>
+      <div class="offline-title" data-loc>Даниэла скучала 💌</div>
       <div class="offline-body" id="offlineBody"></div>
       <div id="offlineAmount" class="offline-amount">0 ₽</div>
-      <button id="offlineX2" class="primary-btn ad-btn" hidden>📺 Удвоить за рекламу</button>
-      <button id="offlineClose" class="primary-btn">Забрать</button>
+      <button id="offlineX2" class="primary-btn ad-btn" hidden data-loc>📺 Удвоить за рекламу</button>
+      <button id="offlineClose" class="primary-btn" data-loc>Забрать</button>
     </div>
   </div>
 
   <!-- ФИНАЛ -->
   <div id="finaleOverlay" class="overlay" hidden>
     <div class="card finale">
-      <div class="finale-title">Партнёр 🥂</div>
+      <div class="finale-title" data-loc>Партнёр 🥂</div>
       <div id="finaleText" class="finale-body"></div>
-      <button id="finaleClose" class="primary-btn">Продолжить</button>
+      <button id="finaleClose" class="primary-btn" data-loc>Продолжить</button>
     </div>
   </div>
 
@@ -807,7 +809,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
     <div class="card finale">
       <div class="finale-title" id="dateTitle">Свидание 💞</div>
       <div id="dateText" class="finale-body"></div>
-      <button id="dateClose" class="primary-btn">💞 Прекрасный вечер</button>
+      <button id="dateClose" class="primary-btn" data-loc>💞 Прекрасный вечер</button>
     </div>
   </div>
 
@@ -827,7 +829,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
       <img id="promoFace" class="promo-face" src="assets/boss_neutral_face.webp" alt="">
       <div class="finale-title" id="promoTitle">Новый офис 🏢</div>
       <div id="promoText" class="finale-body"></div>
-      <button id="promoNext" class="primary-btn">Дальше ▶</button>
+      <button id="promoNext" class="primary-btn" data-loc>Дальше ▶</button>
     </div>
   </div>
 
@@ -1121,12 +1123,33 @@ function defaultState(){
     stage:0, trust:0,
     lifelines:{ report:1, colleagues:1, mentor:1 },
     barProgress:0, stageGoal:0, muted:false, volume:0.5, partner:false, lastQuestion:-1,
-    chatLevel:1, chatProgress:0, boostUntil:0, outfit:'Базовый',
+    chatLevel:1, chatProgress:0, boostUntil:0, outfit:'Базовый', lang:null,
     wrongTotal:0, onboarded:false,
     lastSave:Date.now(),
   };
 }
 let state = defaultState();
+
+/* ---------------------------------------------------------------------------
+   ЛОКАЛИЗАЦИЯ: L(s) — перевод по русскому оригиналу (нет ключа → русский текст);
+   tt(ru,en) — для динамических строк прямо в коде. Язык: state.lang или авто по SDK.
+--------------------------------------------------------------------------- */
+let LANG = 'ru';
+function detectLang(){
+  try{ const l = ysdk && ysdk.environment && ysdk.environment.i18n && ysdk.environment.i18n.lang;
+       if(l && l!=='ru') return 'en'; }catch(e){}
+  return 'ru';
+}
+function L(s){ if(LANG==='ru' || s==null) return s; const m=window.I18N && window.I18N.en; const v=m && m[s]; return v!=null ? v : s; }
+function tt(ru,en){ return LANG==='en' ? en : ru; }
+function localizeUI(){
+  document.querySelectorAll('[data-loc]').forEach(el=>{
+    if(el.dataset.ru==null) el.dataset.ru = el.textContent;
+    el.textContent = L(el.dataset.ru);
+  });
+  const lb=$("langBtn"); if(lb) lb.textContent = (LANG==='en') ? "🌐 Language: RU" : "🌐 Язык: EN";
+}
+function setLang(l){ LANG=l; state.lang=l; localizeUI(); renderAll(); save(); }
 
 /* ---------------------------------------------------------------------------
    6) ХРАНИЛИЩЕ (защита): SDK safeStorage -> localStorage -> память.
@@ -1638,11 +1661,11 @@ function maybeDate(level){
   if(level!==5 && level!==10) return;
   const reward = Math.max(2500, Math.floor(incomePerSec()*600)); // ~10 минут дохода
   state.money += reward;
-  $("dateTitle").textContent = level===10 ? "Свидание на крыше 💞" : "Первое свидание 💞";
-  $("dateText").textContent = (level===10
+  $("dateTitle").textContent = level===10 ? L("Свидание на крыше 💞") : L("Первое свидание 💞");
+  $("dateText").textContent = L(level===10
     ? "Вечер вдвоём на крыше пентхауса, город сияет внизу. «Бизнес — это прекрасно, но лучшее моё приобретение за все эти годы — ты», — тихо сказала Даниэла и взяла тебя за руку."
     : "Даниэла впервые позвала тебя не на совещание, а на ужин при свечах. «С тобой я будто снова дышу полной грудью», — призналась она, улыбаясь.")
-    + " 🎁 Подарок на память: " + fmt(reward) + " ₽.";
+    + tt(" 🎁 Подарок на память: "," 🎁 A keepsake gift: ") + fmt(reward) + " ₽.";
   $("dateOverlay").hidden = false;
   confetti(80);
 }
@@ -1695,11 +1718,11 @@ function openChat(){
   opts.push(pick(RUDE_OPTS));                           // грубый вариант — последним
   currentChat={q, opts, progIdx, answered:false};
   faceImg("chatBossFace","neutral");
-  $("chatBubbleText").textContent=q.q;
+  $("chatBubbleText").textContent=L(q.q);
   const wrap=$("chatAnswers"); wrap.innerHTML="";
   opts.forEach((opt,i)=>{
     const b=document.createElement("button"); b.className="answer chat-answer"+(opt.rude?" rude":"");
-    b.innerHTML=`<span class="txt">${opt.t}</span>`;
+    b.innerHTML=`<span class="txt">${L(opt.t)}</span>`;
     b.addEventListener("click", ()=>chatAnswer(i));
     wrap.appendChild(b);
   });
@@ -1716,7 +1739,7 @@ function chatAnswer(i){
   else if(isProg) warm = Math.max(1,(opt.warm==null?1:opt.warm));
   const fire = isRude && (state.chatLevel||1)<=1 && ((state.chatProgress||0)+warm) < 0;  // отношения ушли в минус → увольнение
   // флиртующий «хвост» — только к верному (прогрессивному) ответу
-  const react = opt.react + (isProg ? " "+pickTail(state.chatLevel||1) : "");
+  const react = L(opt.react) + (isProg ? " "+L(pickTail(state.chatLevel||1)) : "");
   $("chatAnswers").innerHTML="";
   faceImg("chatBossFace", opt.emo);
   $("chatBubbleText").textContent=react;
@@ -1770,10 +1793,10 @@ const GAME_CHALLENGES = [
 function startGameIntro(kind){
   gameOpen=true; chatOpen=true; ensureAudio();
   $("gameResult").hidden=true; $("gameResult").innerHTML="";
-  $("gameTitle").textContent="Вызов от Даниэлы 💢";
+  $("gameTitle").textContent=L("Вызов от Даниэлы 💢");
   $("gameInfo").textContent="";
-  const line = pick(GAME_CHALLENGES).replace("{g}", GAME_NAMES[kind]);
-  $("gameStage").innerHTML = `<div class="game-intro"><img class="gi-face" src="${BOSS_FACES.joy}" alt=""><div class="gi-text">«${line}»</div><button id="gameAccept" class="primary-btn">Принять вызов!</button></div>`;
+  const line = L(pick(GAME_CHALLENGES)).replace("{g}", L(GAME_NAMES[kind]));
+  $("gameStage").innerHTML = `<div class="game-intro"><img class="gi-face" src="${BOSS_FACES.joy}" alt=""><div class="gi-text">«${line}»</div><button id="gameAccept" class="primary-btn">${L("Принять вызов!")}</button></div>`;
   $("gameOverlay").hidden=false;
   $("gameAccept").addEventListener("click", ()=>{ $("gameStage").innerHTML=""; startGame(kind); });
 }
@@ -1802,10 +1825,10 @@ function endGame(win, titleWin, titleLose){
     line = pick(GAME_WIN); sfx.promote(); confetti(40);
   } else { line = pick(GAME_LOSE); sfx.bad(); }
   const res=$("gameResult"); res.hidden=false;
-  res.innerHTML = `<div class="gr-title">${win?(titleWin||"Победа! 🏆"):(titleLose||"Поражение")}</div>`+
-    (win?`<div class="gr-rew">+${fmt(reward)} ₽ · +близость 💗</div>`:``)+
-    `<div class="gr-line">«${line}»</div>`+
-    `<button id="gameDone" class="primary-btn">Готово</button>`;
+  res.innerHTML = `<div class="gr-title">${win?L(titleWin||"Победа! 🏆"):L(titleLose||"Поражение")}</div>`+
+    (win?`<div class="gr-rew">+${fmt(reward)} ₽ · +${tt("близость","closeness")} 💗</div>`:``)+
+    `<div class="gr-line">«${L(line)}»</div>`+
+    `<button id="gameDone" class="primary-btn">${L("Готово")}</button>`;
   bossSay(line, win?"joy":"sympathy");
   save(); renderHud(); renderLooks();
   $("gameDone").addEventListener("click", closeGame);
@@ -2195,16 +2218,16 @@ function openQuiz(){
   currentQuiz = { idx, opts, answered:false };
 
   const stage = STAGES[state.stage];
-  $("quizBubbleText").textContent = pick(stage.motivations);
+  $("quizBubbleText").textContent = L(pick(stage.motivations));
   setQuizBoss("serious");   // «ну, посмотрим, что ты знаешь» — руки скрещены
 
-  $("quizQuestion").textContent = q.q;
+  $("quizQuestion").textContent = L(q.q);
   const wrap = $("quizAnswers"); wrap.innerHTML="";
-  const letters = ["А","Б","В","Г"];
+  const letters = tt(["А","Б","В","Г"],["A","B","C","D"]);
   opts.forEach((o,i)=>{
     const b=document.createElement("button");
     b.className="answer"; b.dataset.i=i;
-    b.innerHTML = `<span class="ltr">${letters[i]}</span><span class="txt">${o.t}</span><span class="vote"></span>`;
+    b.innerHTML = `<span class="ltr">${letters[i]}</span><span class="txt">${L(o.t)}</span><span class="vote"></span>`;
     b.addEventListener("click", ()=>answer(i));
     wrap.appendChild(b);
   });
@@ -2278,7 +2301,7 @@ function answer(i){
     state.wrongTotal = (state.wrongTotal||0) + 1;   // счётчик ошибок за игру
   }
   setQuizBoss(emo);
-  $("quizBubbleText").textContent = line;
+  $("quizBubbleText").textContent = L(line);
   refreshLifelineButtons(); renderHud();
   bossSay(line, emo);
   save();
@@ -2360,7 +2383,7 @@ function promote(){
   if(state.stage >= STAGES.length-1){
     if(!state.partner){
       state.partner = true;
-      $("finaleText").textContent = "Ты прошёл путь от бедолаги-стажёра до равного партнёра Даниэлы Васильевны. Компания на вершине — а вы оказались отличной командой. Можно развивать бизнес без предела.";
+      $("finaleText").textContent = L("Ты прошёл путь от бедолаги-стажёра до равного партнёра Даниэлы Васильевны. Компания на вершине — а вы оказались отличной командой. Можно развивать бизнес без предела.");
       $("finaleOverlay").hidden = false;
       confetti(90); submitScore();
     }
@@ -2406,15 +2429,15 @@ function showPromoSequence(st){
 }
 function promoRender(){
   if(_promoStep===0){
-    $("promoTitle").textContent = "Новый офис 🏢";
-    $("promoText").textContent = OFFICE_DIALOG[_promoStage] || "Мы переехали в новый офис!";
+    $("promoTitle").textContent = L("Новый офис 🏢");
+    $("promoText").textContent = L(OFFICE_DIALOG[_promoStage] || "Мы переехали в новый офис!");
     $("promoFace").src = BOSS_FACES.sympathy;
-    $("promoNext").textContent = "А что с должностью? ▶";
+    $("promoNext").textContent = tt("А что с должностью? ▶","And the position? ▶");
   } else {
-    $("promoTitle").textContent = "Повышение 🎉";
-    $("promoText").textContent = (PROMO_DIALOG[_promoStage] || "Поздравляю с повышением!").replace("{title}", STAGES[_promoStage].title);
+    $("promoTitle").textContent = tt("Повышение 🎉","Promotion 🎉");
+    $("promoText").textContent = L(PROMO_DIALOG[_promoStage] || "Поздравляю с повышением!").replace("{title}", L(STAGES[_promoStage].title));
     $("promoFace").src = BOSS_FACES.joy;
-    $("promoNext").textContent = "Спасибо! 💞";
+    $("promoNext").textContent = tt("Спасибо! 💞","Thank you! 💞");
   }
 }
 function promoNext(){
@@ -2427,10 +2450,10 @@ function showRestart(face, title, text, tag, btn){
   quizOpen=false; chatOpen=false; gameOpen=false;
   $("quizOverlay").hidden=true; $("chatOverlay").hidden=true; $("gameOverlay").hidden=true;
   $("bankFace").src = face;
-  $("bankTitle").textContent = title;
-  $("bankText").textContent = text;
-  $("bankTag").textContent = tag;
-  $("bankHelp").textContent = btn;
+  $("bankTitle").textContent = L(title);
+  $("bankText").textContent = L(text);
+  $("bankTag").textContent = L(tag);
+  $("bankHelp").textContent = L(btn);
   $("bankOverlay").hidden=false;
 }
 function bankruptcy(){
@@ -2451,6 +2474,7 @@ function helpRestart(){
 function resetProgress(skipOnboard){
   state = defaultState();
   state.onboarded = !!skipOnboard;   // true = пропустить онбординг
+  state.lang = LANG;                 // сохранить выбранный язык при перезапуске
   save();
   // закрыть все модалки
   ["quizOverlay","chatOverlay","gameOverlay","offlineOverlay","finaleOverlay","dateOverlay","promoOverlay","bankOverlay"].forEach(id=>{ const e=$(id); if(e) e.hidden=true; });
@@ -2472,7 +2496,7 @@ const ONBOARD = [
 ];
 let _obStep=0;
 function startOnboarding(){ _obStep=0; obRender(); $("obBox").hidden=false; }
-function obRender(){ const s=ONBOARD[_obStep]; $("obText").textContent=s.t; $("obNext").textContent=s.reply; $("obFace").src=BOSS_FACES[s.face||"neutral"]; obHighlight(s.target); }
+function obRender(){ const s=ONBOARD[_obStep]; $("obText").textContent=L(s.t); $("obNext").textContent=L(s.reply); $("obFace").src=BOSS_FACES[s.face||"neutral"]; obHighlight(s.target); }
 function obNext(){ _obStep++; if(_obStep>=ONBOARD.length){ obFinish(); return; } obRender(); }
 function obFinish(){ $("obBox").hidden=true; obHighlight(null); state.onboarded=true; save(); }
 function obHighlight(id){ document.querySelectorAll(".ob-highlight").forEach(e=>e.classList.remove("ob-highlight")); if(id){ const e=$(id); if(e) e.classList.add("ob-highlight"); } }
@@ -2487,8 +2511,8 @@ function buildGenList(){
   const qrow=document.createElement("div"); qrow.className="gen qual-row";
   qrow.innerHTML =
     `<div class="gen-icon">💪</div>`+
-    `<div class="gen-info"><div class="gen-name">Квалификация</div><div class="gen-sub">+1 ₽ к клику за уровень</div></div>`+
-    `<button class="buy-btn"><span class="b-main"><span class="price">${fmt(qualCost())} ₽</span><span class="lvl">УР. ${state.qual||0}</span></span><span class="chev">›</span></button>`;
+    `<div class="gen-info"><div class="gen-name">${L("Квалификация")}</div><div class="gen-sub">${L("+1 ₽ к клику за уровень")}</div></div>`+
+    `<button class="buy-btn"><span class="b-main"><span class="price">${fmt(qualCost())} ₽</span><span class="lvl">${tt("УР. ","LV ")}${state.qual||0}</span></span><span class="chev">›</span></button>`;
   qrow.querySelector(".buy-btn").addEventListener("click", buyQual);
   list.appendChild(qrow);
   qualRef = { row:qrow, btn:qrow.querySelector(".buy-btn"), price:qrow.querySelector(".price"), lvl:qrow.querySelector(".lvl") };
@@ -2497,9 +2521,9 @@ function buildGenList(){
     row.className="gen"; row.dataset.i=i;
     row.innerHTML =
       `<div class="gen-icon">${g.icon}</div>`+
-      `<div class="gen-info"><div class="gen-name">${g.name}</div>`+
-      `<div class="gen-sub">+${fmtRate(g.income)}/с</div></div>`+
-      `<button class="buy-btn"><span class="b-main"><span class="price">${fmt(genCost(i))} ₽</span><span class="lvl">УР. ${state.gens[i]||0}</span></span><span class="chev">›</span></button>`;
+      `<div class="gen-info"><div class="gen-name">${L(g.name)}</div>`+
+      `<div class="gen-sub">+${fmtRate(g.income)}${tt("/с","/s")}</div></div>`+
+      `<button class="buy-btn"><span class="b-main"><span class="price">${fmt(genCost(i))} ₽</span><span class="lvl">${tt("УР. ","LV ")}${state.gens[i]||0}</span></span><span class="chev">›</span></button>`;
     row.querySelector(".buy-btn").addEventListener("click", ()=>buyGen(i));
     list.appendChild(row);
     genRefs.push({ row, btn:row.querySelector(".buy-btn"), price:row.querySelector(".price"), lvl:row.querySelector(".lvl") });
@@ -2507,23 +2531,23 @@ function buildGenList(){
   updateGenAfford();
 }
 function updateGenAfford(){
-  if(qualRef){ const qc=qualCost(); const can=state.money>=qc; qualRef.btn.disabled=!can; qualRef.row.classList.toggle("locked",!can); qualRef.price.textContent=fmt(qc)+" ₽"; qualRef.lvl.textContent="УР. "+(state.qual||0); }
+  if(qualRef){ const qc=qualCost(); const can=state.money>=qc; qualRef.btn.disabled=!can; qualRef.row.classList.toggle("locked",!can); qualRef.price.textContent=fmt(qc)+" ₽"; qualRef.lvl.textContent=tt("УР. ","LV ")+(state.qual||0); }
   GENERATORS.forEach((g,i)=>{
     const r=genRefs[i]; if(!r) return;
     const cost=genCost(i); const can = state.money >= cost;
     r.btn.disabled = !can; r.row.classList.toggle("locked", !can);
-    r.price.textContent = fmt(cost)+" ₽"; r.lvl.textContent = "УР. "+(state.gens[i]||0);
+    r.price.textContent = fmt(cost)+" ₽"; r.lvl.textContent = tt("УР. ","LV ")+(state.gens[i]||0);
   });
 }
 function renderHud(){
   $("money").textContent = fmt(state.money);
-  $("rate").textContent  = "+"+fmtRate(incomePerSec())+"/с";
+  $("rate").textContent  = "+"+fmtRate(incomePerSec())+tt("/с","/s");
   $("clickSub").textContent = "+"+fmt(clickValue())+" ₽";
   const stage = STAGES[state.stage];
-  $("rankTitle").textContent = state.partner ? "Партнёр 🥂" : stage.title;
+  $("rankTitle").textContent = state.partner ? tt("Партнёр 🥂","Partner 🥂") : L(stage.title);
   $("rankMult").textContent = multLabel(stage.mult);
   $("trustFill").style.width = Math.min(100, (state.trust/stage.need)*100)+"%";
-  $("trustLabel").textContent = state.partner ? "Доверие · максимум ★" : ("Доверие · ещё "+Math.max(0, stage.need - state.trust));
+  $("trustLabel").textContent = state.partner ? tt("Доверие · максимум ★","Trust · max ★") : (tt("Доверие · ещё ","Trust · ")+Math.max(0, stage.need - state.trust)+tt(""," to go"));
   $("stageFill").style.width = Math.min(100, (state.barProgress/currentGoal())*100)+"%";
   $("stagePct").textContent = Math.min(100, Math.round((state.barProgress/currentGoal())*100))+"%";
   const bn = $("boostBtn");
@@ -2537,14 +2561,14 @@ function renderHud(){
     bn.innerHTML = "⏳ "+fmtTime(bs.left);
   } else {                          // готова к активации
     bn.disabled = chatOpen || quizOpen;
-    bn.innerHTML = "👑 ПРЕМИУМ ×2";
+    bn.innerHTML = L("👑 ПРЕМИУМ ×2");
   }
   const bonus = Math.round((affectionMult()-1)*100);
-  $("chatLvl").textContent = "ур. "+(state.chatLevel||1)+"/10" + (bonus>0 ? " · +"+bonus+"% ₽" : "");
-  $("chatTitle").textContent = CHAT_TITLES[(state.chatLevel||1)-1];
+  $("chatLvl").textContent = tt("ур. ","lv. ")+(state.chatLevel||1)+"/10" + (bonus>0 ? " · +"+bonus+"% ₽" : "");
+  $("chatTitle").textContent = L(CHAT_TITLES[(state.chatLevel||1)-1]);
   $("chatFill").style.width = Math.min(100, ((state.chatProgress||0)/CHAT_NEED)*100)+"%";
   $("chatBtn").disabled = !(chatReady() && !chatOpen && !quizOpen && !gameOpen);
-  $("chatBtn").textContent = chatReady() ? "💬 Поговорить" : "💬 чуть позже";
+  $("chatBtn").textContent = chatReady() ? L("💬 Поговорить") : L("💬 чуть позже");
   updateGenAfford();
 }
 
@@ -2620,14 +2644,14 @@ function renderLooks(){
     grid.appendChild(cell);
   }
 }
-function renderAll(){ renderScene(); buildGenList(); renderHud(); renderLooks(); }
+function renderAll(){ localizeUI(); renderScene(); buildGenList(); renderHud(); renderLooks(); }
 
 /* комикс-облачко на сцене */
 let bubbleTimer=null;
 function bossSay(text, emo){
   if(text==null || !String(text).trim()){ return; }   // не показываем пустое облачко-реплику (баг «пустое окно»)
   setBossFigure(emo||"neutral");
-  $("bossBubbleText").textContent = text;
+  $("bossBubbleText").textContent = L(text);
   $("bossBubble").hidden = false;
   clearTimeout(bubbleTimer);
   // время показа зависит от длины реплики, чтобы успеть прочитать (≈75 мс/символ, 4.5–14 с)
@@ -2673,7 +2697,7 @@ function computeOffline(){
   if(earn >= 1){
     state.money += earn; state.totalEarned += earn;
     _offlineEarn = earn;                                  // запомним сумму для «удвоить за рекламу»
-    $("offlineBody").textContent = pick(RETURN_LINES);
+    $("offlineBody").textContent = L(pick(RETURN_LINES));
     $("offlineAmount").textContent = fmt(earn)+" ₽";
     const x2=$("offlineX2"); if(x2){ x2.hidden = !hasRewarded(); x2.disabled=false; }
     $("offlineOverlay").hidden = false;
@@ -2762,6 +2786,7 @@ function bindUI(){
   $("bankHelp").addEventListener("click", helpRestart);
   $("obNext").addEventListener("click", obNext);
   $("resetBtn").addEventListener("click", ()=>{ $("menuPanel").hidden=true; resetProgress(false); });
+  $("langBtn").addEventListener("click", ()=>{ setLang(LANG==='en'?'ru':'en'); });
   $("boostBtn").addEventListener("click", ()=>{
     if(boostState().phase!=='ready') return;                // активен или на перезарядке
     state.boostUntil = Date.now() + BOOST_DUR;              // ×2 на 10 минут (для кнопки «Работать» и всего дохода)
@@ -2804,6 +2829,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   await initSDK();
   loadState();                 // локальный сейв
   await mergeCloudSave();      // если в облаке прогресс новее — берём его
+  LANG = state.lang || detectLang();   // выбор игрока или авто по языку Яндекса
+  state.lang = LANG;
   computeOffline();
   $("muteBtn").textContent = state.muted ? "🔇" : "🔊";
   $("volSlider").value = Math.round(musicVol()*100); applyMusic();   // синхронизация громкости из сейва
@@ -3109,10 +3136,10 @@ window.addEventListener("DOMContentLoaded", async ()=>{
     dateCleanup();
     const leveled = (typeof addCloseness==='function') ? addCloseness(closeness) : false;
     res.hidden=false;
-    res.innerHTML=`<div class="gr-title">${title}</div>`+
-      `<div class="gr-rew">Счёт: ${score} · +${closeness} 💗 близости</div>`+
-      (leveled?`<div class="gr-line">💞 Новый уровень близости — ${ (state&&state.chatLevel)||'' }!</div>`:`<div class="gr-line">«Спасибо за чудесное свидание»</div>`)+
-      `<button id="gameDone" class="primary-btn">Готово</button>`;
+    res.innerHTML=`<div class="gr-title">${L(title)}</div>`+
+      `<div class="gr-rew">${tt("Счёт","Score")}: ${score} · +${closeness} 💗 ${tt("близости","closeness")}</div>`+
+      (leveled?`<div class="gr-line">💞 ${tt("Новый уровень близости","New closeness level")} — ${ (state&&state.chatLevel)||'' }!</div>`:`<div class="gr-line">«${L("Спасибо за чудесное свидание")}»</div>`)+
+      `<button id="gameDone" class="primary-btn">${L("Готово")}</button>`;
     if(sfx&&sfx.promote)sfx.promote(); if(typeof confetti==='function')confetti(36);
     if(typeof bossSay==='function') bossSay(leveled?"Это было прекрасно… ты особенный 💗":"С тобой так легко и весело!", "joy");
     if(typeof save==='function')save(); if(typeof renderHud==='function')renderHud(); if(typeof renderLooks==='function')renderLooks();
