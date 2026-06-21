@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>БЕДОЛАГА</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
+<!-- Шрифты захостены локально (требование Яндекс.Игр: без загрузки ресурсов со сторонних доменов) -->
+<link rel="stylesheet" href="fonts.css">
 <style>
 /* ============================================================
    БЕДОЛАГА — горизонтальная версия (десктоп), стиль Playrix
@@ -280,6 +279,12 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
 .offline-title,.finale-title{font-family:"Baloo 2";font-weight:800;font-size:24px;text-align:center;color:var(--gold-deep);}
 .offline-body,.finale-body{text-align:center;color:var(--ink-soft);font-size:14px;font-weight:700;margin-top:8px;line-height:1.4;}
 .offline-amount{text-align:center;font-family:"Baloo 2";font-weight:800;font-size:36px;color:var(--gold-deep);margin-top:10px;}
+/* кнопка «за рекламу» (rewarded) — отличается от обычной, чтобы было понятно про видео */
+.ad-btn{margin-top:10px;color:#fff;
+  background:linear-gradient(180deg,#7ed0ff 0%,#3aa0e8 55%,#1f7fc8 100%);border:2px solid #1f7fc8;
+  box-shadow:0 5px 0 #16689f,0 7px 12px rgba(20,90,150,.3),inset 0 2px 0 rgba(255,255,255,.6);}
+.ad-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #16689f,inset 0 2px 0 rgba(255,255,255,.5);}
+.ad-btn:disabled{filter:grayscale(.4) brightness(.97);box-shadow:0 5px 0 #999;}
 .primary-btn{margin-top:16px;width:100%;font-family:"Baloo 2";font-weight:800;font-size:18px;color:#fff;
   background:linear-gradient(180deg,#b6ec6e 0%,#86cb3c 50%,#5c9e27 100%);border-radius:16px;padding:15px;
   text-shadow:0 1px 0 rgba(0,0,0,.25);
@@ -783,6 +788,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
       <div class="offline-title">Даниэла скучала 💌</div>
       <div class="offline-body" id="offlineBody"></div>
       <div id="offlineAmount" class="offline-amount">0 ₽</div>
+      <button id="offlineX2" class="primary-btn ad-btn" hidden>📺 Удвоить за рекламу</button>
       <button id="offlineClose" class="primary-btn">Забрать</button>
     </div>
   </div>
@@ -1167,13 +1173,47 @@ async function initSDK(){
 function readyForPlayer(){ try{ ysdk.features.LoadingAPI.ready(); }catch(e){} }
 function submitScore(){ try{ if(ysdk && ysdk.leaderboards){ ysdk.leaderboards.setScore("capital", Math.floor(state.totalEarned)); } }catch(e){} }
 let paused=false;
-function onPause(){ paused=true; try{ if(bgm) bgm.pause(); }catch(e){} }            // глушим музыку на рекламе
-function onResume(){ paused=false; try{ if(bgm && !state.muted && $("menuScreen").hidden) bgm.play().catch(()=>{}); }catch(e){} }
+// Глушим ВЕСЬ звук (музыка + WebAudio-эффекты) — требование Яндекса: при сворачивании,
+// переключении вкладки и во время рекламы звук должен молчать.
+function muteAudio(on){
+  try{ if(!bgm) bgm=$("bgm"); }catch(e){}
+  try{ if(bgm){ if(on) bgm.pause(); else if(!state.muted && $("menuScreen") && $("menuScreen").hidden) bgm.play().catch(()=>{}); } }catch(e){}
+  try{ if(actx){ if(on) actx.suspend(); else actx.resume().catch(()=>{}); } }catch(e){}
+}
+function onPause(){ paused=true; muteAudio(true); }    // вкладка свёрнута / реклама / окно покупок
+function onResume(){ paused=false; muteAudio(false); }
 
-// === МОНЕТИЗАЦИЯ — намеренно НЕ реализована в этой версии (только хуки) =======
-// function showRewarded(onReward){ ysdk.adv.showRewardedVideo(...) }   // ×2 офлайн, подсказки
-// function showInterstitial(){ ysdk.adv.showFullscreenAdv(...) }       // на переходах между этапами
-// ============================================================================
+/* ---------- РЕКЛАМА (Яндекс): на время показа — пауза игры и тишина ---------- */
+let adShowing=false;
+function adPause(){ adShowing=true; onPause(); }
+function adResume(){ adShowing=false; onResume(); }
+// Полноэкранная (interstitial) реклама — на естественных переходах. SDK сам соблюдает интервал ≥60 c
+// и не показывает её в первые 60 c после запуска.
+function showFullscreenAd(){
+  if(!ysdk || !ysdk.adv || !ysdk.adv.showFullscreenAdv) return;
+  try{
+    ysdk.adv.showFullscreenAdv({ callbacks:{
+      onOpen:  ()=>adPause(),
+      onClose: ()=>adResume(),
+      onError: ()=>adResume()
+    }});
+  }catch(e){ adResume(); }
+}
+// Реклама за вознаграждение (rewarded). onReward — при полном просмотре.
+function hasRewarded(){ return !!(ysdk && ysdk.adv && ysdk.adv.showRewardedVideo); }
+function showRewardedAd(onReward){
+  if(!hasRewarded()) return false;
+  let granted=false;
+  try{
+    ysdk.adv.showRewardedVideo({ callbacks:{
+      onOpen:    ()=>adPause(),
+      onRewarded:()=>{ granted=true; },
+      onClose:   ()=>{ adResume(); if(granted){ try{ onReward&&onReward(); }catch(e){} } },
+      onError:   ()=>adResume()
+    }});
+  }catch(e){ adResume(); return false; }
+  return true;
+}
 
 /* ---------------------------------------------------------------------------
    8) ВСПОМОГАТЕЛЬНОЕ
@@ -2347,7 +2387,7 @@ function promoRender(){
 }
 function promoNext(){
   if(_promoStep===0){ _promoStep=1; promoRender(); }
-  else { $("promoOverlay").hidden = true; }
+  else { $("promoOverlay").hidden = true; showFullscreenAd(); }   // полноэкранная реклама на переходе между этапами
 }
 
 // ----- Разорение бизнеса (3 неверных ответа за игру) -----
@@ -2600,11 +2640,14 @@ function computeOffline(){
   const earn = incomePerSec() * OFFLINE.rate * elapsed;
   if(earn >= 1){
     state.money += earn; state.totalEarned += earn;
+    _offlineEarn = earn;                                  // запомним сумму для «удвоить за рекламу»
     $("offlineBody").textContent = pick(RETURN_LINES);
     $("offlineAmount").textContent = fmt(earn)+" ₽";
+    const x2=$("offlineX2"); if(x2){ x2.hidden = !hasRewarded(); x2.disabled=false; }
     $("offlineOverlay").hidden = false;
   }
 }
+let _offlineEarn = 0;
 // Эмоциональные реплики Даниэлы при возвращении игрока (выбираются случайно)
 const RETURN_LINES = [
   "Наконец-то ты вернулся! Без тебя и офис будто опустел, и цифры росли как-то нехотя. Касса принесла:",
@@ -2671,6 +2714,14 @@ function bindUI(){
   });
   document.querySelectorAll(".life").forEach(btn=>btn.addEventListener("click", ()=>useLifeline(btn.dataset.life)));
   $("offlineClose").addEventListener("click", ()=>{ $("offlineOverlay").hidden=true; });
+  $("offlineX2").addEventListener("click", ()=>{
+    const btn=$("offlineX2"); btn.disabled=true;
+    showRewardedAd(()=>{                                   // при полном просмотре — добавляем ещё столько же
+      if(_offlineEarn>0){ state.money += _offlineEarn; state.totalEarned += _offlineEarn; sfx.promote(); confetti(30); save(); renderHud(); }
+      $("offlineAmount").textContent = fmt(_offlineEarn*2)+" ₽";
+      btn.hidden=true;
+    });
+  });
   $("finaleClose").addEventListener("click", ()=>{ $("finaleOverlay").hidden=true; });
   $("dateClose").addEventListener("click", ()=>{ $("dateOverlay").hidden=true; });
   $("promoNext").addEventListener("click", promoNext);
@@ -2726,7 +2777,10 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   requestAnimationFrame(loop);
   setInterval(save, 10000);
   setInterval(()=>{ if(Math.random()<0.34) idleTick(); }, 9000);
-  document.addEventListener("visibilitychange", ()=>{ if(document.hidden) save(); });
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden){ save(); paused=true; muteAudio(true); }      // свернули/ушли — тишина и пауза
+    else if(!adShowing){ paused=false; muteAudio(false); }            // вернулись (но не во время рекламы)
+  });
   window.addEventListener("beforeunload", save);
 });
 </script>
