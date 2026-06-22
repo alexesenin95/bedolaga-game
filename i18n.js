@@ -10,6 +10,9 @@ window.I18N = { en: {
 
 /* ---- Меню / шапка / основные кнопки ---- */
 "БЕДОЛАГА":"BEDOLAGA",
+"💗 Близость с Даниэлой":"💗 Closeness with Daniela",
+"Близость с Даниэлой":"Closeness with Daniela",
+"Сближайся в «Поговорить» — на каждом уровне новый образ":"Grow closer via «Talk» — a new look at every level",
 "путь от стажёра до партнёра":"from intern to partner",
 "Играть ▶":"Play ▶",
 "📖 Журнал":"📖 Journal",
