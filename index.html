@@ -3455,5 +3455,65 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   if(document.body) bind(); document.addEventListener('DOMContentLoaded',bind);
 })();
 </script>
+
+<!-- ============================================================
+     ШКАЛА БЛИЗОСТИ: клик по индикатору 💗 → список 10 уровней близости
+     и какой образ Даниэлы открывается на каждом. Откат: удалить этот блок.
+============================================================ -->
+<script>
+(function(){
+  const css=document.createElement('style'); css.textContent=`
+  .chat-meta{cursor:pointer;}
+  #closeOv{position:fixed;inset:0;z-index:9400;background:rgba(30,12,24,.85);
+    display:flex;align-items:center;justify-content:center;padding:16px;}
+  #closeOv[hidden]{display:none;}
+  #closeOv .rk-h{color:#ffc6e3;}
+  #closeOv .rk.cur{background:linear-gradient(90deg,rgba(255,93,143,.30),rgba(255,93,143,.06));box-shadow:inset 0 0 0 2px #ff5d8f;}
+  #closeOv .rk.cur .rk-n{background:#ff5d8f;color:#fff;}
+  #closeOv .rk-m{color:#ff9ec6;}
+  `; document.head.appendChild(css);
+
+  const ov=document.createElement('div'); ov.id='closeOv'; ov.hidden=true;
+  ov.innerHTML=`<div class="rk-card">
+    <button class="rk-x" id="clX">✕</button>
+    <div class="rk-h" id="clH"></div>
+    <div class="rk-sub" id="clSub"></div>
+    <div id="closeList"></div></div>`;
+  function mount(){ if(!ov.isConnected) document.body.appendChild(ov); }
+  if(document.body) mount(); document.addEventListener('DOMContentLoaded',mount);
+
+  // какие образы открываются на уровне lvl (1..10): индекс i открыт при chatLevel>=i+1, а с 10-го — всё остальное
+  function skinsForLevel(lvl){
+    if(typeof OUTFITS==='undefined') return [];
+    return OUTFITS.filter((o,i)=> (i<10 ? i+1 : 10) === lvl).map(o=>L(o.name));
+  }
+  function render(){
+    if(typeof CHAT_TITLES==='undefined') return;
+    document.getElementById('clH').textContent = L('💗 Близость с Даниэлой');
+    document.getElementById('clSub').textContent = L('Сближайся в «Поговорить» — на каждом уровне новый образ');
+    const cur = state.chatLevel||1;
+    const html = CHAT_TITLES.map((title,i)=>{
+      const lvl=i+1;
+      const done = cur>lvl, isCur = cur===lvl;
+      const cls = isCur?'cur':(done?'done':'lock');
+      const st  = isCur?'📍':(done?'✓':'🔒');
+      const skins = skinsForLevel(lvl).join(', ');
+      return `<div class="rk ${cls}"><span class="rk-n">${lvl}</span>`+
+        `<span class="rk-t">${L(title)}</span>`+
+        `<span class="rk-m">${skins?('👗 '+skins):''}</span>`+
+        `<span class="rk-s">${st}</span></div>`;
+    }).join('');
+    document.getElementById('closeList').innerHTML=html;
+  }
+  function open(){ mount(); render(); ov.hidden=false; }
+  function close(){ ov.hidden=true; }
+  ov.querySelector('#clX').addEventListener('click',close);
+  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  window.addEventListener('keydown',e=>{ if(!ov.hidden&&e.key==='Escape') close(); });
+
+  function bind(){ const m=document.querySelector('.chat-meta'); if(m&&!m._cl){ m._cl=1; m.title=L('Близость с Даниэлой'); m.addEventListener('click',open); } }
+  if(document.body) bind(); document.addEventListener('DOMContentLoaded',bind);
+})();
+</script>
 </body>
 </html>
