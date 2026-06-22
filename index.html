@@ -1281,9 +1281,10 @@ function showFullscreenAd(){
   if(!ysdk || !ysdk.adv || !ysdk.adv.showFullscreenAdv) return;
   try{
     ysdk.adv.showFullscreenAdv({ callbacks:{
-      onOpen:  ()=>adPause(),
-      onClose: ()=>adResume(),
-      onError: ()=>adResume()
+      onOpen:    ()=>adPause(),            // реклама открылась → пауза игры + тишина
+      onClose:   (wasShown)=>adResume(),   // закрылась (или не показалась из-за частоты) → продолжаем
+      onError:   ()=>adResume(),
+      onOffline: ()=>adResume()            // нет сети → не зависаем на паузе
     }});
   }catch(e){ adResume(); }
 }
@@ -1291,12 +1292,11 @@ function showFullscreenAd(){
 function hasRewarded(){ return !!(ysdk && ysdk.adv && ysdk.adv.showRewardedVideo); }
 function showRewardedAd(onReward){
   if(!hasRewarded()) return false;
-  let granted=false;
   try{
     ysdk.adv.showRewardedVideo({ callbacks:{
       onOpen:    ()=>adPause(),
-      onRewarded:()=>{ granted=true; },
-      onClose:   ()=>{ adResume(); if(granted){ try{ onReward&&onReward(); }catch(e){} } },
+      onRewarded:()=>{ try{ onReward&&onReward(); }catch(e){} },   // награда выдаётся при полном просмотре (как в доке)
+      onClose:   ()=>adResume(),
       onError:   ()=>adResume()
     }});
   }catch(e){ adResume(); return false; }
