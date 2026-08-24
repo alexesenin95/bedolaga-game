@@ -27,13 +27,15 @@
   --ok:#4CAF50; --bad:#E5564B;
   --r:18px; --r-sm:13px;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;height:100%;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;}
 body{
   font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color:var(--ink);background:linear-gradient(160deg,#f5efe4,#e9dECB);
-  overflow:hidden;user-select:none;-webkit-user-select:none;
+  overflow:hidden;position:fixed;inset:0;width:100%;height:100%;   /* фикс: страница не прокручивается/не «пружинит» во время игры */
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
 }
+img{-webkit-user-drag:none;user-drag:none;user-select:none;}
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;
   touch-action:manipulation;-webkit-user-select:none;user-select:none;}  /* без двойного тапа-зума и выделения */
 button *{pointer-events:none;}  /* клик по тексту/иконке внутри кнопки = клик по кнопке */
@@ -860,7 +862,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
 
   <!-- ЭКРАН МЕНЮ / СТАРТ -->
   <div id="menuScreen" class="menu-screen">
-    <video id="menuVideo" class="menu-video" autoplay loop muted playsinline preload="auto" poster="assets/office_menu.jpg"></video>
+    <video id="menuVideo" class="menu-video" autoplay loop muted playsinline disableRemotePlayback preload="auto" poster="assets/office_menu.jpg"></video>
     <div class="menu-logo" data-loc>БЕДОЛАГА</div>
     <div class="menu-sub" data-loc>путь от стажёра до партнёра</div>
     <div class="menu-lang" id="menuLang">
@@ -870,8 +872,7 @@ button *{pointer-events:none;}  /* клик по тексту/иконке вн�
     <button id="playBtn" class="menu-play" data-loc>Играть ▶</button>
   </div>
 
-  <!-- фоновая музыка (зацикленная) -->
-  <audio id="bgm" src="assets/music.mp3" loop preload="auto"></audio>
+  <!-- фоновая музыка проигрывается через Web Audio API (см. startMusic) -->
 
 </div>
 
@@ -1264,8 +1265,7 @@ let paused=false;
 // Глушим ВЕСЬ звук (музыка + WebAudio-эффекты) — требование Яндекса: при сворачивании,
 // переключении вкладки и во время рекламы звук должен молчать.
 function muteAudio(on){
-  try{ if(!bgm) bgm=$("bgm"); }catch(e){}
-  try{ if(bgm){ if(on) bgm.pause(); else if(!state.muted && $("menuScreen") && $("menuScreen").hidden) bgm.play().catch(()=>{}); } }catch(e){}
+  // музыка и эффекты идут через AudioContext — пауза/возобновление глушит всё сразу
   try{ if(actx){ if(on) actx.suspend(); else actx.resume().catch(()=>{}); } }catch(e){}
 }
 function onPause(){ paused=true; muteAudio(true); }    // вкладка свёрнута / реклама / окно покупок
@@ -2149,11 +2149,32 @@ function startBattleship(){
 
 let actx = null;
 function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); } }
-/* фоновая музыка */
-let bgm=null;
+/* фоновая музыка — через Web Audio API (без HTML <audio>, чтобы не появлялся
+   системный медиаплеер на десктопе и в панели уведомлений на мобильных). */
+let musicBuf=null, musicSrc=null, musicGain=null, musicPlaying=false, musicLoading=false, _wantMusic=false;
 function musicVol(){ return state.volume==null ? 0.5 : state.volume; }
-function applyMusic(){ if(!bgm) bgm=$("bgm"); if(!bgm) return; bgm.muted = !!state.muted; bgm.volume = musicVol(); }
-function startMusic(){ applyMusic(); if(bgm){ bgm.play().catch(()=>{}); } }
+function ensureMusicLoaded(){
+  if(musicBuf || musicLoading || !actx) return;
+  musicLoading=true;
+  fetch('assets/music.mp3').then(r=>r.arrayBuffer()).then(ab=>actx.decodeAudioData(ab))
+    .then(buf=>{ musicBuf=buf; musicLoading=false; if(_wantMusic) startMusic(); })
+    .catch(()=>{ musicLoading=false; });
+}
+function applyMusic(){ if(musicGain){ try{ musicGain.gain.value = state.muted ? 0 : musicVol(); }catch(e){} } }
+function startMusic(){
+  _wantMusic=true;
+  if(!actx){ return; }
+  if(actx.state==="suspended") actx.resume().catch(()=>{});
+  if(!musicBuf){ ensureMusicLoaded(); return; }
+  if(musicPlaying){ applyMusic(); return; }
+  try{
+    musicSrc=actx.createBufferSource(); musicSrc.buffer=musicBuf; musicSrc.loop=true;
+    musicGain=actx.createGain(); musicGain.gain.value = state.muted ? 0 : musicVol();
+    musicSrc.connect(musicGain); musicGain.connect(actx.destination);
+    musicSrc.start(0); musicPlaying=true;
+  }catch(e){}
+}
+function stopMusic(){ _wantMusic=false; if(musicSrc){ try{musicSrc.stop()}catch(e){} try{musicSrc.disconnect()}catch(e){} musicSrc=null; } musicPlaying=false; }
 function beep(freq, dur=0.08, type="sine", vol=0.05){
   if(state.muted || !actx) return;
   try{
@@ -2801,6 +2822,14 @@ function loadState(){ const raw = Storage.get(SAVE_KEY); if(raw) applySave(raw);
    ИНИЦИАЛИЗАЦИЯ
 --------------------------------------------------------------------------- */
 function bindUI(){
+  // запрет контекстного меню и выделения/перетаскивания на игровом поле (п.1.6.2.7)
+  document.addEventListener("contextmenu", e=>e.preventDefault());
+  document.addEventListener("dragstart",  e=>e.preventDefault());
+  document.addEventListener("selectstart", e=>{ const t=e.target; if(!(t && (t.tagName==="INPUT"||t.tagName==="TEXTAREA"))) e.preventDefault(); });
+  document.addEventListener("gesturestart", e=>e.preventDefault());   // без масштабирования жестом на iOS
+  // на всякий случай гасим системную медиасессию (плеер не нужен)
+  try{ if(navigator.mediaSession){ navigator.mediaSession.metadata=null;
+    ["play","pause","stop","seekbackward","seekforward","previoustrack","nexttrack"].forEach(a=>{ try{ navigator.mediaSession.setActionHandler(a,null); }catch(e){} }); } }catch(e){}
   $("clickBtn").addEventListener("click", doClick);
   $("muteBtn").addEventListener("click", ()=>{
     state.muted = !state.muted; $("muteBtn").textContent = state.muted ? "🔇" : "🔊";
