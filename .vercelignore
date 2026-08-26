@@ -1,0 +1,10 @@
+# На сайт идёт только папка football/ — остальное не загружаем
+assets/
+docs/
+index.html
+i18n.js
+fonts.css
+*.md
+football/dist/
+football/build-single.py
+football/*.md
