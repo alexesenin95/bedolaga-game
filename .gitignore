@@ -10,5 +10,6 @@ Thumbs.db
 *.log
 node_modules/
 
-# Архивы сборки
+# Архивы и сборки
 *.zip
+dist/
